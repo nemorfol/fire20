@@ -152,17 +152,23 @@ function parseDirecta(csv: string): PortfolioImport {
 function parseFinecoFromRows(rows: string[][]): PortfolioImport {
   if (rows.length < 2) return buildResult([]);
 
+  console.log('[Fineco] Rows count:', rows.length);
+  console.log('[Fineco] First 5 rows:', rows.slice(0, 5).map((r, i) => `Row ${i}: ${JSON.stringify(r.slice(0, 6))}`).join('\n'));
+
   // Trova la riga di intestazione (Fineco mette 2 righe di titolo prima)
   let headerIdx = -1;
   for (let i = 0; i < Math.min(rows.length, 10); i++) {
-    const row = rows[i].map(c => c.toLowerCase().trim());
-    if (row.some(c => c === 'titolo') && row.some(c => c === 'isin')) {
+    const row = rows[i].map(c => String(c).toLowerCase().trim());
+    if (row.some(c => c.includes('titolo')) && row.some(c => c.includes('isin'))) {
       headerIdx = i;
       break;
     }
   }
+
+  console.log('[Fineco] Header found at row:', headerIdx);
+
   if (headerIdx === -1) {
-    // Fallback: prova il vecchio parsing CSV
+    console.log('[Fineco] FALLBACK to CSV parser');
     return parseFinecoCSVFallback(rows);
   }
 
@@ -171,44 +177,56 @@ function parseFinecoFromRows(rows: string[][]): PortfolioImport {
   const isinIdx = findColumnIndex(headers, ['isin']);
   const instrumentIdx = findColumnIndex(headers, ['strumento']);
   const valueIdx = findColumnIndex(headers, ['valore di mercato', 'valore di mercato €']);
-  // Fallback su "controvalore"
   const valueFallback = valueIdx >= 0 ? valueIdx : findColumnIndex(headers, ['controvalore']);
+
+  console.log('[Fineco] Column indices - name:', nameIdx, 'isin:', isinIdx, 'instrument:', instrumentIdx, 'value:', valueIdx, 'valueFallback:', valueFallback);
 
   const positions: { name: string; value: number; type: string }[] = [];
   for (let i = headerIdx + 1; i < rows.length; i++) {
     const row = rows[i];
     if (row.length < 3) continue;
 
-    const name = (nameIdx >= 0 ? row[nameIdx] : '').trim();
-    const isin = (isinIdx >= 0 ? row[isinIdx] : '').trim();
-    const instrument = (instrumentIdx >= 0 ? row[instrumentIdx] : '').trim();
+    const name = (nameIdx >= 0 ? String(row[nameIdx] ?? '') : '').trim();
+    const isin = (isinIdx >= 0 ? String(row[isinIdx] ?? '') : '').trim();
+    const instrument = (instrumentIdx >= 0 ? String(row[instrumentIdx] ?? '') : '').trim();
     const valIdx = valueFallback >= 0 ? valueFallback : row.length - 5;
-    const value = parseNumber(row[valIdx] || '0');
+    const value = parseNumber(String(row[valIdx] ?? '0'));
 
-    // Salta righe vuote, di intestazione, totale, o valuta senza ISIN (riga riepilogo Fineco)
+    // Salta righe vuote, di intestazione, totale, o valuta senza ISIN
     if (!name || value === 0) continue;
-    if (name.toLowerCase().startsWith('totale') || name.toLowerCase().startsWith('portafoglio')) continue;
-    if (!isin && !instrument && name.length <= 3) continue; // Riga "EUR" di totale Fineco
+    const nameLower = name.toLowerCase();
+    if (nameLower.startsWith('totale') || nameLower.startsWith('portafoglio')) continue;
+    if (!isin && !instrument && name.length <= 3) continue;
 
-    // Classifica usando la colonna "Strumento" di Fineco + nome titolo
+    // Classifica: PRIMA per nome (BTP/BOT/CCT sono sempre obbligazioni),
+    // POI per colonna Strumento, POI per keywords generiche
     let type: string;
-    const instrLower = instrument.toLowerCase();
-    if (instrLower === 'obbligazione' || instrLower.includes('obblig')) {
+    if (BOND_KEYWORDS.some(k => nameLower.includes(k))) {
       type = 'Obbligazione';
-    } else if (instrLower === 'etf') {
-      // ETF puo' essere azionario, obbligazionario o oro - classifica dal nome
-      type = classifyPosition(name, isin);
-    } else if (instrLower === 'azione') {
-      type = 'Azione';
-    } else if (instrLower === 'fondo' || instrLower.includes('fondo')) {
-      type = classifyPosition(name, isin);
+    } else if (GOLD_KEYWORDS.some(k => nameLower.includes(k))) {
+      type = 'Oro';
+    } else if (CASH_KEYWORDS.some(k => nameLower.includes(k))) {
+      type = 'Liquidita';
     } else {
-      type = classifyPosition(name, isin);
+      const instrLower = instrument.toLowerCase();
+      if (instrLower === 'obbligazione' || instrLower.includes('obblig')) {
+        type = 'Obbligazione';
+      } else if (instrLower === 'etf') {
+        type = classifyPosition(name, isin);
+      } else if (instrLower === 'azione') {
+        type = 'Azione';
+      } else {
+        type = classifyPosition(name, isin);
+      }
     }
 
+    console.log('[Fineco] Row', i, '→', type, '|', value.toFixed(2), '|', name, '| instrument:', JSON.stringify(instrument));
     positions.push({ name: `${name}${isin ? ' (' + isin + ')' : ''}`, value: Math.abs(value), type });
   }
-  return buildResult(positions);
+
+  const result = buildResult(positions);
+  console.log('[Fineco] RESULT: stocks:', result.stocks, 'bonds:', result.bonds, 'cash:', result.cash, 'gold:', result.gold, 'other:', result.other);
+  return result;
 }
 
 function parseFinecoCSVFallback(rows: string[][]): PortfolioImport {

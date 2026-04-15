@@ -48,7 +48,9 @@
       "WebFetch(domain:www.mefop.it)",
       "Read(//c/Users/arugg/Downloads/**)",
       "Bash(node -e ':*)",
-      "Bash(node -e \"const p = require\\('xlsx/package.json'\\); console.log\\('xlsx version:', p.version\\); console.log\\('browser field:', p.browser ? 'YES' : 'NO'\\);\")"
+      "Bash(node -e \"const p = require\\('xlsx/package.json'\\); console.log\\('xlsx version:', p.version\\); console.log\\('browser field:', p.browser ? 'YES' : 'NO'\\);\")",
+      "Bash(xargs grep:*)",
+      "Bash(ls e:/sviluppo/fire20/node_modules/flowbite/plugin*.* e:/sviluppo/fire20/node_modules/flowbite/plugin/)"
     ]
   }
 }
