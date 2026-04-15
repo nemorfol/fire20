@@ -47,8 +47,9 @@ function classifyPosition(name: string, isin?: string): string {
 
 function typeToCategory(type: string): 'stocks' | 'bonds' | 'cash' | 'gold' | 'other' {
   const lower = type.toLowerCase();
-  if (lower === 'azione' || lower === 'etf' || lower.includes('azion')) return 'stocks';
+  // NB: check obbligazione PRIMA di azione, perche' "obbligazione" contiene "azion"
   if (lower === 'obbligazione' || lower.includes('obbligaz') || lower.includes('bond')) return 'bonds';
+  if (lower === 'azione' || lower === 'etf' || lower.includes('azion')) return 'stocks';
   if (lower === 'oro' || lower.includes('gold') || lower.includes('oro')) return 'gold';
   if (lower === 'liquidita' || lower.includes('cash') || lower.includes('liquid')) return 'cash';
   return 'other';
