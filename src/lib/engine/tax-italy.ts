@@ -138,25 +138,137 @@ export function calculateCapitalGainsTax(
 	return Math.round(gains * rate * 100) / 100;
 }
 
+/** Risultato dell'extradeducibilita' per nuovi lavoratori post-2007 */
+export interface ExtraDeductibilityResult {
+	/** Se il lavoratore ha diritto all'extradeducibilita' */
+	eligible: boolean;
+	/** Deduzione ordinaria massima */
+	ordinaryDeduction: number;
+	/** Extradeducibilita' annuale massima */
+	extraDeduction: number;
+	/** Deduzione totale massima (ordinaria + extra) */
+	totalMaxDeduction: number;
+	/** Plafond residuo non utilizzato recuperabile */
+	unusedAllowance: number;
+	/** Note esplicative */
+	notes: string;
+}
+
+/**
+ * Calcola l'extradeducibilita' per i "nuovi lavoratori" (primo impiego dal 1/1/2007).
+ *
+ * Regole (Legge di Bilancio 2026):
+ * - Si applica a chi ha iniziato a versare contributi previdenziali obbligatori dopo il 1/1/2007
+ * - Nei primi 5 anni di partecipazione al fondo pensione, se non si e' utilizzato tutto
+ *   il plafond di deducibilita' ordinaria (5.300€/anno), la differenza puo' essere recuperata
+ *   nei 20 anni successivi, fino a un massimo aggiuntivo di 2.650€/anno
+ * - Tetto massimo totale: 5.300 + 2.650 = 7.950€/anno
+ * - Il quinquennio utile decorre dalla data di primo impiego, non dall'iscrizione al fondo
+ * - Per importi versati fino al 2025 si applica il vecchio limite (5.164,57€)
+ *
+ * @param firstEmploymentYear - Anno del primo impiego (deve essere >= 2007)
+ * @param fundJoinYear - Anno di iscrizione al fondo pensione
+ * @param currentYear - Anno corrente
+ * @param avgAnnualContributions - Media contributi annui versati nei primi 5 anni
+ */
+export function calculateExtraDeductibility(
+	firstEmploymentYear: number,
+	fundJoinYear: number,
+	currentYear: number,
+	avgAnnualContributions: number
+): ExtraDeductibilityResult {
+	const ORDINARY_LIMIT = 5300;
+	const EXTRA_LIMIT = 2650;
+	const OLD_ORDINARY_LIMIT = 5164.57;
+
+	// Requisito base: primo impiego dopo 1/1/2007
+	if (firstEmploymentYear < 2007) {
+		return {
+			eligible: false,
+			ordinaryDeduction: ORDINARY_LIMIT,
+			extraDeduction: 0,
+			totalMaxDeduction: ORDINARY_LIMIT,
+			unusedAllowance: 0,
+			notes: 'Non idoneo: il primo impiego e\' precedente al 1/1/2007. Si applica solo la deducibilita\' ordinaria di 5.300€/anno.'
+		};
+	}
+
+	// Calcola il plafond non utilizzato nei primi 5 anni di partecipazione al fondo
+	const yearsInFund = currentYear - fundJoinYear;
+	const firstFiveYearsEnd = fundJoinYear + 5;
+
+	if (yearsInFund <= 5) {
+		// Ancora nei primi 5 anni: non si puo' ancora recuperare
+		return {
+			eligible: true,
+			ordinaryDeduction: ORDINARY_LIMIT,
+			extraDeduction: 0,
+			totalMaxDeduction: ORDINARY_LIMIT,
+			unusedAllowance: 0,
+			notes: `Idoneo all'extradeducibilita'. Sei nel ${yearsInFund}° anno di partecipazione al fondo. Il recupero del plafond inutilizzato sara' possibile dal ${firstFiveYearsEnd + 1}° anno, per i successivi 20 anni.`
+		};
+	}
+
+	// Dopo i primi 5 anni: calcola il plafond non utilizzato
+	// Per anni fino al 2025 si usa il vecchio limite, dal 2026 il nuovo
+	let totalAllowance = 0;
+	for (let y = fundJoinYear; y < fundJoinYear + 5; y++) {
+		totalAllowance += y < 2026 ? OLD_ORDINARY_LIMIT : ORDINARY_LIMIT;
+	}
+
+	const totalUsed = avgAnnualContributions * 5;
+	const unusedAllowance = Math.max(0, totalAllowance - totalUsed);
+
+	// L'extra recuperabile e' limitato a 2.650€/anno per max 20 anni
+	const recoveryYearsLeft = Math.max(0, 20 - (yearsInFund - 5));
+	const annualExtra = recoveryYearsLeft > 0 ? Math.min(EXTRA_LIMIT, unusedAllowance / recoveryYearsLeft) : 0;
+
+	const totalMax = ORDINARY_LIMIT + annualExtra;
+
+	let notes = `Idoneo all'extradeducibilita'. Plafond non utilizzato nei primi 5 anni: ${unusedAllowance.toLocaleString('it-IT', { maximumFractionDigits: 0 })}€.`;
+	if (recoveryYearsLeft > 0) {
+		notes += ` Recuperabile in ${recoveryYearsLeft} anni rimanenti, fino a ${annualExtra.toLocaleString('it-IT', { maximumFractionDigits: 0 })}€/anno in aggiunta alla deduzione ordinaria.`;
+	} else {
+		notes += ' Periodo di recupero (20 anni) esaurito.';
+	}
+	notes += ` Tetto massimo annuo: ${totalMax.toLocaleString('it-IT', { maximumFractionDigits: 0 })}€ (ordinaria 5.300€ + extra ${Math.round(annualExtra)}€).`;
+
+	return {
+		eligible: true,
+		ordinaryDeduction: ORDINARY_LIMIT,
+		extraDeduction: Math.round(annualExtra * 100) / 100,
+		totalMaxDeduction: Math.round(totalMax * 100) / 100,
+		unusedAllowance: Math.round(unusedAllowance * 100) / 100,
+		notes
+	};
+}
+
 /**
  * Calcola la tassazione del fondo pensione complementare italiano.
  *
- * Regole:
- * - Contributi deducibili fino a 5.300€/anno (dal 2026, Legge di Bilancio 2026)
+ * Regole (aggiornate Legge di Bilancio 2026):
+ * - Contributi deducibili fino a 5.300€/anno (ordinaria)
+ * - Per nuovi lavoratori post-2007: extradeducibilita' fino a 2.650€/anno (totale max 7.950€)
  * - Rendimenti tassati al 20% (12.5% sulla quota investita in titoli di stato)
  * - Prestazione finale tassata al 15%, ridotta dello 0.3% per ogni anno oltre il 15°,
  *   fino a un minimo del 9% (dopo 35 anni di partecipazione)
  *
  * @param contributions - Contributo annuale al fondo
  * @param years - Anni di partecipazione al fondo
+ * @param extraDeductionEligible - Se il lavoratore ha diritto all'extradeducibilita'
+ * @param extraDeductionAmount - Importo extra deducibile annuo (default 0)
  * @returns Oggetto con deduzione, aliquota rendimenti e aliquota prestazione
  */
 export function calculatePensionFundTax(
 	contributions: number,
-	years: number
+	years: number,
+	extraDeductionEligible: boolean = false,
+	extraDeductionAmount: number = 0
 ): PensionFundTaxResult {
-	// Deduzione massima annuale
-	const maxDeduction = 5300;
+	// Deduzione massima annuale (ordinaria + eventuale extra)
+	const ordinaryMax = 5300;
+	const extraMax = extraDeductionEligible ? Math.min(extraDeductionAmount, 2650) : 0;
+	const maxDeduction = ordinaryMax + extraMax;
 	const contributionDeduction = Math.min(contributions, maxDeduction);
 
 	// Tassazione sui rendimenti: 20% (aliquota standard)

@@ -44,7 +44,8 @@
       "Read(//c/Program Files \\(x86\\)/Google/Chrome/Application/**)",
       "Read(//c/Program Files \\(x86\\)/Microsoft/Edge/Application/**)",
       "Bash(node take-screenshots.mjs)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "WebFetch(domain:www.mefop.it)"
     ]
   }
 }

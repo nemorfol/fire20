@@ -923,9 +923,9 @@ Per compensare, dovresti vendere un'azione o un'obbligazione singola con 5.000�
 <h3>1. Deducibilità dei Contributi</h3>
 <p>I contributi al fondo pensione (fino a <strong>5.300€ annui</strong>) sono deducibili dal reddito imponibile IRPEF. Il risparmio fiscale dipende dalla tua aliquota marginale:</p>
 <ul>
-<li>Aliquota marginale <strong>23%</strong> (redditi fino a 28.000€): risparmi <strong>1.188€/anno</strong></li>
-<li>Aliquota marginale <strong>35%</strong> (redditi 28.000-50.000€): risparmi <strong>1.808€/anno</strong></li>
-<li>Aliquota marginale <strong>43%</strong> (redditi oltre 50.000€): risparmi <strong>2.221€/anno</strong></li>
+<li>Aliquota marginale <strong>23%</strong> (redditi fino a 28.000€): risparmi <strong>1.219€/anno</strong></li>
+<li>Aliquota marginale <strong>33%</strong> (redditi 28.000-50.000€): risparmi <strong>1.749€/anno</strong></li>
+<li>Aliquota marginale <strong>43%</strong> (redditi oltre 50.000€): risparmi <strong>2.279€/anno</strong></li>
 </ul>
 <p>Questo è un rendimento immediato e garantito! Chi ha un'aliquota del 43% ottiene un "rendimento" istantaneo del 43% sul contributo.</p>
 
@@ -942,9 +942,9 @@ Per compensare, dovresti vendere un'azione o un'obbligazione singola con 5.000�
 
 <div class="example">
 <strong>Esempio completo su 20 anni:</strong><br>
-Contributo annuo: 5.165€. Aliquota marginale: 35%.<br><br>
-<strong>Risparmio fiscale totale</strong>: 5.165€ × 35% × 20 anni = <strong>36.155€</strong><br>
-<strong>Capitale versato</strong>: 5.165€ × 20 = 103.300€<br>
+Contributo annuo: 5.300€. Aliquota marginale: 35%.<br><br>
+<strong>Risparmio fiscale totale</strong>: 5.300€ × 35% × 20 anni = <strong>37.100€</strong><br>
+<strong>Capitale versato</strong>: 5.300€ × 20 = 106.000€<br>
 <strong>Con rendimento 5% netto di gestione</strong> (tassato al 20%): ~170.000€ circa<br>
 <strong>Tassazione in uscita</strong> (dopo 20 anni → aliquota 13,5%): ~13.500€ sui contributi dedotti<br><br>
 <strong>Risultato netto</strong>: ~156.500€, da un versamento effettivo (al netto del risparmio fiscale) di ~67.145€.<br>
@@ -977,8 +977,33 @@ Contributo annuo: 5.165€. Aliquota marginale: 35%.<br><br>
 <li>Tassazione: stessa aliquota agevolata del 9-15%</li>
 </ul>
 
+<h3>Extradeducibilità per Nuovi Lavoratori (Post-2007)</h3>
+<p>Se il tuo <strong>primo impiego</strong> è iniziato dopo il 1° gennaio 2007, hai diritto a un'agevolazione aggiuntiva introdotta dalla Legge di Bilancio 2026:</p>
+<ul>
+<li><strong>Deduzione ordinaria</strong>: 5.300€/anno (per tutti)</li>
+<li><strong>Extradeducibilità</strong>: fino a <strong>2.650€/anno</strong> in aggiunta (solo per lavoratori post-2007)</li>
+<li><strong>Tetto massimo totale</strong>: <strong>7.950€/anno</strong></li>
+</ul>
+
+<p><strong>Come funziona:</strong></p>
+<ul>
+<li>Nei <strong>primi 5 anni</strong> di partecipazione al fondo pensione, se non hai utilizzato tutto il plafond di 5.300€/anno, la differenza si accumula come "credito"</li>
+<li>Questo credito può essere <strong>recuperato nei 20 anni successivi</strong>, con un massimo aggiuntivo di 2.650€/anno</li>
+<li>Il quinquennio utile decorre dalla data di <strong>primo impiego</strong>, non dall'iscrizione al fondo</li>
+</ul>
+
+<div class="example">
+<strong>Esempio pratico:</strong><br>
+Mario, primo impiego nel 2015 (post-2007), iscritto al fondo nel 2020.<br>
+Nei primi 5 anni (2020-2024) ha versato in media 3.000€/anno.<br>
+Plafond 5 anni: 5.164,57€ × 4 + 5.300€ × 1 = 25.958,28€<br>
+Versato: 3.000€ × 5 = 15.000€<br>
+<strong>Plafond inutilizzato</strong>: 10.958,28€<br><br>
+Dal 2025 in poi, per i successivi 20 anni, Mario può dedurre fino a <strong>5.300€ + 548€ = 5.848€/anno</strong> (il plafond residuo spalmato su 20 anni), con un massimo extra di 2.650€/anno.<br>
+</div>
+
 <div class="tip">
-<strong>Consiglio:</strong> Anche se punti al FIRE, versa sempre i 5.300€ annui nel fondo pensione. Il risparmio fiscale in entrata (35-43%) supera enormemente la tassazione in uscita (9-15%). Usa la RITA come ponte tra il FIRE e la pensione INPS. È uno strumento progettato quasi su misura per i FIRE seeker italiani.
+<strong>Consiglio:</strong> Anche se punti al FIRE, versa sempre almeno i 5.300€ annui nel fondo pensione (o fino a 7.950€ se hai diritto all'extradeducibilità). Il risparmio fiscale in entrata (33-43%) supera enormemente la tassazione in uscita (9-15%). Usa la RITA come ponte tra il FIRE e la pensione INPS. È uno strumento progettato quasi su misura per i FIRE seeker italiani.
 </div>
 
 <div class="warning">
