@@ -111,6 +111,8 @@
 					taxRate: taxRate,
 					withdrawalRate: withdrawalRate,
 					withdrawalStrategy: withdrawalStrategy,
+					annualPension: (profile.pension?.estimatedMonthly || 0) * 13,
+					pensionAge: profile.pension?.pensionAge || 67,
 					currentAge: currentAge,
 					retirementAge: retirementAge,
 					lifeExpectancy: profile.lifeExpectancy,

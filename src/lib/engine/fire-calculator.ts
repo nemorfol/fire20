@@ -44,6 +44,10 @@ export interface ProjectionParams {
 	withdrawalRate: number;
 	/** Strategia di prelievo */
 	withdrawalStrategy?: 'fixed' | 'vpw' | 'guyton-klinger' | 'cape-based';
+	/** Pensione INPS annua lorda (13 mensilita) */
+	annualPension?: number;
+	/** Eta' di accesso alla pensione INPS */
+	pensionAge?: number;
 	/** Età attuale */
 	currentAge: number;
 	/** Età di pensionamento FIRE */
@@ -140,6 +144,8 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 		taxRate,
 		withdrawalRate,
 		withdrawalStrategy = 'fixed',
+		annualPension = 0,
+		pensionAge = 67,
 		currentAge,
 		retirementAge,
 		lifeExpectancy,
@@ -173,6 +179,9 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 			}
 			const yearsSinceRetirement = i - retirementYear;
 
+			// Pensione INPS: disponibile solo dopo l'eta' pensionabile
+			const pensionIncome = age >= pensionAge ? annualPension : 0;
+
 			actualWithdrawals = calculateWithdrawal(withdrawalStrategy, {
 				initialPortfolio: retirementPortfolio,
 				portfolio,
@@ -190,6 +199,9 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 					previousWithdrawal: previousWithdrawal || retirementPortfolio * withdrawalRate
 				} : undefined
 			});
+
+			// La pensione riduce quanto serve prelevare dal portafoglio
+			actualWithdrawals = Math.max(0, actualWithdrawals - pensionIncome);
 			previousWithdrawal = actualWithdrawals;
 		}
 
