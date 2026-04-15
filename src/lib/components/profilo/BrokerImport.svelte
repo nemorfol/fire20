@@ -33,10 +33,16 @@
 				if (!data) { errorMessage = 'Errore nella lettura del file.'; return; }
 				errorMessage = '';
 				successMessage = '';
-				parseResult = parseFinecoXLS(data);
-				if (!parseResult || parseResult.positions.length === 0) {
-					errorMessage = 'Nessuna posizione trovata nel file XLS. Verifica che sia un export di portafoglio Fineco.';
-					parseResult = null;
+				try {
+					parseResult = parseFinecoXLS(data);
+					console.log('[BrokerImport] XLS parse result:', JSON.stringify(parseResult, null, 2));
+					if (!parseResult || parseResult.positions.length === 0) {
+						errorMessage = 'Nessuna posizione trovata nel file XLS. Verifica che sia un export di portafoglio Fineco.';
+						parseResult = null;
+					}
+				} catch (err) {
+					console.error('[BrokerImport] XLS parse error:', err);
+					errorMessage = 'Errore nel parsing del file XLS: ' + (err instanceof Error ? err.message : String(err));
 				}
 			};
 			reader.readAsArrayBuffer(file);
