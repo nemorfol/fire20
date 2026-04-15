@@ -194,7 +194,7 @@ Per ogni dataset: grafici a barre (verde/rosso), [B]rendimenti rolling[/B] (1, 5
 
 [B]Calcoli e Simulazioni:[/B] Asset allocation, regola del 4%, strategie avanzate, Monte Carlo, rischio sequenza rendimenti, inflazione
 
-[B]Fiscalita' Italiana:[/B] Tassazione investimenti (26%/12.5%), fondi pensione e TFR (deducibilita' 5.300 EUR, tassazione agevolata 9-15%), pensione INPS (contributivo, coefficienti trasformazione), gap pensionistico, ottimizzazione fiscale del prelievo
+[B]Fiscalita' Italiana:[/B] Tassazione investimenti (26%/12.5%), fondi pensione e TFR (deducibilita' ordinaria 5.300 EUR + extradeducibilita' 2.650 EUR per post-2007, tassazione agevolata 9-15%), pensione INPS (contributivo, coefficienti trasformazione), gap pensionistico, ottimizzazione fiscale del prelievo
 
 [B]Strategie Avanzate:[/B] Scenari di rischio, immobili nel piano FIRE (IMU, cedolare secca), debiti e mutuo, monitoraggio e ribilanciamento
 
@@ -248,7 +248,7 @@ L'app modella in dettaglio il sistema fiscale italiano:
 [/TR]
 [TR]
 [TD][B]Fondi pensione[/B][/TD]
-[TD]Deducibilita' 5.300 EUR/anno, rendimenti 20%, prestazioni 9-15%[/TD]
+[TD]Deducibilita' 5.300 EUR/anno (ordinaria). Per nuovi lavoratori post-2007: extradeducibilita' fino a 2.650 EUR/anno aggiuntivi (totale max 7.950 EUR). Rendimenti tassati 20%, prestazioni 9-15%[/TD]
 [/TR]
 [TR]
 [TD][B]TFR[/B][/TD]
@@ -363,6 +363,11 @@ Aprite [URL='http://localhost:5173']http://localhost:5173[/URL] nel browser. Req
 [TD][B]Calcolatore Pensione INPS avanzato[/B][/TD]
 [TD][COLOR=#22c55e]✓ Fatto[/COLOR][/TD]
 [TD]Montante contributivo, coefficienti trasformazione, pensione netta, RITA, gap pensionistico[/TD]
+[/TR]
+[TR]
+[TD][B]Extradeducibilita' fondo pensione[/B][/TD]
+[TD][COLOR=#22c55e]✓ Fatto[/COLOR][/TD]
+[TD]Calcolo automatico per nuovi lavoratori post-2007: plafond inutilizzato nei primi 5 anni, recuperabile nei 20 successivi fino a 2.650€/anno extra (max 7.950€/anno totali). Gestione periodo transitorio pre/post 2026[/TD]
 [/TR]
 [TR]
 [TD][B]Import estratto conto INPS[/B][/TD]
