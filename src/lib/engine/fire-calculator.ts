@@ -4,6 +4,8 @@
  * proiezioni del portafoglio e metriche correlate.
  */
 
+import { calculateWithdrawal } from './withdrawal';
+
 /** Proiezione anno per anno del portafoglio */
 export interface YearlyProjection {
 	/** Anno di calendario */
@@ -40,6 +42,8 @@ export interface ProjectionParams {
 	taxRate: number;
 	/** Tasso di prelievo (es. 0.04 per 4%) */
 	withdrawalRate: number;
+	/** Strategia di prelievo */
+	withdrawalStrategy?: 'fixed' | 'vpw' | 'guyton-klinger' | 'cape-based';
 	/** Età attuale */
 	currentAge: number;
 	/** Età di pensionamento FIRE */
@@ -135,6 +139,7 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 		inflationRate,
 		taxRate,
 		withdrawalRate,
+		withdrawalStrategy = 'fixed',
 		currentAge,
 		retirementAge,
 		lifeExpectancy,
@@ -146,6 +151,9 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 
 	const projections: YearlyProjection[] = [];
 	let portfolio = initialPortfolio;
+	let retirementPortfolio = 0; // portafoglio al momento del pensionamento
+	let previousWithdrawal = 0;
+	let retirementYear = 0; // anno (0-based) di inizio pensione
 
 	for (let i = 0; i < totalYears; i++) {
 		const age = currentAge + i + 1;
@@ -155,10 +163,35 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 		// Contributi (solo in fase di accumulazione)
 		const contributions = isRetired ? 0 : annualContribution;
 
-		// Prelievi (solo in fase di decumulo), aggiustati per inflazione
-		const inflationFactor = Math.pow(1 + inflationRate, i);
-		// Prelievi aggiustati per inflazione
-		const actualWithdrawals = isRetired ? annualExpenses * inflationFactor : 0;
+		// Prelievi (solo in fase di decumulo)
+		let actualWithdrawals = 0;
+		if (isRetired) {
+			// Salva il portafoglio al primo anno di pensione
+			if (retirementPortfolio === 0) {
+				retirementPortfolio = portfolio;
+				retirementYear = i;
+			}
+			const yearsSinceRetirement = i - retirementYear;
+
+			actualWithdrawals = calculateWithdrawal(withdrawalStrategy, {
+				initialPortfolio: retirementPortfolio,
+				portfolio,
+				rate: withdrawalRate,
+				inflationRate,
+				year: yearsSinceRetirement,
+				age,
+				lifeExpectancy,
+				guytonKlinger: withdrawalStrategy === 'guyton-klinger' ? {
+					portfolio,
+					initialWithdrawal: retirementPortfolio * withdrawalRate,
+					initialRate: withdrawalRate,
+					inflationRate,
+					year: yearsSinceRetirement,
+					previousWithdrawal: previousWithdrawal || retirementPortfolio * withdrawalRate
+				} : undefined
+			});
+			previousWithdrawal = actualWithdrawals;
+		}
 
 		// Rendimenti lordi
 		const grossReturns = (portfolio + contributions) * expectedReturn;

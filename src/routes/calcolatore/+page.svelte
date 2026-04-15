@@ -53,10 +53,18 @@
 
 	let netWorth = $derived(profile ? calculateNetWorth(profile.portfolio as unknown as Record<string, number>) : 0);
 
-	let annualSavings = $derived(
+	let monthlyContributionsTotal = $derived(
 		profile
 			? Object.values(profile.monthlyContributions).reduce((s, v) => s + (v || 0), 0) * 12
 			: 0
+	);
+
+	// I contributi non possono superare il reddito disponibile (reddito - spese)
+	let totalIncome = $derived(profile ? (profile.annualIncome || 0) + (profile.otherIncome || 0) : 0);
+	let annualSavings = $derived(
+		totalIncome > 0
+			? Math.min(monthlyContributionsTotal, Math.max(0, totalIncome - (profile?.annualExpenses || 0)))
+			: monthlyContributionsTotal
 	);
 
 	let yearsToFire = $derived(
@@ -102,6 +110,7 @@
 					inflationRate: inflationRate / 100,
 					taxRate: taxRate,
 					withdrawalRate: withdrawalRate,
+					withdrawalStrategy: withdrawalStrategy,
 					currentAge: currentAge,
 					retirementAge: retirementAge,
 					lifeExpectancy: profile.lifeExpectancy,
