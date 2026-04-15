@@ -42,7 +42,7 @@ Tutti i calcoli avvengono nel browser. I dati finanziari restano sul dispositivo
 ### Fiscalita' Italiana
 - IRPEF 2026 (23% / 33% / 43%)
 - Capital gains: 26% azioni/ETF, 12.5% titoli di stato
-- Fondi pensione: deducibilita' 5.164,57 EUR, rendimenti al 20%, prestazioni 9-15%
+- Fondi pensione: deducibilita' 5.300 EUR, rendimenti al 20%, prestazioni 9-15%
 - Calcolo TFR con rivalutazione
 - Pensione INPS contributiva con coefficienti di trasformazione
 - Gap pensionistico (da FIRE a eta' pensionabile)

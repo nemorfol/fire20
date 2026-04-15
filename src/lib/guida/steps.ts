@@ -82,7 +82,7 @@ export const guideSteps: GuideStep[] = [
 <ul>
 <li><strong>Costo della vita</strong> più basso rispetto a Nord Europa e USA, specialmente fuori dalle grandi città</li>
 <li><strong>Sanità pubblica</strong> che riduce enormemente i costi sanitari rispetto agli USA</li>
-<li><strong>Fondi pensione</strong> con vantaggi fiscali eccezionali (deducibilità fino a 5.164,57€)</li>
+<li><strong>Fondi pensione</strong> con vantaggi fiscali eccezionali (deducibilità fino a 5.300€)</li>
 <li><strong>Qualità della vita</strong> — clima, cibo, cultura — che rende il LeanFIRE molto più piacevole</li>
 </ul>
 
@@ -921,7 +921,7 @@ Per compensare, dovresti vendere un'azione o un'obbligazione singola con 5.000�
 <h3>I Tre Vantaggi Fiscali</h3>
 
 <h3>1. Deducibilità dei Contributi</h3>
-<p>I contributi al fondo pensione (fino a <strong>5.164,57€ annui</strong>) sono deducibili dal reddito imponibile IRPEF. Il risparmio fiscale dipende dalla tua aliquota marginale:</p>
+<p>I contributi al fondo pensione (fino a <strong>5.300€ annui</strong>) sono deducibili dal reddito imponibile IRPEF. Il risparmio fiscale dipende dalla tua aliquota marginale:</p>
 <ul>
 <li>Aliquota marginale <strong>23%</strong> (redditi fino a 28.000€): risparmi <strong>1.188€/anno</strong></li>
 <li>Aliquota marginale <strong>35%</strong> (redditi 28.000-50.000€): risparmi <strong>1.808€/anno</strong></li>
@@ -978,7 +978,7 @@ Contributo annuo: 5.165€. Aliquota marginale: 35%.<br><br>
 </ul>
 
 <div class="tip">
-<strong>Consiglio:</strong> Anche se punti al FIRE, versa sempre i 5.164,57€ annui nel fondo pensione. Il risparmio fiscale in entrata (35-43%) supera enormemente la tassazione in uscita (9-15%). Usa la RITA come ponte tra il FIRE e la pensione INPS. È uno strumento progettato quasi su misura per i FIRE seeker italiani.
+<strong>Consiglio:</strong> Anche se punti al FIRE, versa sempre i 5.300€ annui nel fondo pensione. Il risparmio fiscale in entrata (35-43%) supera enormemente la tassazione in uscita (9-15%). Usa la RITA come ponte tra il FIRE e la pensione INPS. È uno strumento progettato quasi su misura per i FIRE seeker italiani.
 </div>
 
 <div class="warning">
@@ -1154,7 +1154,7 @@ Se le tue spese sono 2.000€/mese, la RITA copre il 67%! Il portafoglio deve co
 </ul>
 
 <div class="tip">
-<strong>Consiglio:</strong> Pianifica il gap anni in anticipo. Massimizza i versamenti al fondo pensione durante la fase lavorativa (5.164,57€/anno) per avere una RITA robusta. E considera che durante il gap avrai comunque accesso alla sanità pubblica (SSN) — non serve un'assicurazione sanitaria privata come negli USA.
+<strong>Consiglio:</strong> Pianifica il gap anni in anticipo. Massimizza i versamenti al fondo pensione durante la fase lavorativa (5.300€/anno) per avere una RITA robusta. E considera che durante il gap avrai comunque accesso alla sanità pubblica (SSN) — non serve un'assicurazione sanitaria privata come negli USA.
 </div>
 
 <div class="warning">
@@ -1600,7 +1600,7 @@ Ma il rendimento del 5% non è garantito. In scenari sfavorevoli, l'Opzione A po
 <h3>Fiscalità e Previdenza</h3>
 <ul>
 <li>☐ <strong>Strategia di prelievo definita</strong> — Sai da quali conti prelevare e in quale ordine per ottimizzare le tasse</li>
-<li>☐ <strong>Fondo pensione massimizzato</strong> — Hai versato i 5.164,57€/anno per il numero massimo di anni possibile. Piano RITA definito.</li>
+<li>☐ <strong>Fondo pensione massimizzato</strong> — Hai versato i 5.300€/anno per il numero massimo di anni possibile. Piano RITA definito.</li>
 <li>☐ <strong>Contributi INPS verificati</strong> — Estratto conto contributivo aggiornato. Requisito minimo di 20 anni raggiunto (o piano per raggiungerlo con versamenti volontari)</li>
 <li>☐ <strong>Pensione INPS stimata</strong> — Sai quanto riceverai e quando, con un margine conservativo del -15%</li>
 <li>☐ <strong>Piano di Gap</strong> — Hai un piano chiaro per gli anni tra FIRE e pensione INPS (portafoglio + RITA + eventuale reddito part-time)</li>

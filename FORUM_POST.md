@@ -158,7 +158,7 @@ Per ogni dataset: grafici a barre (verde/rosso), **rendimenti rolling** (1, 5, 1
 
 **Calcoli e Simulazioni:** Asset allocation, regola del 4%, strategie avanzate, Monte Carlo, rischio sequenza rendimenti, inflazione
 
-**Fiscalita' Italiana:** Tassazione investimenti (26%/12.5%), fondi pensione e TFR (deducibilita' 5.164,57 EUR, tassazione agevolata 9-15%), pensione INPS (contributivo, coefficienti trasformazione), gap pensionistico, ottimizzazione fiscale del prelievo
+**Fiscalita' Italiana:** Tassazione investimenti (26%/12.5%), fondi pensione e TFR (deducibilita' 5.300 EUR, tassazione agevolata 9-15%), pensione INPS (contributivo, coefficienti trasformazione), gap pensionistico, ottimizzazione fiscale del prelievo
 
 **Strategie Avanzate:** Scenari di rischio, immobili nel piano FIRE (IMU, cedolare secca), debiti e mutuo, monitoraggio e ribilanciamento
 
@@ -192,7 +192,7 @@ L'app modella in dettaglio il sistema fiscale italiano:
 | **IRPEF 2026** | 23% fino a 28.000, 33% da 28.001 a 50.000, 43% oltre |
 | **Capital gains azioni/ETF** | 26% |
 | **Capital gains BTP/titoli stato** | 12.5% |
-| **Fondi pensione** | Deducibilita' 5.164,57 EUR/anno, rendimenti 20%, prestazioni 9-15% |
+| **Fondi pensione** | Deducibilita' 5.300 EUR/anno, rendimenti 20%, prestazioni 9-15% |
 | **TFR** | Stipendio/13.5, rivalutazione 1.5% + 75% inflazione |
 | **Pensione INPS** | Contributivo, coefficienti da 4.186% (57 anni) a 6.466% (71 anni) |
 | **Ordine prelievo ottimale** | Conto titoli (26%) -> Fondo pensione (9-15%) -> BTP (12.5%) |

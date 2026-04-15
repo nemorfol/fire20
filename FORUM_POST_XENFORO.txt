@@ -194,7 +194,7 @@ Per ogni dataset: grafici a barre (verde/rosso), [B]rendimenti rolling[/B] (1, 5
 
 [B]Calcoli e Simulazioni:[/B] Asset allocation, regola del 4%, strategie avanzate, Monte Carlo, rischio sequenza rendimenti, inflazione
 
-[B]Fiscalita' Italiana:[/B] Tassazione investimenti (26%/12.5%), fondi pensione e TFR (deducibilita' 5.164,57 EUR, tassazione agevolata 9-15%), pensione INPS (contributivo, coefficienti trasformazione), gap pensionistico, ottimizzazione fiscale del prelievo
+[B]Fiscalita' Italiana:[/B] Tassazione investimenti (26%/12.5%), fondi pensione e TFR (deducibilita' 5.300 EUR, tassazione agevolata 9-15%), pensione INPS (contributivo, coefficienti trasformazione), gap pensionistico, ottimizzazione fiscale del prelievo
 
 [B]Strategie Avanzate:[/B] Scenari di rischio, immobili nel piano FIRE (IMU, cedolare secca), debiti e mutuo, monitoraggio e ribilanciamento
 
@@ -248,7 +248,7 @@ L'app modella in dettaglio il sistema fiscale italiano:
 [/TR]
 [TR]
 [TD][B]Fondi pensione[/B][/TD]
-[TD]Deducibilita' 5.164,57 EUR/anno, rendimenti 20%, prestazioni 9-15%[/TD]
+[TD]Deducibilita' 5.300 EUR/anno, rendimenti 20%, prestazioni 9-15%[/TD]
 [/TR]
 [TR]
 [TD][B]TFR[/B][/TD]

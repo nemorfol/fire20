@@ -142,7 +142,7 @@ export function calculateCapitalGainsTax(
  * Calcola la tassazione del fondo pensione complementare italiano.
  *
  * Regole:
- * - Contributi deducibili fino a 5.164,57€/anno
+ * - Contributi deducibili fino a 5.300€/anno (dal 2026, Legge di Bilancio 2026)
  * - Rendimenti tassati al 20% (12.5% sulla quota investita in titoli di stato)
  * - Prestazione finale tassata al 15%, ridotta dello 0.3% per ogni anno oltre il 15°,
  *   fino a un minimo del 9% (dopo 35 anni di partecipazione)
@@ -156,7 +156,7 @@ export function calculatePensionFundTax(
 	years: number
 ): PensionFundTaxResult {
 	// Deduzione massima annuale
-	const maxDeduction = 5164.57;
+	const maxDeduction = 5300;
 	const contributionDeduction = Math.min(contributions, maxDeduction);
 
 	// Tassazione sui rendimenti: 20% (aliquota standard)
