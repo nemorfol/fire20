@@ -1,0 +1,334 @@
+[SIZE=6][B][OPEN SOURCE] FIRE Planner - App web gratuita per pianificare l'indipendenza finanziaria (con fiscalita' italiana)[/B][/SIZE]
+
+Ciao a tutti,
+
+vi presento [B]FIRE Planner[/B], un'applicazione web gratuita e open source che ho sviluppato per pianificare il percorso verso l'indipendenza finanziaria (FIRE - Financial Independence, Retire Early), pensata [B]specificamente per il contesto italiano[/B] (fiscalita', INPS, TFR, fondi pensione).
+
+L'app e' completamente gratuita, non richiede registrazione, e [B]tutti i dati restano nel vostro browser[/B] (IndexedDB). Nessun dato viene inviato a server esterni. Privacy totale.
+
+[B]Repository GitHub:[/B] [URL='https://github.com/nemorfol/fire20']https://github.com/nemorfol/fire20[/URL]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=5][B]Cosa fa in sintesi[/B][/SIZE]
+
+E' un simulatore/pianificatore FIRE completo che vi permette di:
+[LIST]
+[*]Calcolare il vostro [B]FIRE Number[/B] e gli anni mancanti al FIRE
+[*]Eseguire [B]simulazioni Monte Carlo[/B] (fino a 100.000 iterazioni) con dati storici reali
+[*]Testare [B]scenari di rischio[/B] (crash di mercato, inflazione alta, problemi sanitari, ecc.)
+[*]Ottimizzare la [B]fiscalita' italiana[/B] del prelievo in fase di decumulo
+[*]Confrontare [B]4 strategie di prelievo[/B] diverse (4%, VPW, Guyton-Klinger, CAPE-based)
+[*]Esplorare [B]dati storici[/B] dal 1928 ad oggi con grafici interattivi
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=5][B]Le 10 sezioni dell'app in dettaglio[/B][/SIZE]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=4][B][COLOR=#3b82f6]1. DASHBOARD[/COLOR][/B][/SIZE]
+
+Vista d'insieme con patrimonio netto, FIRE Number, progresso verso il FIRE (%), anni rimanenti, tasso di risparmio. Grafico proiezione del patrimonio e pie chart dell'asset allocation.
+
+[IMG]https://raw.githubusercontent.com/nemorfol/fire20/main/screenshots/01-dashboard.png[/IMG]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=4][B][COLOR=#3b82f6]2. PROFILO FINANZIARIO[/COLOR][/B][/SIZE]
+
+Form completo a 6 schede per inserire la propria situazione:
+[LIST]
+[*][B]Dati Personali[/B]: anno di nascita, eta' pensionamento desiderato, aspettativa di vita
+[*][B]Reddito[/B]: reddito netto annuo, crescita attesa, entrate extra
+[*][B]Spese[/B]: spese annuali correnti, spese stimate in FIRE, inflazione personale
+[*][B]Patrimonio[/B]: 9 classi di asset (azioni, obbligazioni, liquidita', immobili, oro, crypto, fondo pensione, TFR, altro) + contributi mensili per ciascuna
+[*][B]Debiti[/B]: lista dinamica con importo, tasso, rata, durata residua
+[*][B]Pensione[/B]: anni di contributi, stima pensione INPS, eta' pensionabile
+[/LIST]
+
+Supporta [B]profili multipli[/B] (es. "Scenario base", "Scenario aggressivo"). Salvataggio automatico.
+
+[IMG]https://raw.githubusercontent.com/nemorfol/fire20/main/screenshots/02-profilo.png[/IMG]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=4][B][COLOR=#3b82f6]3. CALCOLATORE FIRE[/COLOR][/B][/SIZE]
+
+Il cuore dell'app:
+[LIST]
+[*][B]FIRE Number[/B] prominente con calcolo esplicito (Spese Annuali / SWR)
+[*][B]6 metriche chiave[/B]: FIRE Number, Anni al FIRE, Coast FIRE, Tasso di Risparmio, Gap da colmare, Reddito mensile stimato in FIRE
+[*][B]4 strategie di prelievo[/B] selezionabili con spiegazione:
+[LIST]
+[*][B]Regola del 4%[/B] - classica, aggiustata per inflazione
+[*][B]VPW[/B] - Variable Percentage Withdrawal (percentuale variabile per eta')
+[*][B]Guyton-Klinger Guardrails[/B] - taglia 10% se SWR sale troppo, aumenta 10% se scende
+[*][B]CAPE-Based[/B] - adattiva alle valutazioni di mercato: portfolio × (2% + 0.5/CAPE)
+[/LIST]
+[*][B]Parametri regolabili[/B] con slider: SWR (1-8%), rendimento atteso, inflazione, aliquota fiscale
+[*][B]Grafico proiezione[/B] interattivo con fase di accumulazione e decumulo
+[*][B]Tabella anno per anno[/B]: patrimonio, contributi, rendimenti, prelievi, tasse
+[*][B]Ottimizzatore fiscale[/B]: ordine ottimale di prelievo (conto titoli 26% → fondo pensione 9-15% → BTP 12.5%)
+[/LIST]
+
+[IMG]https://raw.githubusercontent.com/nemorfol/fire20/main/screenshots/03-calcolatore.png[/IMG]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=4][B][COLOR=#3b82f6]4. SIMULAZIONE MONTE CARLO[/COLOR][/B][/SIZE]
+
+La funzionalita' piu' avanzata. Esegue migliaia di simulazioni con rendimenti casuali:
+[LIST]
+[*][B]Fino a 100.000 iterazioni[/B] eseguite in un Web Worker (l'interfaccia non si blocca)
+[*][B]3 modalita'[/B]:
+[LIST]
+[*]Parametrica (distribuzione log-normale)
+[*]Bootstrap storico (campiona rendimenti reali S&P 500 dal 1928)
+[*]Block Bootstrap (preserva l'autocorrelazione dei mercati)
+[/LIST]
+[*][B]Risultati[/B]:
+[LIST]
+[*][B]Tasso di successo[/B] - % simulazioni senza esaurimento portafoglio
+[*][B]Fan chart[/B] con bande P5-P95 (dal pessimista all'ottimista)
+[*][B]Istogramma[/B] distribuzione dei valori finali
+[*][B]Tabella percentili[/B] per decennio
+[*]Dettaglio scenario peggiore / mediano / migliore
+[/LIST]
+[*]Salvataggio risultati e confronto tra simulazioni diverse
+[/LIST]
+
+[IMG]https://raw.githubusercontent.com/nemorfol/fire20/main/screenshots/04-simulazione.png[/IMG]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=4][B][COLOR=#3b82f6]5. SCENARI SALVATI[/COLOR][/B][/SIZE]
+
+Gestione e confronto tra piani diversi:
+[LIST]
+[*]Creare scenari con parametri diversi (es. "SWR 3.5% + 80% azioni" vs "SWR 4% + 60% azioni")
+[*][B]Confronto side-by-side[/B] fino a 4 scenari con grafici sovrapposti
+[*]Duplica e modifica scenari esistenti
+[/LIST]
+
+[IMG]https://raw.githubusercontent.com/nemorfol/fire20/main/screenshots/05-scenari.png[/IMG]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=4][B][COLOR=#3b82f6]6. SCENARI DI RISCHIO (STRESS TEST)[/COLOR][/B][/SIZE]
+
+Testa la resilienza del tuo piano contro eventi avversi. [B]8 scenari predefiniti[/B]:
+
+[TABLE]
+[TR]
+[TH]Scenario[/TH]
+[TH]Impatto[/TH]
+[/TR]
+[TR]
+[TD]Crisi sanitaria grave[/TD]
+[TD]Spese +40%, durata 3 anni[/TD]
+[/TR]
+[TR]
+[TD]Crash di mercato[/TD]
+[TD]Portafoglio -40%[/TD]
+[/TR]
+[TR]
+[TD]Inflazione elevata persistente[/TD]
+[TD]+5% extra per 5 anni[/TD]
+[/TR]
+[TR]
+[TD]Shock geopolitico[/TD]
+[TD]Portafoglio -25%, inflazione +3%[/TD]
+[/TR]
+[TR]
+[TD]Sequenza rendimenti negativi[/TD]
+[TD]5 anni peggiori all'inizio del FIRE[/TD]
+[/TR]
+[TR]
+[TD]Perdita lavoro pre-FIRE[/TD]
+[TD]Reddito 0 per 12 mesi[/TD]
+[/TR]
+[TR]
+[TD]Divorzio[/TD]
+[TD]Patrimonio -50%[/TD]
+[/TR]
+[TR]
+[TD]Longevita' estrema[/TD]
+[TD]Vivere fino a 100 anni[/TD]
+[/TR]
+[/TABLE]
+
+Puoi anche creare [B]scenari personalizzati[/B] e confrontare l'impatto su grafico sovrapposto (before vs after).
+
+[IMG]https://raw.githubusercontent.com/nemorfol/fire20/main/screenshots/06-rischi.png[/IMG]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=4][B][COLOR=#3b82f6]7. DATI STORICI[/COLOR][/B][/SIZE]
+
+Esplorazione interattiva di rendimenti storici con grafici:
+[LIST]
+[*][B]S&P 500[/B] Total Return (1928-2024, 97 anni di dati)
+[*][B]Obbligazioni USA[/B] 10Y Treasury (1928-2024)
+[*][B]Oro[/B] (1971-2024)
+[*][B]Inflazione USA[/B] (1928-2024)
+[*][B]Inflazione Italia[/B] (1960-2024, dati ISTAT)
+[*][B]Azioni internazionali[/B] MSCI World ex-USA (1970-2024)
+[*][B]Shiller CAPE Ratio[/B] (1881-2024)
+[/LIST]
+
+Per ogni dataset: grafici a barre (verde/rosso), [B]rendimenti rolling[/B] (1, 5, 10, 20 anni), [B]heatmap correlazioni[/B] tra asset, istogramma distribuzione, statistiche (media, dev. standard, Sharpe).
+
+[IMG]https://raw.githubusercontent.com/nemorfol/fire20/main/screenshots/07-dati-storici.png[/IMG]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=4][B][COLOR=#3b82f6]8. GUIDA INTERATTIVA[/COLOR][/B][/SIZE]
+
+20 capitoli dalla A alla Z del FIRE, con [B]focus specifico sulla fiscalita' e previdenza italiana[/B]:
+
+[B]Fondamenti:[/B] Cos'e' il FIRE, profilo finanziario, FIRE Number, tasso di risparmio
+
+[B]Calcoli e Simulazioni:[/B] Asset allocation, regola del 4%, strategie avanzate, Monte Carlo, rischio sequenza rendimenti, inflazione
+
+[B]Fiscalita' Italiana:[/B] Tassazione investimenti (26%/12.5%), fondi pensione e TFR (deducibilita' 5.164,57 EUR, tassazione agevolata 9-15%), pensione INPS (contributivo, coefficienti trasformazione), gap pensionistico, ottimizzazione fiscale del prelievo
+
+[B]Strategie Avanzate:[/B] Scenari di rischio, immobili nel piano FIRE (IMU, cedolare secca), debiti e mutuo, monitoraggio e ribilanciamento
+
+[B]Preparazione Finale:[/B] Checklist completa pre-FIRE
+
+Ogni capitolo ha esempi pratici con numeri reali italiani, consigli, avvertenze, e link alla sezione dell'app correlata.
+
+[IMG]https://raw.githubusercontent.com/nemorfol/fire20/main/screenshots/08-guida.png[/IMG]
+
+[IMG]https://raw.githubusercontent.com/nemorfol/fire20/main/screenshots/09-guida-step.png[/IMG]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=4][B][COLOR=#3b82f6]9. IMPOSTAZIONI / IMPORT-EXPORT[/COLOR][/B][/SIZE]
+
+[LIST]
+[*]Export profili e scenari in JSON
+[*]Export risultati simulazioni in CSV (apribile in Excel)
+[*]Backup completo e ripristino
+[*]Cancellazione selettiva dati
+[/LIST]
+
+[IMG]https://raw.githubusercontent.com/nemorfol/fire20/main/screenshots/10-impostazioni.png[/IMG]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=5][B][COLOR=#22c55e]Fiscalita' italiana integrata[/COLOR][/B][/SIZE]
+
+L'app modella in dettaglio il sistema fiscale italiano:
+
+[TABLE]
+[TR]
+[TH]Voce[/TH]
+[TH]Dettaglio[/TH]
+[/TR]
+[TR]
+[TD][B]IRPEF 2026[/B][/TD]
+[TD]23% fino a 28.000 EUR, 33% da 28.001 a 50.000, 43% oltre[/TD]
+[/TR]
+[TR]
+[TD][B]Capital gains azioni/ETF[/B][/TD]
+[TD]26%[/TD]
+[/TR]
+[TR]
+[TD][B]Capital gains BTP/titoli stato[/B][/TD]
+[TD]12.5%[/TD]
+[/TR]
+[TR]
+[TD][B]Fondi pensione[/B][/TD]
+[TD]Deducibilita' 5.164,57 EUR/anno, rendimenti 20%, prestazioni 9-15%[/TD]
+[/TR]
+[TR]
+[TD][B]TFR[/B][/TD]
+[TD]Stipendio/13.5, rivalutazione 1.5% + 75% inflazione[/TD]
+[/TR]
+[TR]
+[TD][B]Pensione INPS[/B][/TD]
+[TD]Contributivo, coefficienti da 4.186% (57 anni) a 6.466% (71 anni)[/TD]
+[/TR]
+[TR]
+[TD][B]Ordine prelievo ottimale[/B][/TD]
+[TD]Conto titoli (26%) → Fondo pensione (9-15%) → BTP (12.5%)[/TD]
+[/TR]
+[/TABLE]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=5][B]Aspetti tecnici[/B][/SIZE]
+
+[SPOILER="Clicca per i dettagli tecnici"]
+
+[B]Stack tecnologico:[/B]
+[LIST]
+[*][B]SvelteKit 2.57 + Svelte 5[/B] (runes mode) - Framework web moderno e velocissimo
+[*][B]Tailwind CSS 4.2 + Flowbite-Svelte[/B] - UI responsive e componenti pronti
+[*][B]Apache ECharts 6.0[/B] - Grafici finanziari interattivi (fan chart, heatmap, proiezioni)
+[*][B]Dexie.js 4.4[/B] - Database locale IndexedDB (i dati restano nel browser)
+[*][B]jStat 1.9[/B] - Distribuzioni statistiche per Monte Carlo
+[*][B]Web Workers[/B] - Le simulazioni pesanti girano in un thread separato
+[*][B]PapaParse 5.5[/B] - Import/export CSV
+[/LIST]
+
+[B]Numeri:[/B]
+[LIST]
+[*]71 file sorgente (44 componenti Svelte + 27 moduli TypeScript)
+[*]14.709 righe di codice
+[*]10 dataset storici embedded (dal 1881 al 2024)
+[*]Build statica pronta per Vercel/Netlify/GitHub Pages
+[/LIST]
+
+[B]Architettura:[/B]
+[LIST]
+[*]Tutto client-side, nessun server backend
+[*]I dati finanziari dell'utente non lasciano mai il browser
+[*]Compilato in file statici HTML/JS/CSS
+[*]Open source, licenza MIT
+[/LIST]
+
+[B]Repository:[/B] [URL='https://github.com/nemorfol/fire20']https://github.com/nemorfol/fire20[/URL]
+
+[/SPOILER]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=5][B]Come provarlo[/B][/SIZE]
+
+[CODE]
+git clone https://github.com/nemorfol/fire20.git
+cd fire20
+npm install
+npm run dev
+[/CODE]
+
+Aprite [URL='http://localhost:5173']http://localhost:5173[/URL] nel browser. Requisiti: Node.js 18+.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=5][B]Roadmap / idee future[/B][/SIZE]
+
+[LIST]
+[*]Deploy pubblico su Vercel (link diretto senza installazione)
+[*]PWA installabile su smartphone
+[*]Calcolo pensione INPS automatico da estratto conto
+[*]Integrazione API quotazioni in tempo reale
+[*]Export report PDF
+[*]Localizzazione multilingua
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=3][COLOR=#ef4444][B]Disclaimer[/B][/COLOR][/SIZE]
+
+[I]Questa applicazione e' uno strumento educativo e di simulazione. [B]Non costituisce consulenza finanziaria.[/B] I dati storici non garantiscono rendimenti futuri. Consultate un professionista qualificato prima di prendere decisioni di investimento.[/I]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Feedback, suggerimenti, segnalazioni bug e contributi sono benvenuti! Aprite una issue su [URL='https://github.com/nemorfol/fire20/issues']GitHub[/URL] o rispondete qui nel thread.
+
+Spero possa essere utile a chi sta pianificando il proprio percorso FIRE in Italia! :)

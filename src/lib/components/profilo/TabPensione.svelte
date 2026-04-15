@@ -1,17 +1,24 @@
 <script lang="ts">
 	import CurrencyInput from '$lib/components/shared/CurrencyInput.svelte';
 	import YearSlider from '$lib/components/shared/YearSlider.svelte';
-	import { Label, Input } from 'flowbite-svelte';
+	import { Label, Input, Hr } from 'flowbite-svelte';
 	import type { PensionInfo } from '$lib/db/index';
+	import PensionCalculator from './PensionCalculator.svelte';
 
 	let {
 		pension = $bindable<PensionInfo>({
 			contributionYears: 0,
 			estimatedMonthly: 0,
 			pensionAge: 67
-		})
+		}),
+		birthYear = 1990,
+		retirementAge = 50,
+		annualExpenses = 20000
 	}: {
 		pension?: PensionInfo;
+		birthYear?: number;
+		retirementAge?: number;
+		annualExpenses?: number;
 	} = $props();
 
 	let annualPension = $derived(pension.estimatedMonthly * 13);
@@ -57,4 +64,8 @@
 			Pensione di vecchiaia: 67 anni. Anticipata: da 57 anni con requisiti contributivi.
 		</p>
 	</div>
+
+	<hr class="border-gray-200 dark:border-gray-700 my-6" />
+
+	<PensionCalculator {birthYear} {retirementAge} {annualExpenses} />
 </div>

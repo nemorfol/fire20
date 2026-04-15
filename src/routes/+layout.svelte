@@ -24,6 +24,7 @@
 		FireSolid
 	} from 'flowbite-svelte-icons';
 	import favicon from '$lib/assets/favicon.svg';
+	import { t } from '$lib/i18n/store.svelte';
 
 	let { children } = $props();
 
@@ -70,31 +71,31 @@
 		>
 			<SidebarWrapper class="py-2">
 				<SidebarGroup>
-					<SidebarItem label="Dashboard" href="/" active={isActive('/')} onclick={() => (sidebarOpen = false)}>
+					<SidebarItem label={t('nav.dashboard')} href="/" active={isActive('/')} onclick={() => (sidebarOpen = false)}>
 						{#snippet icon()}<HomeSolid class={iconClass} />{/snippet}
 					</SidebarItem>
-					<SidebarItem label="Profilo Finanziario" href="/profilo/" active={isActive('/profilo/')} onclick={() => (sidebarOpen = false)}>
+					<SidebarItem label={t('nav.profile')} href="/profilo/" active={isActive('/profilo/')} onclick={() => (sidebarOpen = false)}>
 						{#snippet icon()}<UserSolid class={iconClass} />{/snippet}
 					</SidebarItem>
-					<SidebarItem label="Calcolatore FIRE" href="/calcolatore/" active={isActive('/calcolatore/')} onclick={() => (sidebarOpen = false)}>
+					<SidebarItem label={t('nav.calculator')} href="/calcolatore/" active={isActive('/calcolatore/')} onclick={() => (sidebarOpen = false)}>
 						{#snippet icon()}<ChartMixedDollarSolid class={iconClass} />{/snippet}
 					</SidebarItem>
-					<SidebarItem label="Simulazione Monte Carlo" href="/simulazione/" active={isActive('/simulazione/')} onclick={() => (sidebarOpen = false)}>
+					<SidebarItem label={t('nav.simulation')} href="/simulazione/" active={isActive('/simulazione/')} onclick={() => (sidebarOpen = false)}>
 						{#snippet icon()}<ChartPieSolid class={iconClass} />{/snippet}
 					</SidebarItem>
-					<SidebarItem label="Scenari Salvati" href="/scenari/" active={isActive('/scenari/')} onclick={() => (sidebarOpen = false)}>
+					<SidebarItem label={t('nav.scenarios')} href="/scenari/" active={isActive('/scenari/')} onclick={() => (sidebarOpen = false)}>
 						{#snippet icon()}<FolderSolid class={iconClass} />{/snippet}
 					</SidebarItem>
-					<SidebarItem label="Scenari di Rischio" href="/rischi/" active={isActive('/rischi/')} onclick={() => (sidebarOpen = false)}>
+					<SidebarItem label={t('nav.risks')} href="/rischi/" active={isActive('/rischi/')} onclick={() => (sidebarOpen = false)}>
 						{#snippet icon()}<ShieldCheckSolid class={iconClass} />{/snippet}
 					</SidebarItem>
-					<SidebarItem label="Dati Storici" href="/dati-storici/" active={isActive('/dati-storici/')} onclick={() => (sidebarOpen = false)}>
+					<SidebarItem label={t('nav.history')} href="/dati-storici/" active={isActive('/dati-storici/')} onclick={() => (sidebarOpen = false)}>
 						{#snippet icon()}<FileChartBarSolid class={iconClass} />{/snippet}
 					</SidebarItem>
-					<SidebarItem label="Guida" href="/guida/" active={isActive('/guida/')} onclick={() => (sidebarOpen = false)}>
+					<SidebarItem label={t('nav.guide')} href="/guida/" active={isActive('/guida/')} onclick={() => (sidebarOpen = false)}>
 						{#snippet icon()}<BookOpenSolid class={iconClass} />{/snippet}
 					</SidebarItem>
-					<SidebarItem label="Impostazioni" href="/impostazioni/" active={isActive('/impostazioni/')} onclick={() => (sidebarOpen = false)}>
+					<SidebarItem label={t('nav.settings')} href="/impostazioni/" active={isActive('/impostazioni/')} onclick={() => (sidebarOpen = false)}>
 						{#snippet icon()}<CogSolid class={iconClass} />{/snippet}
 					</SidebarItem>
 				</SidebarGroup>

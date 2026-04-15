@@ -34,6 +34,7 @@
 	import { formatCurrency, formatPercent, formatCompact, formatDate } from '$lib/utils/format';
 	import StatCard from '$lib/components/shared/StatCard.svelte';
 	import EChart from '$lib/components/simulazione/EChart.svelte';
+	import MarketTicker from '$lib/components/dashboard/MarketTicker.svelte';
 
 	let profile = $state<Profile | undefined>(undefined);
 	let loading = $state(true);
@@ -282,6 +283,9 @@
 			{currentAge} anni
 		</Badge>
 	</div>
+
+	<!-- Market Ticker -->
+	<MarketTicker />
 
 	<!-- Summary Cards Grid -->
 	<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">

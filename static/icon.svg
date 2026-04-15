@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="51" fill="#111827"/>
+  <g transform="translate(256, 215.04) scale(1)">
+    <path d="M0,-180 C60,-120 100,-60 100,20 C100,80 60,140 0,160 C-60,140 -100,80 -100,20 C-100,-60 -60,-120 0,-180Z" fill="#f59e0b"/>
+    <path d="M0,-100 C35,-60 60,-20 60,30 C60,70 35,110 0,120 C-35,110 -60,70 -60,30 C-60,-20 -35,-60 0,-100Z" fill="#ef4444"/>
+    <path d="M0,-40 C18,-20 30,5 30,30 C30,55 18,75 0,80 C-18,75 -30,55 -30,30 C-30,5 -18,-20 0,-40Z" fill="#fbbf24"/>
+  </g>
+  <text x="256" y="419.84" font-family="Arial, Helvetica, sans-serif" font-size="77" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">FIRE</text>
+  <text x="256" y="471.04" font-family="Arial, Helvetica, sans-serif" font-size="39" fill="#9ca3af" text-anchor="middle" dominant-baseline="middle">PLANNER</text>
+</svg>

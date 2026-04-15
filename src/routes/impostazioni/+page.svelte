@@ -9,20 +9,33 @@
 		Fileupload,
 		Alert,
 		Badge,
-		Modal
+		Modal,
+		Radio
 	} from 'flowbite-svelte';
 	import {
 		ArrowDownToBracketOutline,
 		TrashBinSolid,
 		InfoCircleSolid,
-		ExclamationCircleSolid
+		ExclamationCircleSolid,
+		FilePdfSolid
 	} from 'flowbite-svelte-icons';
 	import Papa from 'papaparse';
 	import { db } from '$lib/db/index';
 	import type { Profile } from '$lib/db/index';
 	import { getAllProfiles } from '$lib/db/profiles';
+	import { generateFireReport } from '$lib/utils/pdf-export';
 	import { getAllScenarios } from '$lib/db/scenarios';
 	import { getAllResults } from '$lib/db/results';
+	import { t } from '$lib/i18n/store.svelte';
+	import { getLocale, setLocale } from '$lib/i18n/store.svelte';
+	import { locales, type Locale } from '$lib/i18n/index';
+
+	let selectedLocale = $state<Locale>(getLocale());
+
+	function handleLocaleChange(locale: Locale) {
+		selectedLocale = locale;
+		setLocale(locale);
+	}
 
 	// State
 	let profileCount = $state(0);
@@ -85,6 +98,20 @@
 	}
 
 	// === Exports ===
+
+	async function exportPdfReport() {
+		try {
+			const profiles = await getAllProfiles();
+			if (profiles.length === 0) {
+				notify('Nessun profilo disponibile per il report PDF.', 'warning');
+				return;
+			}
+			generateFireReport(profiles[0]);
+			notify('Report PDF generato con successo.');
+		} catch (e) {
+			notify('Errore durante la generazione del report PDF.', 'error');
+		}
+	}
 
 	async function exportProfiles() {
 		try {
@@ -312,6 +339,29 @@
 	</div>
 {/if}
 
+<!-- Language Selector -->
+<Card class="max-w-none mb-6">
+	<Heading tag="h3" class="mb-2">{t('settings.language')}</Heading>
+	<p class="text-sm text-gray-500 dark:text-gray-400 mb-4">{t('settings.chooseLanguage')}</p>
+	<div class="flex flex-wrap gap-4">
+		{#each locales as locale}
+			<button
+				type="button"
+				class="flex items-center gap-3 px-4 py-3 rounded-lg border-2 transition-colors cursor-pointer {selectedLocale === locale.code ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}"
+				onclick={() => handleLocaleChange(locale.code)}
+			>
+				<span class="text-2xl">{locale.flag}</span>
+				<span class="font-medium text-gray-900 dark:text-white">{locale.label}</span>
+				{#if selectedLocale === locale.code}
+					<svg class="w-5 h-5 text-primary-500" fill="currentColor" viewBox="0 0 20 20">
+						<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+					</svg>
+				{/if}
+			</button>
+		{/each}
+	</div>
+</Card>
+
 <!-- DB Stats -->
 <Card class="max-w-none mb-6">
 	<Heading tag="h3" class="mb-4">Stato del Database</Heading>
@@ -334,7 +384,7 @@
 <!-- Export Section -->
 <Card class="max-w-none mb-6">
 	<Heading tag="h3" class="mb-4">Esportazione Dati</Heading>
-	<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+	<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
 		<Button color="blue" onclick={exportProfiles}>
 			<ArrowDownToBracketOutline class="w-4 h-4 me-2" />
 			Esporta Profili (JSON)
@@ -350,6 +400,10 @@
 		<Button color="green" onclick={exportFullBackup}>
 			<ArrowDownToBracketOutline class="w-4 h-4 me-2" />
 			Backup Completo (JSON)
+		</Button>
+		<Button color="purple" onclick={exportPdfReport}>
+			<FilePdfSolid class="w-4 h-4 me-2" />
+			Esporta Report PDF
 		</Button>
 	</div>
 </Card>

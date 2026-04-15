@@ -365,7 +365,7 @@
 					</TabItem>
 					<TabItem title="Pensione">
 						<div class="pt-4">
-							<TabPensione bind:pension />
+							<TabPensione bind:pension {birthYear} {retirementAge} annualExpenses={fireExpenses} />
 						</div>
 					</TabItem>
 				</Tabs>
