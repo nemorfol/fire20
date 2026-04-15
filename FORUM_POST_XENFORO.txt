@@ -6,6 +6,8 @@ vi presento [B]FIRE Planner[/B], un'applicazione web gratuita e open source che 
 
 L'app e' completamente gratuita, non richiede registrazione, e [B]tutti i dati restano nel vostro browser[/B] (IndexedDB). Nessun dato viene inviato a server esterni. Privacy totale. [B]Installabile come app su smartphone[/B] (PWA) e funziona anche offline.
 
+[SIZE=5][COLOR=#22c55e]👉 [B][URL='https://fire20.vercel.app/']PROVALO SUBITO: fire20.vercel.app[/URL][/B][/COLOR][/SIZE]
+
 [B]Repository GitHub:[/B] [URL='https://github.com/nemorfol/fire20']https://github.com/nemorfol/fire20[/URL]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -307,13 +309,16 @@ L'app modella in dettaglio il sistema fiscale italiano:
 
 [SIZE=5][B]Come provarlo[/B][/SIZE]
 
+[SIZE=4][B]Modo 1 - Online (nessuna installazione):[/B][/SIZE]
+Andate su [B][URL='https://fire20.vercel.app/']https://fire20.vercel.app/[/URL][/B] e usatelo direttamente dal browser. Funziona su PC, tablet e smartphone. Su smartphone potete anche installarlo come app (PWA).
+
+[SIZE=4][B]Modo 2 - In locale (per sviluppatori):[/B][/SIZE]
 [CODE]
 git clone https://github.com/nemorfol/fire20.git
 cd fire20
 npm install
 npm run dev
 [/CODE]
-
 Aprite [URL='http://localhost:5173']http://localhost:5173[/URL] nel browser. Requisiti: Node.js 18+.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -353,15 +358,14 @@ Aprite [URL='http://localhost:5173']http://localhost:5173[/URL] nel browser. Req
 [/TR]
 [TR]
 [TD][B]Deploy Vercel[/B][/TD]
-[TD][COLOR=#22c55e]✓ Pronto[/COLOR][/TD]
-[TD]adapter-static + vercel.json configurati, basta importare il repo su Vercel[/TD]
+[TD][COLOR=#22c55e]✓ LIVE[/COLOR][/TD]
+[TD][URL='https://fire20.vercel.app/']fire20.vercel.app[/URL] - online e accessibile a tutti, nessuna installazione necessaria[/TD]
 [/TR]
 [/TABLE]
 
 [SIZE=5][B]Roadmap futura[/B][/SIZE]
 
 [LIST]
-[*]Deploy pubblico su Vercel con link diretto (senza necessita' di installazione locale)
 [*]Calcolo pensione INPS automatico da estratto conto contributivo
 [*]Grafici interattivi nell'export PDF
 [*]Notifiche push per ribilanciamento periodico
