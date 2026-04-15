@@ -178,27 +178,36 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 				retirementYear = i;
 			}
 			const yearsSinceRetirement = i - retirementYear;
+			const inflationFactor = Math.pow(1 + inflationRate, yearsSinceRetirement);
 
 			// Pensione INPS: disponibile solo dopo l'eta' pensionabile
 			const pensionIncome = age >= pensionAge ? annualPension : 0;
 
-			actualWithdrawals = calculateWithdrawal(withdrawalStrategy, {
-				initialPortfolio: retirementPortfolio,
-				portfolio,
-				rate: withdrawalRate,
-				inflationRate,
-				year: yearsSinceRetirement,
-				age,
-				lifeExpectancy,
-				guytonKlinger: withdrawalStrategy === 'guyton-klinger' ? {
+			if (withdrawalStrategy === 'fixed') {
+				// Regola del 4%: preleva le spese effettive aggiustate per inflazione.
+				// Il SWR serve a determinare il FIRE number, non l'importo del prelievo.
+				actualWithdrawals = annualExpenses * inflationFactor;
+			} else {
+				// Strategie dinamiche (VPW, CAPE, Guyton-Klinger):
+				// l'importo dipende dal portafoglio corrente, eta', ecc.
+				actualWithdrawals = calculateWithdrawal(withdrawalStrategy, {
+					initialPortfolio: retirementPortfolio,
 					portfolio,
-					initialWithdrawal: retirementPortfolio * withdrawalRate,
-					initialRate: withdrawalRate,
+					rate: withdrawalRate,
 					inflationRate,
 					year: yearsSinceRetirement,
-					previousWithdrawal: previousWithdrawal || retirementPortfolio * withdrawalRate
-				} : undefined
-			});
+					age,
+					lifeExpectancy,
+					guytonKlinger: withdrawalStrategy === 'guyton-klinger' ? {
+						portfolio,
+						initialWithdrawal: retirementPortfolio * withdrawalRate,
+						initialRate: withdrawalRate,
+						inflationRate,
+						year: yearsSinceRetirement,
+						previousWithdrawal: previousWithdrawal || retirementPortfolio * withdrawalRate
+					} : undefined
+				});
+			}
 
 			// La pensione riduce quanto serve prelevare dal portafoglio
 			actualWithdrawals = Math.max(0, actualWithdrawals - pensionIncome);
