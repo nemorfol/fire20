@@ -217,6 +217,8 @@ Ogni capitolo ha esempi pratici con numeri reali italiani, consigli, avvertenze,
 [*]Backup completo e ripristino
 [*]Cancellazione selettiva dati
 [*][B]Selettore lingua[/B] Italiano / English
+[*][B]Selettore valuta[/B] EUR / USD / CHF / GBP
+[*][B]Promemoria ribilanciamento[/B] con frequenza e soglia configurabili
 [/LIST]
 
 [IMG]https://raw.githubusercontent.com/nemorfol/fire20/main/screenshots/10-impostazioni.png[/IMG]
@@ -283,10 +285,11 @@ L'app modella in dettaglio il sistema fiscale italiano:
 
 [B]Numeri:[/B]
 [LIST]
-[*]~95 file sorgente (50+ componenti Svelte + 30+ moduli TypeScript)
-[*]~25.000 righe di codice
+[*]~110 file sorgente (55+ componenti Svelte + 35+ moduli TypeScript)
+[*]~27.000 righe di codice
 [*]10 dataset storici embedded (dal 1881 al 2024)
-[*]76 risorse precachate per uso offline (PWA)
+[*]8 benchmark FIRE internazionali
+[*]78 risorse precachate per uso offline (PWA)
 [*]Build statica pronta per Vercel/Netlify/GitHub Pages
 [/LIST]
 
@@ -323,7 +326,7 @@ Aprite [URL='http://localhost:5173']http://localhost:5173[/URL] nel browser. Req
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-[SIZE=5][B][COLOR=#22c55e]Feature gia' implementate (v1.1)[/COLOR][/B][/SIZE]
+[SIZE=5][B][COLOR=#22c55e]Feature implementate (v1.0 → v1.2)[/COLOR][/B][/SIZE]
 
 [TABLE]
 [TR]
@@ -334,27 +337,57 @@ Aprite [URL='http://localhost:5173']http://localhost:5173[/URL] nel browser. Req
 [TR]
 [TD][B]PWA installabile[/B][/TD]
 [TD][COLOR=#22c55e]✓ Fatto[/COLOR][/TD]
-[TD]App installabile su smartphone (Android/iOS), funziona offline con 76 risorse precachate[/TD]
+[TD]App installabile su smartphone (Android/iOS), funziona offline con 78 risorse precachate[/TD]
 [/TR]
 [TR]
-[TD][B]Export Report PDF[/B][/TD]
+[TD][B]Export Report PDF con grafici[/B][/TD]
 [TD][COLOR=#22c55e]✓ Fatto[/COLOR][/TD]
-[TD]Report finanziario A4 completo con jsPDF: 6 sezioni, formato EUR italiano[/TD]
+[TD]Report 3 pagine A4: dati finanziari + grafico proiezione portafoglio + asset allocation bar chart. Formato EUR italiano[/TD]
 [/TR]
 [TR]
 [TD][B]Quotazioni in tempo reale[/B][/TD]
 [TD][COLOR=#22c55e]✓ Fatto[/COLOR][/TD]
-[TD]Ticker nella dashboard con dati Yahoo Finance: VWCE, SWDA, AGGH, SGLD, S&P 500, FTSE MIB, Oro, EUR/USD. Aggiornamento ogni 5 min[/TD]
+[TD]Ticker nella dashboard: VWCE, SWDA, AGGH, SGLD, S&P 500, FTSE MIB, Oro, EUR/USD (Yahoo Finance, aggiornamento ogni 5 min)[/TD]
 [/TR]
 [TR]
 [TD][B]Multilingua (i18n)[/B][/TD]
 [TD][COLOR=#22c55e]✓ Fatto[/COLOR][/TD]
-[TD]Infrastruttura Italiano/English con store reattivo e selettore nelle Impostazioni[/TD]
+[TD]Italiano/English con store reattivo e selettore nelle Impostazioni[/TD]
+[/TR]
+[TR]
+[TD][B]Multi-valuta[/B][/TD]
+[TD][COLOR=#22c55e]✓ Fatto[/COLOR][/TD]
+[TD]Supporto EUR, USD, CHF (ideale per frontalieri), GBP con tassi di conversione e selettore nelle Impostazioni[/TD]
 [/TR]
 [TR]
 [TD][B]Calcolatore Pensione INPS avanzato[/B][/TD]
 [TD][COLOR=#22c55e]✓ Fatto[/COLOR][/TD]
-[TD]Montante contributivo, coefficienti trasformazione, pensione netta stimata, RITA, gap pensionistico in EUR[/TD]
+[TD]Montante contributivo, coefficienti trasformazione, pensione netta, RITA, gap pensionistico[/TD]
+[/TR]
+[TR]
+[TD][B]Import estratto conto INPS[/B][/TD]
+[TD][COLOR=#22c55e]✓ Fatto[/COLOR][/TD]
+[TD]Incolla o carica il tuo estratto conto contributivo INPS → calcolo automatico montante e pensione stimata[/TD]
+[/TR]
+[TR]
+[TD][B]Monte Carlo correlato[/B][/TD]
+[TD][COLOR=#22c55e]✓ Fatto[/COLOR][/TD]
+[TD]Rendimenti azioni/obbligazioni correlati via decomposizione di Cholesky (correlazione storica 0.189). Toggle nel pannello simulazione[/TD]
+[/TR]
+[TR]
+[TD][B]Promemoria ribilanciamento[/B][/TD]
+[TD][COLOR=#22c55e]✓ Fatto[/COLOR][/TD]
+[TD]Alert sulla dashboard quando e' il momento di ribilanciare. Frequenza configurabile (mensile/trimestrale/semestrale/annuale), soglia %, posticipo[/TD]
+[/TR]
+[TR]
+[TD][B]Confronto FIRE internazionale[/B][/TD]
+[TD][COLOR=#22c55e]✓ Fatto[/COLOR][/TD]
+[TD]8 benchmark: Italia citta'/provincia, USA, Svizzera, Portogallo NHR, Sud-Est Asiatico, Germania, Spagna. Bar chart + tabella comparativa[/TD]
+[/TR]
+[TR]
+[TD][B]Import broker italiani[/B][/TD]
+[TD][COLOR=#22c55e]✓ Fatto[/COLOR][/TD]
+[TD]Import CSV da Directa SIM, Fineco, DEGIRO, CSV generico. Auto-classificazione posizioni in classi di asset[/TD]
 [/TR]
 [TR]
 [TD][B]Deploy Vercel[/B][/TD]
@@ -366,13 +399,13 @@ Aprite [URL='http://localhost:5173']http://localhost:5173[/URL] nel browser. Req
 [SIZE=5][B]Roadmap futura[/B][/SIZE]
 
 [LIST]
-[*]Calcolo pensione INPS automatico da estratto conto contributivo
-[*]Grafici interattivi nell'export PDF
-[*]Notifiche push per ribilanciamento periodico
-[*]Supporto per piu' valute (CHF per frontalieri, USD)
-[*]Integrazione con broker italiani per import automatico portafoglio
-[*]Simulazione Monte Carlo con asset correlati (Cholesky decomposition)
-[*]Confronto con benchmark FIRE internazionali
+[*]Calcolo pensione INPS automatico direttamente da SPID/CIE (integrazione API INPS)
+[*]Notifiche push native (oltre al reminder in-app)
+[*]Simulazione Monte Carlo multi-asset (3+ classi con matrice di correlazione completa)
+[*]Import automatico transazioni bancarie (formato PSD2)
+[*]Confronto storico del proprio portafoglio (time-weighted return)
+[*]Modalita' "What If" interattiva (slider in tempo reale su tutti i parametri)
+[*]Community: condivisione anonima scenari per benchmark collaborativo
 [/LIST]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
