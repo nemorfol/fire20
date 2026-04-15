@@ -1,7 +1,8 @@
 /**
- * Import di CSV da broker italiani comuni.
- * Parsing e classificazione automatica delle posizioni in categorie di asset.
+ * Import di portafoglio da broker italiani comuni.
+ * Supporta CSV, XLS (Fineco) e classificazione automatica delle posizioni.
  */
+import * as XLSX from 'xlsx';
 
 export interface PortfolioImport {
   stocks: number;
@@ -23,7 +24,7 @@ export interface BrokerTemplate {
 // Keywords per classificazione automatica
 const BOND_KEYWORDS = ['bond', 'obbligaz', 'btp', 'cct', 'bot', 'treasury', 'govt', 'government', 'aggregate', 'fixed income', 'reddito fisso'];
 const GOLD_KEYWORDS = ['gold', 'oro', 'precious', 'prezios', 'xau'];
-const CASH_KEYWORDS = ['money market', 'monetar', 'liquidita', 'cash', 'deposito'];
+const CASH_KEYWORDS = ['money market', 'monetar', 'liquidita', 'cash', 'deposito', 'overnight', 'eonia', 'ester', 'xeon'];
 const STOCK_KEYWORDS = ['stock', 'azione', 'equity', 'azionari', 'msci', 'sp500', 's&p', 'nasdaq', 'ftse', 'world', 'emerging', 'small cap'];
 
 function classifyPosition(name: string, isin?: string): string {
@@ -140,14 +141,81 @@ function parseDirecta(csv: string): PortfolioImport {
   return buildResult(positions);
 }
 
-function parseFineco(csv: string): PortfolioImport {
-  const rows = parseCSVLines(csv);
+/**
+ * Parser Fineco - gestisce il vero formato XLS esportato da Fineco.
+ * Colonne: Titolo, ISIN, Simbolo, Mercato, Strumento, Valuta, Quantita',
+ * P.zo medio di carico, Cambio di carico, Valore di carico,
+ * P.zo di mercato, Cambio di mercato, Valore di mercato €, Var%, Var €, Var in valuta, Rateo
+ *
+ * Usa la colonna "Strumento" (ETF, Obbligazione, Azione, Fondo, ecc.) per classificazione primaria.
+ */
+function parseFinecoFromRows(rows: string[][]): PortfolioImport {
   if (rows.length < 2) return buildResult([]);
 
+  // Trova la riga di intestazione (Fineco mette 2 righe di titolo prima)
+  let headerIdx = -1;
+  for (let i = 0; i < Math.min(rows.length, 10); i++) {
+    const row = rows[i].map(c => c.toLowerCase().trim());
+    if (row.some(c => c === 'titolo') && row.some(c => c === 'isin')) {
+      headerIdx = i;
+      break;
+    }
+  }
+  if (headerIdx === -1) {
+    // Fallback: prova il vecchio parsing CSV
+    return parseFinecoCSVFallback(rows);
+  }
+
+  const headers = rows[headerIdx];
+  const nameIdx = findColumnIndex(headers, ['titolo']);
+  const isinIdx = findColumnIndex(headers, ['isin']);
+  const instrumentIdx = findColumnIndex(headers, ['strumento']);
+  const valueIdx = findColumnIndex(headers, ['valore di mercato', 'valore di mercato €']);
+  // Fallback su "controvalore"
+  const valueFallback = valueIdx >= 0 ? valueIdx : findColumnIndex(headers, ['controvalore']);
+
+  const positions: { name: string; value: number; type: string }[] = [];
+  for (let i = headerIdx + 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (row.length < 3) continue;
+
+    const name = (nameIdx >= 0 ? row[nameIdx] : '').trim();
+    const isin = (isinIdx >= 0 ? row[isinIdx] : '').trim();
+    const instrument = (instrumentIdx >= 0 ? row[instrumentIdx] : '').trim();
+    const valIdx = valueFallback >= 0 ? valueFallback : row.length - 5;
+    const value = parseNumber(row[valIdx] || '0');
+
+    // Salta righe vuote, di intestazione, totale, o valuta senza ISIN (riga riepilogo Fineco)
+    if (!name || value === 0) continue;
+    if (name.toLowerCase().startsWith('totale') || name.toLowerCase().startsWith('portafoglio')) continue;
+    if (!isin && !instrument && name.length <= 3) continue; // Riga "EUR" di totale Fineco
+
+    // Classifica usando la colonna "Strumento" di Fineco + nome titolo
+    let type: string;
+    const instrLower = instrument.toLowerCase();
+    if (instrLower === 'obbligazione' || instrLower.includes('obblig')) {
+      type = 'Obbligazione';
+    } else if (instrLower === 'etf') {
+      // ETF puo' essere azionario, obbligazionario o oro - classifica dal nome
+      type = classifyPosition(name, isin);
+    } else if (instrLower === 'azione') {
+      type = 'Azione';
+    } else if (instrLower === 'fondo' || instrLower.includes('fondo')) {
+      type = classifyPosition(name, isin);
+    } else {
+      type = classifyPosition(name, isin);
+    }
+
+    positions.push({ name: `${name}${isin ? ' (' + isin + ')' : ''}`, value: Math.abs(value), type });
+  }
+  return buildResult(positions);
+}
+
+function parseFinecoCSVFallback(rows: string[][]): PortfolioImport {
   const headers = rows[0];
   const nameIdx = findColumnIndex(headers, ['titolo', 'nome', 'descrizione']);
   const isinIdx = findColumnIndex(headers, ['isin']);
-  const valueIdx = findColumnIndex(headers, ['controvalore', 'valore', 'controvalore eur']);
+  const valueIdx = findColumnIndex(headers, ['controvalore', 'valore', 'controvalore eur', 'valore di mercato']);
 
   const positions: { name: string; value: number; type: string }[] = [];
   for (let i = 1; i < rows.length; i++) {
@@ -161,6 +229,32 @@ function parseFineco(csv: string): PortfolioImport {
     positions.push({ name, value: Math.abs(value), type });
   }
   return buildResult(positions);
+}
+
+function parseFineco(csv: string): PortfolioImport {
+  return parseFinecoFromRows(parseCSVLines(csv));
+}
+
+/**
+ * Parsa un file XLS/XLSX binario (come l'export Fineco).
+ * Accetta un ArrayBuffer dal FileReader.
+ */
+export function parseFinecoXLS(data: ArrayBuffer): PortfolioImport {
+  try {
+    const workbook = XLSX.read(data, { type: 'array' });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    // raw: true per avere numeri come numeri (non stringhe formattate)
+    const rawRows: unknown[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true, defval: '' });
+    // Converti tutto a stringhe per il parser unificato
+    const rows: string[][] = rawRows.map(row => row.map(cell => {
+      if (typeof cell === 'number') return cell.toString();
+      return String(cell ?? '');
+    }));
+    return parseFinecoFromRows(rows);
+  } catch {
+    return buildResult([]);
+  }
 }
 
 function parseDegiro(csv: string): PortfolioImport {
@@ -220,8 +314,8 @@ export const brokerTemplates: BrokerTemplate[] = [
   {
     id: 'fineco',
     name: 'Fineco Bank',
-    description: 'Export posizioni Fineco',
-    sampleHeaders: ['Titolo', 'ISIN', 'Quantita', 'Prezzo', 'Controvalore EUR'],
+    description: 'Export portafoglio Fineco (CSV o XLS)',
+    sampleHeaders: ['Titolo', 'ISIN', 'Strumento', 'Valore di mercato €'],
     parser: parseFineco
   },
   {

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Button, Select, Table, TableHead, TableHeadCell, TableBody, TableBodyRow, TableBodyCell, Badge, Textarea, Alert } from 'flowbite-svelte';
 	import { ArrowDownToBracketOutline, UploadSolid } from 'flowbite-svelte-icons';
-	import { brokerTemplates, parseBrokerCSV, type PortfolioImport } from '$lib/utils/broker-import';
+	import { brokerTemplates, parseBrokerCSV, parseFinecoXLS, type PortfolioImport } from '$lib/utils/broker-import';
 	import { formatCurrency } from '$lib/utils/format';
 
 	let {
@@ -23,12 +23,32 @@
 		const file = input.files?.[0];
 		if (!file) return;
 
-		const reader = new FileReader();
-		reader.onload = (e) => {
-			csvText = e.target?.result as string || '';
-			doParse();
-		};
-		reader.readAsText(file);
+		const ext = file.name.split('.').pop()?.toLowerCase() || '';
+
+		if (ext === 'xls' || ext === 'xlsx') {
+			// File Excel binario (es. export Fineco)
+			const reader = new FileReader();
+			reader.onload = (e) => {
+				const data = e.target?.result as ArrayBuffer;
+				if (!data) { errorMessage = 'Errore nella lettura del file.'; return; }
+				errorMessage = '';
+				successMessage = '';
+				parseResult = parseFinecoXLS(data);
+				if (!parseResult || parseResult.positions.length === 0) {
+					errorMessage = 'Nessuna posizione trovata nel file XLS. Verifica che sia un export di portafoglio Fineco.';
+					parseResult = null;
+				}
+			};
+			reader.readAsArrayBuffer(file);
+		} else {
+			// File CSV/TXT
+			const reader = new FileReader();
+			reader.onload = (e) => {
+				csvText = e.target?.result as string || '';
+				doParse();
+			};
+			reader.readAsText(file);
+		}
 		input.value = '';
 	}
 
@@ -78,7 +98,7 @@
 		Importa da Broker
 	</h4>
 	<p class="text-sm text-gray-500 dark:text-gray-400">
-		Importa le posizioni del tuo portafoglio da un file CSV esportato dal tuo broker.
+		Importa le posizioni del tuo portafoglio da un file esportato dal tuo broker (CSV o XLS).
 	</p>
 
 	{#if errorMessage}
@@ -111,12 +131,12 @@
 	<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 		<div>
 			<label for="csv-file" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-				Carica file CSV
+				Carica file (CSV/XLS)
 			</label>
 			<input
 				type="file"
 				id="csv-file"
-				accept=".csv,.txt"
+				accept=".csv,.txt,.xls,.xlsx"
 				onchange={handleFileUpload}
 				class="block w-full text-sm text-gray-500 dark:text-gray-400
 					file:mr-4 file:py-2 file:px-4
