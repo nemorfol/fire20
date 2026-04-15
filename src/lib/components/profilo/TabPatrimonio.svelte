@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { Heading } from 'flowbite-svelte';
 	import CurrencyInput from '$lib/components/shared/CurrencyInput.svelte';
+	import BrokerImport from '$lib/components/profilo/BrokerImport.svelte';
 	import type { PortfolioAllocation, MonthlyContributions } from '$lib/db/index';
+	import type { PortfolioImport } from '$lib/utils/broker-import';
 
 	let {
 		portfolio = $bindable<PortfolioAllocation>({
@@ -30,6 +32,14 @@
 	};
 
 	const assetKeys = Object.keys(assetLabels) as (keyof PortfolioAllocation)[];
+
+	function handleBrokerImport(result: PortfolioImport) {
+		portfolio.stocks += result.stocks;
+		portfolio.bonds += result.bonds;
+		portfolio.cash += result.cash;
+		portfolio.gold += result.gold;
+		portfolio.other += result.other;
+	}
 </script>
 
 <div class="space-y-8">
@@ -68,5 +78,11 @@
 				</div>
 			{/each}
 		</div>
+	</div>
+
+	<hr class="border-gray-200 dark:border-gray-700" />
+
+	<div>
+		<BrokerImport onApply={handleBrokerImport} />
 	</div>
 </div>

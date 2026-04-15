@@ -2,6 +2,8 @@
  * Funzioni di formattazione per valuta, percentuali, numeri e date.
  * Localizzazione italiana (it-IT), valuta EUR.
  */
+import { getCurrency } from './currency-store.svelte';
+import { getCurrencyInfo } from './currency';
 
 const eurFormatter = new Intl.NumberFormat('it-IT', {
 	style: 'currency',
@@ -103,5 +105,21 @@ export function formatNumber(value: number, decimals = 0): string {
 	return new Intl.NumberFormat('it-IT', {
 		minimumFractionDigits: decimals,
 		maximumFractionDigits: decimals
+	}).format(value);
+}
+
+/**
+ * Formatta un valore nella valuta correntemente selezionata dall'utente.
+ * Usa il currency store per determinare valuta e locale.
+ * @example formatCurrencyDynamic(150000) => "150.000 €" (se EUR) o "$150,000" (se USD)
+ */
+export function formatCurrencyDynamic(value: number, detailed = false): string {
+	const currency = getCurrency();
+	const info = getCurrencyInfo(currency);
+	return new Intl.NumberFormat(info.locale, {
+		style: 'currency',
+		currency: info.code,
+		minimumFractionDigits: detailed ? 2 : 0,
+		maximumFractionDigits: detailed ? 2 : 0
 	}).format(value);
 }

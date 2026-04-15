@@ -1,9 +1,10 @@
 <script lang="ts">
 	import CurrencyInput from '$lib/components/shared/CurrencyInput.svelte';
 	import YearSlider from '$lib/components/shared/YearSlider.svelte';
-	import { Label, Input, Hr } from 'flowbite-svelte';
+	import { Label, Input } from 'flowbite-svelte';
 	import type { PensionInfo } from '$lib/db/index';
 	import PensionCalculator from './PensionCalculator.svelte';
+	import INPSImport from './INPSImport.svelte';
 
 	let {
 		pension = $bindable<PensionInfo>({
@@ -68,4 +69,11 @@
 	<hr class="border-gray-200 dark:border-gray-700 my-6" />
 
 	<PensionCalculator {birthYear} {retirementAge} {annualExpenses} />
+
+	<hr class="border-gray-200 dark:border-gray-700 my-6" />
+
+	<INPSImport onApply={(data) => {
+		pension.contributionYears = data.contributionYears;
+		pension.estimatedMonthly = data.estimatedMonthly;
+	}} />
 </div>

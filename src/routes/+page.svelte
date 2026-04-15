@@ -35,6 +35,8 @@
 	import StatCard from '$lib/components/shared/StatCard.svelte';
 	import EChart from '$lib/components/simulazione/EChart.svelte';
 	import MarketTicker from '$lib/components/dashboard/MarketTicker.svelte';
+	import RebalanceAlert from '$lib/components/dashboard/RebalanceAlert.svelte';
+	import BenchmarkComparison from '$lib/components/dashboard/BenchmarkComparison.svelte';
 
 	let profile = $state<Profile | undefined>(undefined);
 	let loading = $state(true);
@@ -287,6 +289,9 @@
 	<!-- Market Ticker -->
 	<MarketTicker />
 
+	<!-- Rebalance Reminder Alert -->
+	<RebalanceAlert />
+
 	<!-- Summary Cards Grid -->
 	<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
 		<StatCard
@@ -384,6 +389,15 @@
 				</p>
 			{/if}
 		</Card>
+	</div>
+
+	<!-- FIRE Benchmark Comparison -->
+	<div class="mb-8">
+		<BenchmarkComparison
+			userSavingsRate={savingsRate}
+			userFireNumber={fireNumber}
+			userYearsToFire={yearsToFire}
+		/>
 	</div>
 
 	<!-- Quick Actions -->

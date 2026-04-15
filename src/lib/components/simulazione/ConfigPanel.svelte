@@ -9,7 +9,8 @@
 		Helper,
 		Tooltip,
 		Badge,
-		Spinner
+		Spinner,
+		Toggle
 	} from 'flowbite-svelte';
 	import { InfoCircleSolid, PlaySolid } from 'flowbite-svelte-icons';
 	import type { MonteCarloParams } from '$lib/engine/monte-carlo';
@@ -41,6 +42,7 @@
 	let stockStdDev = $state(16.0);
 	let bondReturn = $state(3.5);
 	let bondStdDev = $state(7.0);
+	let useCorrelation = $state(true);
 
 	// Portfolio params
 	let stockAllocation = $state(70);
@@ -80,6 +82,7 @@
 			params.stockStdDev = stockStdDev / 100;
 			params.expectedBondReturn = bondReturn / 100;
 			params.bondStdDev = bondStdDev / 100;
+			params.useCorrelation = useCorrelation;
 		}
 
 		onRun(params);
@@ -285,6 +288,17 @@
 						<Label for="bond-std" class="mb-1 text-xs">Volatilit&agrave; bond (%)</Label>
 						<Input id="bond-std" type="number" bind:value={bondStdDev} step={0.5} size="sm" />
 					</div>
+				</div>
+				<div class="mt-3 flex items-center gap-2">
+					<Toggle bind:checked={useCorrelation} size="small">
+						Rendimenti correlati
+					</Toggle>
+					<span id="tip-correlation">
+						<InfoCircleSolid class="w-4 h-4 text-gray-400 cursor-help" />
+					</span>
+					<Tooltip triggeredBy="#tip-correlation" class="max-w-xs">
+						Usa la decomposizione di Cholesky per generare rendimenti azionari e obbligazionari correlati (correlazione storica ~0.189). Disattivando questa opzione i rendimenti vengono generati in modo indipendente, sottostimando il rischio reale del portafoglio.
+					</Tooltip>
 				</div>
 			</div>
 		{:else}

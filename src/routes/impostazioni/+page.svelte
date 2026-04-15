@@ -29,12 +29,53 @@
 	import { t } from '$lib/i18n/store.svelte';
 	import { getLocale, setLocale } from '$lib/i18n/store.svelte';
 	import { locales, type Locale } from '$lib/i18n/index';
+	import { Toggle, Select, Input, Label } from 'flowbite-svelte';
+	import { currencies, type Currency } from '$lib/utils/currency';
+	import { getCurrency, setCurrency } from '$lib/utils/currency-store.svelte';
+	import {
+		getReminder,
+		setReminder,
+		calculateNextDate,
+		type RebalanceReminder
+	} from '$lib/utils/reminders';
 
 	let selectedLocale = $state<Locale>(getLocale());
+
+	// Rebalance reminder state
+	let reminder = $state<RebalanceReminder>(getReminder());
+
+	const frequencyOptions = [
+		{ value: 1, name: 'Mensile' },
+		{ value: 3, name: 'Trimestrale' },
+		{ value: 6, name: 'Semestrale' },
+		{ value: 12, name: 'Annuale' }
+	];
+
+	function updateReminder() {
+		// Ricalcola la prossima data promemoria
+		if (reminder.enabled && reminder.lastRebalanceDate) {
+			reminder.nextReminderDate = calculateNextDate(
+				new Date(reminder.lastRebalanceDate),
+				reminder.frequencyMonths
+			);
+		} else if (reminder.enabled && !reminder.lastRebalanceDate) {
+			// Se non c'e' data di ultimo ribilanciamento, imposta da oggi
+			reminder.nextReminderDate = calculateNextDate(new Date(), reminder.frequencyMonths);
+		} else {
+			reminder.nextReminderDate = null;
+		}
+		setReminder(reminder);
+	}
+	let selectedCurrency = $state<Currency>(getCurrency());
 
 	function handleLocaleChange(locale: Locale) {
 		selectedLocale = locale;
 		setLocale(locale);
+	}
+
+	function handleCurrencyChange(code: Currency) {
+		selectedCurrency = code;
+		setCurrency(code);
 	}
 
 	// State
@@ -359,6 +400,102 @@
 				{/if}
 			</button>
 		{/each}
+	</div>
+</Card>
+
+<!-- Currency Selector -->
+<Card class="max-w-none mb-6">
+	<Heading tag="h3" class="mb-2">Valuta</Heading>
+	<p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Seleziona la valuta utilizzata per la visualizzazione degli importi.</p>
+	<div class="flex flex-wrap gap-4">
+		{#each currencies as curr}
+			<button
+				type="button"
+				class="flex items-center gap-3 px-4 py-3 rounded-lg border-2 transition-colors cursor-pointer {selectedCurrency === curr.code ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}"
+				onclick={() => handleCurrencyChange(curr.code)}
+			>
+				<span class="text-2xl">{curr.flag}</span>
+				<div class="text-left">
+					<span class="font-medium text-gray-900 dark:text-white">{curr.name}</span>
+					<span class="text-sm text-gray-500 dark:text-gray-400 ml-1">({curr.symbol})</span>
+				</div>
+				{#if selectedCurrency === curr.code}
+					<svg class="w-5 h-5 text-primary-500" fill="currentColor" viewBox="0 0 20 20">
+						<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+					</svg>
+				{/if}
+			</button>
+		{/each}
+	</div>
+</Card>
+
+<!-- Promemoria Ribilanciamento -->
+<Card class="max-w-none mb-6">
+	<Heading tag="h3" class="mb-4">Promemoria Ribilanciamento</Heading>
+	<p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+		Ricevi un promemoria periodico per ribilanciare il tuo portafoglio e mantenere l'allocazione target.
+	</p>
+
+	<div class="space-y-4">
+		<!-- Toggle on/off -->
+		<Toggle bind:checked={reminder.enabled} onchange={updateReminder}>
+			{reminder.enabled ? 'Promemoria attivo' : 'Promemoria disattivato'}
+		</Toggle>
+
+		{#if reminder.enabled}
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+				<!-- Frequenza -->
+				<div>
+					<Label for="rebal-freq" class="mb-2">Frequenza</Label>
+					<Select
+						id="rebal-freq"
+						items={frequencyOptions}
+						bind:value={reminder.frequencyMonths}
+						onchange={updateReminder}
+					/>
+				</div>
+
+				<!-- Soglia % -->
+				<div>
+					<Label for="rebal-threshold" class="mb-2">Soglia di deviazione (%)</Label>
+					<Input
+						id="rebal-threshold"
+						type="number"
+						min={1}
+						max={50}
+						step={1}
+						bind:value={reminder.thresholdPercent}
+						onchange={updateReminder}
+					/>
+					<p class="text-xs text-gray-400 mt-1">Allerta se l'allocazione devia oltre questa % dal target.</p>
+				</div>
+
+				<!-- Data ultimo ribilanciamento -->
+				<div>
+					<Label for="rebal-last" class="mb-2">Data ultimo ribilanciamento</Label>
+					<input
+						id="rebal-last"
+						type="date"
+						value={reminder.lastRebalanceDate ?? ''}
+						onchange={(e: Event) => { reminder.lastRebalanceDate = (e.target as HTMLInputElement).value || null; updateReminder(); }}
+						class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+					/>
+				</div>
+
+				<!-- Prossimo promemoria (readonly) -->
+				<div>
+					<Label for="rebal-next" class="mb-2">Prossimo promemoria</Label>
+					<input
+						id="rebal-next"
+						type="date"
+						value={reminder.nextReminderDate ?? ''}
+						disabled
+						class="block w-full rounded-lg border border-gray-300 bg-gray-100 p-2.5 text-sm text-gray-500 dark:border-gray-600 dark:bg-gray-600 dark:text-gray-400 cursor-not-allowed"
+					/>
+					<p class="text-xs text-gray-400 mt-1">Calcolato automaticamente.</p>
+				</div>
+			</div>
+		{/if}
 	</div>
 </Card>
 

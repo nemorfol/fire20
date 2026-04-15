@@ -13,7 +13,8 @@ import {
 	bootstrapSample,
 	blockBootstrapSample,
 	calculatePercentiles,
-	calculateMean
+	calculateMean,
+	correlatedReturns
 } from './statistics.js';
 import { calculateWithdrawal } from './withdrawal.js';
 
@@ -65,6 +66,10 @@ export interface MonteCarloParams {
 	lifeExpectancy?: number;
 	/** Rapporto CAPE (per CAPE-based) */
 	capeRatio?: number;
+	/** Usa rendimenti correlati (Cholesky) per modalita' parametrica */
+	useCorrelation?: boolean;
+	/** Correlazione azioni-obbligazioni (default 0.189) */
+	stockBondCorrelation?: number;
 	/** Callback per aggiornamenti di progresso */
 	onProgress?: (percent: number) => void;
 }
@@ -106,6 +111,29 @@ function generateReturn(
 	const mode = params.simulationMode;
 
 	if (mode === 'parametric') {
+		const useCorrelation = params.useCorrelation ?? true;
+		const inflation = gaussianRandom(params.inflationRate, 0.01);
+
+		if (useCorrelation) {
+			// Genera rendimenti correlati con decomposizione di Cholesky
+			const correlation = params.stockBondCorrelation ?? 0.189;
+			const corrMatrix = [
+				[1.0, correlation],
+				[correlation, 1.0]
+			];
+			const means = [
+				params.expectedStockReturn ?? 0.07,
+				params.expectedBondReturn ?? 0.03
+			];
+			const stdDevs = [
+				params.stockStdDev ?? 0.16,
+				params.bondStdDev ?? 0.06
+			];
+			const [stockReturn, bondReturn] = correlatedReturns(means, stdDevs, corrMatrix);
+			return { stockReturn, bondReturn, inflation: Math.max(0, inflation) };
+		}
+
+		// Rendimenti indipendenti (fallback)
 		const stockReturn = logNormalReturn(
 			params.expectedStockReturn ?? 0.07,
 			params.stockStdDev ?? 0.16
@@ -114,7 +142,6 @@ function generateReturn(
 			params.expectedBondReturn ?? 0.03,
 			params.bondStdDev ?? 0.06
 		);
-		const inflation = gaussianRandom(params.inflationRate, 0.01);
 		return { stockReturn, bondReturn, inflation: Math.max(0, inflation) };
 	}
 
