@@ -4,7 +4,7 @@ Ciao a tutti,
 
 vi presento [B]FIRE Planner[/B], un'applicazione web gratuita e open source che ho sviluppato per pianificare il percorso verso l'indipendenza finanziaria (FIRE - Financial Independence, Retire Early), pensata [B]specificamente per il contesto italiano[/B] (fiscalita', INPS, TFR, fondi pensione).
 
-L'app e' completamente gratuita, non richiede registrazione, e [B]tutti i dati restano nel vostro browser[/B] (IndexedDB). Nessun dato viene inviato a server esterni. Privacy totale.
+L'app e' completamente gratuita, non richiede registrazione, e [B]tutti i dati restano nel vostro browser[/B] (IndexedDB). Nessun dato viene inviato a server esterni. Privacy totale. [B]Installabile come app su smartphone[/B] (PWA) e funziona anche offline.
 
 [B]Repository GitHub:[/B] [URL='https://github.com/nemorfol/fire20']https://github.com/nemorfol/fire20[/URL]
 
@@ -30,7 +30,7 @@ E' un simulatore/pianificatore FIRE completo che vi permette di:
 
 [SIZE=4][B][COLOR=#3b82f6]1. DASHBOARD[/COLOR][/B][/SIZE]
 
-Vista d'insieme con patrimonio netto, FIRE Number, progresso verso il FIRE (%), anni rimanenti, tasso di risparmio. Grafico proiezione del patrimonio e pie chart dell'asset allocation.
+Vista d'insieme con patrimonio netto, FIRE Number, progresso verso il FIRE (%), anni rimanenti, tasso di risparmio. Grafico proiezione del patrimonio e pie chart dell'asset allocation. [B]Ticker quotazioni in tempo reale[/B] con VWCE, SWDA, S&P 500, FTSE MIB, Oro, EUR/USD (dati Yahoo Finance, aggiornamento ogni 5 min).
 
 [IMG]https://raw.githubusercontent.com/nemorfol/fire20/main/screenshots/01-dashboard.png[/IMG]
 
@@ -45,7 +45,7 @@ Form completo a 6 schede per inserire la propria situazione:
 [*][B]Spese[/B]: spese annuali correnti, spese stimate in FIRE, inflazione personale
 [*][B]Patrimonio[/B]: 9 classi di asset (azioni, obbligazioni, liquidita', immobili, oro, crypto, fondo pensione, TFR, altro) + contributi mensili per ciascuna
 [*][B]Debiti[/B]: lista dinamica con importo, tasso, rata, durata residua
-[*][B]Pensione[/B]: anni di contributi, stima pensione INPS, eta' pensionabile
+[*][B]Pensione[/B]: anni di contributi, stima pensione INPS, eta' pensionabile + [B]Calcolatore INPS avanzato[/B] (montante contributivo, coefficienti trasformazione, pensione netta, RITA, gap pensionistico)
 [/LIST]
 
 Supporta [B]profili multipli[/B] (es. "Scenario base", "Scenario aggressivo"). Salvataggio automatico.
@@ -211,8 +211,10 @@ Ogni capitolo ha esempi pratici con numeri reali italiani, consigli, avvertenze,
 [LIST]
 [*]Export profili e scenari in JSON
 [*]Export risultati simulazioni in CSV (apribile in Excel)
+[*][B][COLOR=#8b5cf6]Export Report PDF[/COLOR][/B] - Report finanziario completo in formato A4 (dati personali, patrimonio, reddito/spese, obiettivo FIRE, pensione, asset allocation)
 [*]Backup completo e ripristino
 [*]Cancellazione selettiva dati
+[*][B]Selettore lingua[/B] Italiano / English
 [/LIST]
 
 [IMG]https://raw.githubusercontent.com/nemorfol/fire20/main/screenshots/10-impostazioni.png[/IMG]
@@ -273,13 +275,16 @@ L'app modella in dettaglio il sistema fiscale italiano:
 [*][B]jStat 1.9[/B] - Distribuzioni statistiche per Monte Carlo
 [*][B]Web Workers[/B] - Le simulazioni pesanti girano in un thread separato
 [*][B]PapaParse 5.5[/B] - Import/export CSV
+[*][B]jsPDF[/B] - Generazione report PDF lato client
+[*][B]@vite-pwa/sveltekit[/B] - Progressive Web App con service worker e cache offline
 [/LIST]
 
 [B]Numeri:[/B]
 [LIST]
-[*]71 file sorgente (44 componenti Svelte + 27 moduli TypeScript)
-[*]14.709 righe di codice
+[*]~95 file sorgente (50+ componenti Svelte + 30+ moduli TypeScript)
+[*]~25.000 righe di codice
 [*]10 dataset storici embedded (dal 1881 al 2024)
+[*]76 risorse precachate per uso offline (PWA)
 [*]Build statica pronta per Vercel/Netlify/GitHub Pages
 [/LIST]
 
@@ -287,7 +292,10 @@ L'app modella in dettaglio il sistema fiscale italiano:
 [LIST]
 [*]Tutto client-side, nessun server backend
 [*]I dati finanziari dell'utente non lasciano mai il browser
+[*]PWA installabile su smartphone (Android e iOS)
+[*]Funziona offline dopo il primo caricamento
 [*]Compilato in file statici HTML/JS/CSS
+[*]Supporto multilingua (Italiano/English)
 [*]Open source, licenza MIT
 [/LIST]
 
@@ -310,15 +318,57 @@ Aprite [URL='http://localhost:5173']http://localhost:5173[/URL] nel browser. Req
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-[SIZE=5][B]Roadmap / idee future[/B][/SIZE]
+[SIZE=5][B][COLOR=#22c55e]Feature gia' implementate (v1.1)[/COLOR][/B][/SIZE]
+
+[TABLE]
+[TR]
+[TH]Feature[/TH]
+[TH]Stato[/TH]
+[TH]Dettagli[/TH]
+[/TR]
+[TR]
+[TD][B]PWA installabile[/B][/TD]
+[TD][COLOR=#22c55e]✓ Fatto[/COLOR][/TD]
+[TD]App installabile su smartphone (Android/iOS), funziona offline con 76 risorse precachate[/TD]
+[/TR]
+[TR]
+[TD][B]Export Report PDF[/B][/TD]
+[TD][COLOR=#22c55e]✓ Fatto[/COLOR][/TD]
+[TD]Report finanziario A4 completo con jsPDF: 6 sezioni, formato EUR italiano[/TD]
+[/TR]
+[TR]
+[TD][B]Quotazioni in tempo reale[/B][/TD]
+[TD][COLOR=#22c55e]✓ Fatto[/COLOR][/TD]
+[TD]Ticker nella dashboard con dati Yahoo Finance: VWCE, SWDA, AGGH, SGLD, S&P 500, FTSE MIB, Oro, EUR/USD. Aggiornamento ogni 5 min[/TD]
+[/TR]
+[TR]
+[TD][B]Multilingua (i18n)[/B][/TD]
+[TD][COLOR=#22c55e]✓ Fatto[/COLOR][/TD]
+[TD]Infrastruttura Italiano/English con store reattivo e selettore nelle Impostazioni[/TD]
+[/TR]
+[TR]
+[TD][B]Calcolatore Pensione INPS avanzato[/B][/TD]
+[TD][COLOR=#22c55e]✓ Fatto[/COLOR][/TD]
+[TD]Montante contributivo, coefficienti trasformazione, pensione netta stimata, RITA, gap pensionistico in EUR[/TD]
+[/TR]
+[TR]
+[TD][B]Deploy Vercel[/B][/TD]
+[TD][COLOR=#22c55e]✓ Pronto[/COLOR][/TD]
+[TD]adapter-static + vercel.json configurati, basta importare il repo su Vercel[/TD]
+[/TR]
+[/TABLE]
+
+[SIZE=5][B]Roadmap futura[/B][/SIZE]
 
 [LIST]
-[*]Deploy pubblico su Vercel (link diretto senza installazione)
-[*]PWA installabile su smartphone
-[*]Calcolo pensione INPS automatico da estratto conto
-[*]Integrazione API quotazioni in tempo reale
-[*]Export report PDF
-[*]Localizzazione multilingua
+[*]Deploy pubblico su Vercel con link diretto (senza necessita' di installazione locale)
+[*]Calcolo pensione INPS automatico da estratto conto contributivo
+[*]Grafici interattivi nell'export PDF
+[*]Notifiche push per ribilanciamento periodico
+[*]Supporto per piu' valute (CHF per frontalieri, USD)
+[*]Integrazione con broker italiani per import automatico portafoglio
+[*]Simulazione Monte Carlo con asset correlati (Cholesky decomposition)
+[*]Confronto con benchmark FIRE internazionali
 [/LIST]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
