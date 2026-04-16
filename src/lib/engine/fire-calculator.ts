@@ -24,6 +24,8 @@ export interface YearlyProjection {
 	taxes: number;
 	/** Patrimonio netto totale */
 	netWorth: number;
+	/** Reddito pensionistico nell'anno */
+	pensionIncome?: number;
 }
 
 /** Parametri per la proiezione deterministica del portafoglio */
@@ -229,6 +231,9 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 		// Il portafoglio non può essere negativo (si è esaurito)
 		if (portfolio < 0) portfolio = 0;
 
+		// Pensione INPS per la proiezione (calcolata anche fuori dal blocco isRetired)
+		const pensionIncomeForProjection = age >= pensionAge ? annualPension : 0;
+
 		projections.push({
 			year,
 			age,
@@ -237,7 +242,8 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 			withdrawals: actualWithdrawals,
 			returns: netReturns,
 			taxes,
-			netWorth: portfolio
+			netWorth: portfolio,
+			pensionIncome: pensionIncomeForProjection
 		});
 	}
 

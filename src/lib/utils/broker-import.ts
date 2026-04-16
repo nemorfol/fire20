@@ -153,9 +153,6 @@ function parseDirecta(csv: string): PortfolioImport {
 function parseFinecoFromRows(rows: string[][]): PortfolioImport {
   if (rows.length < 2) return buildResult([]);
 
-  console.log('[Fineco] Rows count:', rows.length);
-  console.log('[Fineco] First 5 rows:', rows.slice(0, 5).map((r, i) => `Row ${i}: ${JSON.stringify(r.slice(0, 6))}`).join('\n'));
-
   // Trova la riga di intestazione (Fineco mette 2 righe di titolo prima)
   let headerIdx = -1;
   for (let i = 0; i < Math.min(rows.length, 10); i++) {
@@ -166,10 +163,7 @@ function parseFinecoFromRows(rows: string[][]): PortfolioImport {
     }
   }
 
-  console.log('[Fineco] Header found at row:', headerIdx);
-
   if (headerIdx === -1) {
-    console.log('[Fineco] FALLBACK to CSV parser');
     return parseFinecoCSVFallback(rows);
   }
 
@@ -179,8 +173,6 @@ function parseFinecoFromRows(rows: string[][]): PortfolioImport {
   const instrumentIdx = findColumnIndex(headers, ['strumento']);
   const valueIdx = findColumnIndex(headers, ['valore di mercato', 'valore di mercato €']);
   const valueFallback = valueIdx >= 0 ? valueIdx : findColumnIndex(headers, ['controvalore']);
-
-  console.log('[Fineco] Column indices - name:', nameIdx, 'isin:', isinIdx, 'instrument:', instrumentIdx, 'value:', valueIdx, 'valueFallback:', valueFallback);
 
   const positions: { name: string; value: number; type: string }[] = [];
   for (let i = headerIdx + 1; i < rows.length; i++) {
@@ -221,13 +213,10 @@ function parseFinecoFromRows(rows: string[][]): PortfolioImport {
       }
     }
 
-    console.log('[Fineco] Row', i, '→', type, '|', value.toFixed(2), '|', name, '| instrument:', JSON.stringify(instrument));
     positions.push({ name: `${name}${isin ? ' (' + isin + ')' : ''}`, value: Math.abs(value), type });
   }
 
-  const result = buildResult(positions);
-  console.log('[Fineco] RESULT: stocks:', result.stocks, 'bonds:', result.bonds, 'cash:', result.cash, 'gold:', result.gold, 'other:', result.other);
-  return result;
+  return buildResult(positions);
 }
 
 function parseFinecoCSVFallback(rows: string[][]): PortfolioImport {

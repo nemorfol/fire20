@@ -62,6 +62,7 @@
 		{ key: 'age', label: 'Eta\'' },
 		{ key: 'portfolio', label: 'Portafoglio' },
 		{ key: 'contributions', label: 'Contributi' },
+		{ key: 'pensionIncome', label: 'Pensione' },
 		{ key: 'returns', label: 'Rendimenti' },
 		{ key: 'withdrawals', label: 'Prelievi' },
 		{ key: 'taxes', label: 'Tasse' }
@@ -103,6 +104,9 @@
 						<TableBodyCell class="tabular-nums font-medium">{formatCurrency(row.portfolio)}</TableBodyCell>
 						<TableBodyCell class="tabular-nums {row.contributions > 0 ? 'text-green-600 dark:text-green-400' : ''}">
 							{row.contributions > 0 ? '+' : ''}{formatCurrency(row.contributions)}
+						</TableBodyCell>
+						<TableBodyCell class="tabular-nums {(row.pensionIncome ?? 0) > 0 ? 'text-blue-600 dark:text-blue-400' : ''}">
+							{(row.pensionIncome ?? 0) > 0 ? formatCurrency(row.pensionIncome ?? 0) : ''}
 						</TableBodyCell>
 						<TableBodyCell class="tabular-nums {row.returns >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}">
 							{row.returns >= 0 ? '+' : ''}{formatCurrency(row.returns)}

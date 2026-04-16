@@ -58,7 +58,7 @@
 			const eff = getEffective(sc, profile);
 			const fireNumber = calculateFireNumber(eff.fireExpenses, eff.withdrawalRate);
 			const netWorth = calculateNetWorth(profile.portfolio as unknown as Record<string, number>);
-			const annualSavings = profile.annualIncome - eff.annualExpenses;
+			const annualSavings = (profile.annualIncome || 0) + (profile.otherIncome || 0) - eff.annualExpenses;
 			const yearsToFire = calculateYearsToFire(netWorth, annualSavings, eff.expectedReturn, fireNumber);
 			return {
 				scenario: sc,

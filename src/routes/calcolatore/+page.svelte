@@ -49,7 +49,9 @@
 	let annualExpenses = $derived(profile ? (profile.fireExpenses || profile.annualExpenses) : 0);
 	let withdrawalRate = $derived(swr / 100);
 
-	let fireNumber = $derived(calculateFireNumber(annualExpenses, withdrawalRate));
+	let annualPensionIncome = $derived(profile ? (profile.pension?.estimatedMonthly || 0) * 13 : 0);
+	let expensesNetOfPension = $derived(Math.max(0, annualExpenses - annualPensionIncome));
+	let fireNumber = $derived(calculateFireNumber(expensesNetOfPension, withdrawalRate));
 
 	let netWorth = $derived(profile ? calculateNetWorth(profile.portfolio as unknown as Record<string, number>) : 0);
 
@@ -64,7 +66,7 @@
 	let annualSavings = $derived(
 		totalIncome > 0
 			? Math.min(monthlyContributionsTotal, Math.max(0, totalIncome - (profile?.annualExpenses || 0)))
-			: monthlyContributionsTotal
+			: 0
 	);
 
 	let yearsToFire = $derived(
