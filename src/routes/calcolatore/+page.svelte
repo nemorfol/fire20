@@ -13,6 +13,7 @@
 	import { getAllProfiles } from '$lib/db/profiles';
 	import {
 		calculateFireNumber,
+		calculateFireNumberWithPension,
 		calculateYearsToFire,
 		calculateSavingsRate,
 		calculateNetWorth,
@@ -80,10 +81,23 @@
 	let annualExpenses = $derived(wiAnnualExpenses);
 	let withdrawalRate = $derived(swr / 100);
 
-	// FIRE number tiene conto della pensione INPS
+	// FIRE number tiene conto della pensione INPS e del "ponte" prima di riceverla
 	let annualPensionIncome = $derived(wiPensionAmount * 13);
-	let expensesNetOfPension = $derived(Math.max(0, annualExpenses - annualPensionIncome));
-	let fireNumber = $derived(calculateFireNumber(expensesNetOfPension, withdrawalRate));
+	let realReturn = $derived((1 + expectedReturn / 100) / (1 + inflationRate / 100) - 1);
+	let fireNumberClassic = $derived(calculateFireNumber(annualExpenses, withdrawalRate));
+	let fireNumber = $derived(
+		calculateFireNumberWithPension({
+			annualExpenses,
+			withdrawalRate,
+			annualPension: annualPensionIncome,
+			retirementAge: wiRetirementAge,
+			pensionAge: wiPensionAge,
+			lifeExpectancy: wiLifeExpectancy,
+			realReturn
+		})
+	);
+	let bridgeYears = $derived(Math.max(0, wiPensionAge - wiRetirementAge));
+	let hasPensionBridge = $derived(annualPensionIncome > 0 && bridgeYears > 0);
 
 	let netWorth = $derived(profile ? calculateNetWorth(profile.portfolio as unknown as Record<string, number>) : 0);
 
@@ -243,7 +257,17 @@
 {:else}
 	<!-- FIRE Number Hero -->
 	<div class="mb-8">
-		<FireHero {fireNumber} {annualExpenses} {withdrawalRate} annualPension={annualPensionIncome} />
+		<FireHero
+			{fireNumber}
+			{annualExpenses}
+			{withdrawalRate}
+			annualPension={annualPensionIncome}
+			{fireNumberClassic}
+			{hasPensionBridge}
+			{bridgeYears}
+			pensionAge={wiPensionAge}
+			retirementAge={wiRetirementAge}
+		/>
 	</div>
 
 	<!-- Key Metrics -->

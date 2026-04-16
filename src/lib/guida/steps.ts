@@ -262,11 +262,19 @@ Questo significa che prima dei 67 devi finanziare un "gap" con il portafoglio, e
 </div>
 
 <div class="tip">
-<strong>Come il calcolatore mostra il FIRE Number con pensione INPS:</strong> se hai indicato una pensione INPS stimata nel profilo, il <strong>FIRE Number</strong> visualizzato è <em>già ridotto</em> del gettito pensionistico. La formula mostrata diventa:
-<br><br>
-<code>(Spese annuali − Pensione INPS annua) / SWR = FIRE Number</code>
-<br><br>
-Esempio: spese 15.000€/anno, pensione INPS 866€/mese (11.258€/anno), SWR 4% → FIRE Number = (15.000 − 11.258) / 0,04 = <strong>93.550€</strong>. Il calcolatore copre solo il "gap residuo" con il portafoglio, perché la pensione INPS copre il resto. Se il numero ti sembra troppo basso, verifica la stima pensione in <em>Profilo → Pensione</em>.
+<strong>Come il calcolatore gestisce il FIRE Number con pensione INPS:</strong> la pensione INPS arriva a 67 anni, ma spesso il FIRE avviene prima. Il calcolatore distingue tre casi:
+<ul>
+<li><strong>FIRE dopo l'età pensionabile (retirementAge ≥ pensionAge):</strong> la pensione è già attiva. FIRE Number = (Spese − Pensione annua) / SWR</li>
+<li><strong>Nessuna pensione INPS indicata:</strong> FIRE Number classico = Spese / SWR</li>
+<li><strong>FIRE prima della pensione INPS (caso più comune):</strong> il portafoglio deve coprire due fasi distinte — "bridge years" con spese piene (dal FIRE ai 67) + fase post-pensione con solo il gap residuo (67 → aspettativa di vita). Il calcolatore usa il <strong>valore attuale (PV)</strong> delle due rendite scontate al rendimento reale.</li>
+</ul>
+<strong>Esempio realistico:</strong> utente 45 anni, FIRE a 55, pensione INPS 866€/mese a 67, spese 15.000€/anno, rendimento reale 5%.
+<ul>
+<li>Ponte 12 anni (55 → 67) a spese piene 15.000 € → PV ≈ 133.000 €</li>
+<li>Post-pensione 18 anni (67 → 85) a spese ridotte 3.742 € → PV alla pensione ≈ 43.700 €, scontato al FIRE ≈ 24.400 €</li>
+<li><strong>FIRE Number totale ≈ 157.000 €</strong> (non 93.550 € — quello è il numero "finale" post-67)</li>
+</ul>
+Se il numero ti sembra troppo basso o troppo alto, verifica <em>Profilo → Pensione</em> (stima e età pensionabile) e l'età di FIRE nel pannello "Esplora Scenari" del calcolatore.
 </div>
 
 <div class="tip">

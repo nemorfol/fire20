@@ -5,12 +5,22 @@
 		fireNumber = 0,
 		annualExpenses = 0,
 		withdrawalRate = 0.04,
-		annualPension = 0
+		annualPension = 0,
+		fireNumberClassic = 0,
+		hasPensionBridge = false,
+		bridgeYears = 0,
+		pensionAge = 67,
+		retirementAge = 65
 	}: {
 		fireNumber?: number;
 		annualExpenses?: number;
 		withdrawalRate?: number;
 		annualPension?: number;
+		fireNumberClassic?: number;
+		hasPensionBridge?: boolean;
+		bridgeYears?: number;
+		pensionAge?: number;
+		retirementAge?: number;
 	} = $props();
 
 	let hasPension = $derived(annualPension > 0);
@@ -35,7 +45,20 @@
 		</div>
 
 		<div class="mt-6 pt-6 border-t border-white/20">
-			{#if hasPension}
+			{#if hasPensionBridge}
+				<p class="text-sm text-primary-100">
+					Il portafoglio deve coprire <strong>{bridgeYears} anni di "ponte"</strong> a spese piene
+					({formatCurrency(annualExpenses)}/anno dai {retirementAge} ai {pensionAge} anni)
+					e poi il gap residuo di {formatCurrency(expensesNetOfPension)}/anno dopo la pensione INPS.
+				</p>
+				<p class="text-xs text-primary-300 mt-2">
+					Il calcolo usa il valore attuale (PV) delle due rendite al rendimento reale.
+				</p>
+				<p class="text-xs text-primary-200 mt-2">
+					Riferimento: FIRE Number "classico" senza considerare la pensione = <strong>{formatCurrency(fireNumberClassic)}</strong>
+					({formatCurrency(annualExpenses)} / {(withdrawalRate * 100).toFixed(1)}%).
+				</p>
+			{:else if hasPension}
 				<p class="text-sm text-primary-100 font-mono">
 					({formatCurrency(annualExpenses)} − {formatCurrency(annualPension)}) / {(withdrawalRate * 100).toFixed(1)}% = <strong>{formatCurrency(fireNumber)}</strong>
 				</p>
@@ -43,7 +66,7 @@
 					(Spese annuali − Pensione INPS annua) / Tasso di prelievo sicuro = Numero FIRE
 				</p>
 				<p class="text-xs text-primary-200 mt-2">
-					Ridotto dalla pensione INPS stimata: copri con il portafoglio solo il gap residuo di {formatCurrency(expensesNetOfPension)}/anno.
+					Pensione INPS gia' attiva (FIRE age &ge; {pensionAge}): copri con il portafoglio solo il gap residuo di {formatCurrency(expensesNetOfPension)}/anno.
 				</p>
 			{:else}
 				<p class="text-sm text-primary-100 font-mono">
