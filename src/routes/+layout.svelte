@@ -21,7 +21,8 @@
 		FileChartBarSolid,
 		BookOpenSolid,
 		CogSolid,
-		FireSolid
+		FireSolid,
+		ChartLineUpOutline
 	} from 'flowbite-svelte-icons';
 	import favicon from '$lib/assets/favicon.svg';
 	import { t } from '$lib/i18n/store.svelte';
@@ -88,6 +89,9 @@
 					</SidebarItem>
 					<SidebarItem label={t('nav.risks')} href="/rischi/" active={isActive('/rischi/')} onclick={() => (sidebarOpen = false)}>
 						{#snippet icon()}<ShieldCheckSolid class={iconClass} />{/snippet}
+					</SidebarItem>
+					<SidebarItem label={t('nav.performance')} href="/performance/" active={isActive('/performance/')} onclick={() => (sidebarOpen = false)}>
+						{#snippet icon()}<ChartLineUpOutline class={iconClass} />{/snippet}
 					</SidebarItem>
 					<SidebarItem label={t('nav.history')} href="/dati-storici/" active={isActive('/dati-storici/')} onclick={() => (sidebarOpen = false)}>
 						{#snippet icon()}<FileChartBarSolid class={iconClass} />{/snippet}
