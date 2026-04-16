@@ -243,7 +243,7 @@
 {:else}
 	<!-- FIRE Number Hero -->
 	<div class="mb-8">
-		<FireHero {fireNumber} {annualExpenses} {withdrawalRate} />
+		<FireHero {fireNumber} {annualExpenses} {withdrawalRate} annualPension={annualPensionIncome} />
 	</div>
 
 	<!-- Key Metrics -->

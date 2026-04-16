@@ -262,6 +262,14 @@ Questo significa che prima dei 67 devi finanziare un "gap" con il portafoglio, e
 </div>
 
 <div class="tip">
+<strong>Come il calcolatore mostra il FIRE Number con pensione INPS:</strong> se hai indicato una pensione INPS stimata nel profilo, il <strong>FIRE Number</strong> visualizzato è <em>già ridotto</em> del gettito pensionistico. La formula mostrata diventa:
+<br><br>
+<code>(Spese annuali − Pensione INPS annua) / SWR = FIRE Number</code>
+<br><br>
+Esempio: spese 15.000€/anno, pensione INPS 866€/mese (11.258€/anno), SWR 4% → FIRE Number = (15.000 − 11.258) / 0,04 = <strong>93.550€</strong>. Il calcolatore copre solo il "gap residuo" con il portafoglio, perché la pensione INPS copre il resto. Se il numero ti sembra troppo basso, verifica la stima pensione in <em>Profilo → Pensione</em>.
+</div>
+
+<div class="tip">
 <strong>Consiglio:</strong> Calcola il FIRE Number con diversi scenari: ottimistico (spese basse, rendimenti buoni), realistico (spese medie, rendimenti storici), pessimistico (spese alte, rendimenti bassi). Il tuo piano dovrebbe funzionare anche nello scenario pessimistico.
 </div>
 

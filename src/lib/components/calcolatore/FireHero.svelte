@@ -4,12 +4,17 @@
 	let {
 		fireNumber = 0,
 		annualExpenses = 0,
-		withdrawalRate = 0.04
+		withdrawalRate = 0.04,
+		annualPension = 0
 	}: {
 		fireNumber?: number;
 		annualExpenses?: number;
 		withdrawalRate?: number;
+		annualPension?: number;
 	} = $props();
+
+	let hasPension = $derived(annualPension > 0);
+	let expensesNetOfPension = $derived(Math.max(0, annualExpenses - annualPension));
 </script>
 
 <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 p-8 text-white shadow-xl">
@@ -30,12 +35,24 @@
 		</div>
 
 		<div class="mt-6 pt-6 border-t border-white/20">
-			<p class="text-sm text-primary-100 font-mono">
-				{formatCurrency(annualExpenses)} / {(withdrawalRate * 100).toFixed(1)}% = <strong>{formatCurrency(fireNumber)}</strong>
-			</p>
-			<p class="text-xs text-primary-300 mt-1">
-				Spese annuali / Tasso di prelievo sicuro = Numero FIRE
-			</p>
+			{#if hasPension}
+				<p class="text-sm text-primary-100 font-mono">
+					({formatCurrency(annualExpenses)} − {formatCurrency(annualPension)}) / {(withdrawalRate * 100).toFixed(1)}% = <strong>{formatCurrency(fireNumber)}</strong>
+				</p>
+				<p class="text-xs text-primary-300 mt-1">
+					(Spese annuali − Pensione INPS annua) / Tasso di prelievo sicuro = Numero FIRE
+				</p>
+				<p class="text-xs text-primary-200 mt-2">
+					Ridotto dalla pensione INPS stimata: copri con il portafoglio solo il gap residuo di {formatCurrency(expensesNetOfPension)}/anno.
+				</p>
+			{:else}
+				<p class="text-sm text-primary-100 font-mono">
+					{formatCurrency(annualExpenses)} / {(withdrawalRate * 100).toFixed(1)}% = <strong>{formatCurrency(fireNumber)}</strong>
+				</p>
+				<p class="text-xs text-primary-300 mt-1">
+					Spese annuali / Tasso di prelievo sicuro = Numero FIRE
+				</p>
+			{/if}
 		</div>
 	</div>
 </div>
