@@ -10,6 +10,8 @@
 		pensionAmount = $bindable(0),
 		pensionAge = $bindable(67),
 		lifeExpectancy = $bindable(90),
+		otherIncome = $bindable(0),
+		otherIncomeEndAge = $bindable(90),
 		// Default values from profile for reset & change detection
 		defaults = {} as {
 			annualExpenses: number;
@@ -19,6 +21,8 @@
 			pensionAmount: number;
 			pensionAge: number;
 			lifeExpectancy: number;
+			otherIncome: number;
+			otherIncomeEndAge: number;
 		},
 		onreset = () => {}
 	}: {
@@ -29,6 +33,8 @@
 		pensionAmount?: number;
 		pensionAge?: number;
 		lifeExpectancy?: number;
+		otherIncome?: number;
+		otherIncomeEndAge?: number;
 		defaults?: {
 			annualExpenses: number;
 			initialPortfolio: number;
@@ -37,6 +43,8 @@
 			pensionAmount: number;
 			pensionAge: number;
 			lifeExpectancy: number;
+			otherIncome: number;
+			otherIncomeEndAge: number;
 		};
 		onreset?: () => void;
 	} = $props();
@@ -50,7 +58,9 @@
 		retirementAge !== defaults.retirementAge ||
 		pensionAmount !== defaults.pensionAmount ||
 		pensionAge !== defaults.pensionAge ||
-		lifeExpectancy !== defaults.lifeExpectancy
+		lifeExpectancy !== defaults.lifeExpectancy ||
+		otherIncome !== defaults.otherIncome ||
+		otherIncomeEndAge !== defaults.otherIncomeEndAge
 	);
 
 	function formatCurrency(value: number): string {
@@ -249,6 +259,48 @@
 							<span>100 anni</span>
 						</div>
 					</div>
+
+					<!-- Altri redditi annui (affitti, dividendi, rendite) -->
+					<div>
+						<div class="flex justify-between items-center mb-2">
+							<Label>
+								Altri redditi (affitti, dividendi)
+								{#if isChanged(otherIncome, defaults.otherIncome)}
+									<span class="inline-block w-1.5 h-1.5 rounded-full bg-yellow-400 ml-1"></span>
+								{/if}
+							</Label>
+							<span class="text-lg font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
+								{formatCurrency(otherIncome)}/anno
+							</span>
+						</div>
+						<Range min={0} max={60000} step={500} bind:value={otherIncome} />
+						<div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+							<span>0 &euro;</span>
+							<span>60.000 &euro;</span>
+						</div>
+					</div>
+
+					<!-- Durata altri redditi -->
+					{#if otherIncome > 0}
+						<div>
+							<div class="flex justify-between items-center mb-2">
+								<Label>
+									Altri redditi fino a
+									{#if isChanged(otherIncomeEndAge, defaults.otherIncomeEndAge)}
+										<span class="inline-block w-1.5 h-1.5 rounded-full bg-yellow-400 ml-1"></span>
+									{/if}
+								</Label>
+								<span class="text-lg font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
+									{otherIncomeEndAge} anni
+								</span>
+							</div>
+							<Range min={retirementAge} max={lifeExpectancy} step={1} bind:value={otherIncomeEndAge} />
+							<div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+								<span>{retirementAge} anni (cessa al FIRE)</span>
+								<span>{lifeExpectancy} anni (perpetuo)</span>
+							</div>
+						</div>
+					{/if}
 				</div>
 			</div>
 		</div>

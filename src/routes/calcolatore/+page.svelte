@@ -17,6 +17,8 @@
 		calculateYearsToFire,
 		calculateSavingsRate,
 		calculateNetWorth,
+		calculateLiquidNetWorth,
+		calculateIlliquidNetWorth,
 		projectPortfolio,
 		calculateCoastFireNumber,
 		type YearlyProjection
@@ -51,6 +53,8 @@
 	let wiPensionAmount = $state(0);
 	let wiPensionAge = $state(67);
 	let wiLifeExpectancy = $state(90);
+	let wiOtherIncome = $state(0);
+	let wiOtherIncomeEndAge = $state(90);
 
 	// Profile defaults for reset & change detection
 	let wiDefaults = $state({
@@ -60,7 +64,9 @@
 		retirementAge: 65,
 		pensionAmount: 0,
 		pensionAge: 67,
-		lifeExpectancy: 90
+		lifeExpectancy: 90,
+		otherIncome: 0,
+		otherIncomeEndAge: 90
 	});
 
 	function resetWhatIf() {
@@ -71,6 +77,8 @@
 		wiPensionAmount = wiDefaults.pensionAmount;
 		wiPensionAge = wiDefaults.pensionAge;
 		wiLifeExpectancy = wiDefaults.lifeExpectancy;
+		wiOtherIncome = wiDefaults.otherIncome;
+		wiOtherIncomeEndAge = wiDefaults.otherIncomeEndAge;
 	}
 
 	// === Derived values ===
@@ -81,7 +89,8 @@
 	let annualExpenses = $derived(wiAnnualExpenses);
 	let withdrawalRate = $derived(swr / 100);
 
-	// FIRE number tiene conto della pensione INPS e del "ponte" prima di riceverla
+	// FIRE number tiene conto della pensione INPS, del "ponte" prima di riceverla
+	// e di eventuali altri redditi perpetui (affitti, dividendi, rendite)
 	let annualPensionIncome = $derived(wiPensionAmount * 13);
 	let realReturn = $derived((1 + expectedReturn / 100) / (1 + inflationRate / 100) - 1);
 	let fireNumberClassic = $derived(calculateFireNumber(annualExpenses, withdrawalRate));
@@ -93,13 +102,18 @@
 			retirementAge: wiRetirementAge,
 			pensionAge: wiPensionAge,
 			lifeExpectancy: wiLifeExpectancy,
-			realReturn
+			realReturn,
+			otherIncome: wiOtherIncome,
+			otherIncomeEndAge: wiOtherIncomeEndAge
 		})
 	);
 	let bridgeYears = $derived(Math.max(0, wiPensionAge - wiRetirementAge));
 	let hasPensionBridge = $derived(annualPensionIncome > 0 && bridgeYears > 0);
 
+	// Patrimonio totale (info), liquido (usato per FIRE) e illiquido (immobili/TFR)
 	let netWorth = $derived(profile ? calculateNetWorth(profile.portfolio as unknown as Record<string, number>) : 0);
+	let liquidNetWorth = $derived(profile ? calculateLiquidNetWorth(profile.portfolio as unknown as Record<string, number>) : 0);
+	let illiquidNetWorth = $derived(profile ? calculateIlliquidNetWorth(profile.portfolio as unknown as Record<string, number>) : 0);
 
 	let annualSavings = $derived(wiAnnualContribution);
 
@@ -149,6 +163,8 @@
 					withdrawalStrategy: withdrawalStrategy,
 					annualPension: annualPensionIncome,
 					pensionAge: wiPensionAge,
+					otherIncome: wiOtherIncome,
+					otherIncomeEndAge: wiOtherIncomeEndAge,
 					currentAge: currentAge,
 					retirementAge: retirementAge,
 					lifeExpectancy: wiLifeExpectancy,
@@ -170,7 +186,9 @@
 
 	// === Helper: initialize What-If state from profile ===
 	function initWhatIfFromProfile(p: Profile) {
-		const nw = calculateNetWorth(p.portfolio as unknown as Record<string, number>);
+		// Usiamo il patrimonio LIQUIDO come base per il FIRE (immobili e TFR
+		// non sono prelevabili al 4%).
+		const liquidNw = calculateLiquidNetWorth(p.portfolio as unknown as Record<string, number>);
 		const monthlyTotal = Object.values(p.monthlyContributions).reduce((s, v) => s + (v || 0), 0) * 12;
 		const income = (p.annualIncome || 0) + (p.otherIncome || 0);
 		// I contributi non possono superare il reddito disponibile
@@ -178,14 +196,17 @@
 			? Math.min(monthlyTotal, Math.max(0, income - (p.annualExpenses || 0)))
 			: 0;
 
+		const lifeExp = p.lifeExpectancy || 90;
 		const defaults = {
 			annualExpenses: p.fireExpenses || p.annualExpenses || 20000,
-			initialPortfolio: nw,
+			initialPortfolio: liquidNw,
 			annualContribution: contribution,
 			retirementAge: p.retirementAge || 65,
 			pensionAmount: p.pension?.estimatedMonthly || 0,
 			pensionAge: p.pension?.pensionAge || 67,
-			lifeExpectancy: p.lifeExpectancy || 90
+			lifeExpectancy: lifeExp,
+			otherIncome: p.otherIncome || 0,
+			otherIncomeEndAge: p.otherIncomeEndAge ?? lifeExp
 		};
 
 		wiDefaults = { ...defaults };
@@ -196,6 +217,8 @@
 		wiPensionAmount = defaults.pensionAmount;
 		wiPensionAge = defaults.pensionAge;
 		wiLifeExpectancy = defaults.lifeExpectancy;
+		wiOtherIncome = defaults.otherIncome;
+		wiOtherIncomeEndAge = defaults.otherIncomeEndAge;
 	}
 
 	// === Load profile ===
@@ -272,6 +295,8 @@
 			{bridgeYears}
 			pensionAge={wiPensionAge}
 			retirementAge={wiRetirementAge}
+			otherIncome={wiOtherIncome}
+			otherIncomeEndAge={wiOtherIncomeEndAge}
 		/>
 	</div>
 
@@ -282,6 +307,8 @@
 			{yearsToFire}
 			{savingsRate}
 			{netWorth}
+			{liquidNetWorth}
+			{illiquidNetWorth}
 			{coastFireNumber}
 			{gap}
 		/>
@@ -303,6 +330,8 @@
 			bind:pensionAmount={wiPensionAmount}
 			bind:pensionAge={wiPensionAge}
 			bind:lifeExpectancy={wiLifeExpectancy}
+			bind:otherIncome={wiOtherIncome}
+			bind:otherIncomeEndAge={wiOtherIncomeEndAge}
 			defaults={wiDefaults}
 			onreset={resetWhatIf}
 		/>

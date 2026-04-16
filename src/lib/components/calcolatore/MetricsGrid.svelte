@@ -15,6 +15,8 @@
 		yearsToFire = 0,
 		savingsRate = 0,
 		netWorth = 0,
+		liquidNetWorth = 0,
+		illiquidNetWorth = 0,
 		coastFireNumber = 0,
 		gap = 0
 	}: {
@@ -22,6 +24,8 @@
 		yearsToFire?: number;
 		savingsRate?: number;
 		netWorth?: number;
+		liquidNetWorth?: number;
+		illiquidNetWorth?: number;
 		coastFireNumber?: number;
 		gap?: number;
 	} = $props();
@@ -68,18 +72,20 @@
 		color="green"
 	/>
 	<StatCard
-		title="Patrimonio Netto"
-		value={formatCurrency(netWorth)}
-		subtitle="Valore attuale del portafoglio"
+		title="Patrimonio Liquido"
+		value={formatCurrency(liquidNetWorth || netWorth)}
+		subtitle={illiquidNetWorth > 0
+			? `Totale ${formatCurrency(netWorth)} (di cui ${formatCurrency(illiquidNetWorth)} illiquidi: immobili/TFR)`
+			: 'Azioni, obbligazioni, cash, ETF, fondo pensione'}
 		icon={WalletSolid}
 		color="primary"
 	/>
 	<StatCard
 		title="Coast FIRE Number"
 		value={formatCurrency(coastFireNumber)}
-		subtitle={netWorth >= coastFireNumber ? 'Coast FIRE raggiunto!' : 'Soglia per smettere di contribuire'}
+		subtitle={(liquidNetWorth || netWorth) >= coastFireNumber ? 'Coast FIRE raggiunto!' : 'Soglia per smettere di contribuire'}
 		icon={ShieldCheckSolid}
-		trend={netWorth >= coastFireNumber ? 'up' : 'neutral'}
+		trend={(liquidNetWorth || netWorth) >= coastFireNumber ? 'up' : 'neutral'}
 		color="yellow"
 	/>
 	<StatCard

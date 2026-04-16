@@ -262,19 +262,24 @@ Questo significa che prima dei 67 devi finanziare un "gap" con il portafoglio, e
 </div>
 
 <div class="tip">
-<strong>Come il calcolatore gestisce il FIRE Number con pensione INPS:</strong> la pensione INPS arriva a 67 anni, ma spesso il FIRE avviene prima. Il calcolatore distingue tre casi:
+<strong>Come il calcolatore gestisce il FIRE Number con pensione INPS e rendite passive:</strong> la pensione INPS arriva a 67 anni, ma spesso il FIRE avviene prima. Inoltre molti italiani hanno <em>altri redditi</em> (affitti, dividendi) che continuano in FIRE. Il calcolatore distingue tre casi e sottrae sempre il valore attuale (PV) degli altri redditi:
 <ul>
-<li><strong>FIRE dopo l'età pensionabile (retirementAge ≥ pensionAge):</strong> la pensione è già attiva. FIRE Number = (Spese − Pensione annua) / SWR</li>
-<li><strong>Nessuna pensione INPS indicata:</strong> FIRE Number classico = Spese / SWR</li>
-<li><strong>FIRE prima della pensione INPS (caso più comune):</strong> il portafoglio deve coprire due fasi distinte — "bridge years" con spese piene (dal FIRE ai 67) + fase post-pensione con solo il gap residuo (67 → aspettativa di vita). Il calcolatore usa il <strong>valore attuale (PV)</strong> delle due rendite scontate al rendimento reale.</li>
+<li><strong>FIRE dopo l'età pensionabile (retirementAge ≥ pensionAge):</strong> la pensione è già attiva. FIRE Number = (Spese − Pensione annua) / SWR − PV(altri redditi)</li>
+<li><strong>Nessuna pensione INPS indicata:</strong> FIRE Number classico = Spese / SWR − PV(altri redditi)</li>
+<li><strong>FIRE prima della pensione INPS (caso più comune):</strong> il portafoglio deve coprire due fasi distinte — "bridge years" con spese piene (dal FIRE ai 67) + fase post-pensione con solo il gap residuo (67 → aspettativa di vita) − PV(altri redditi attivi nel periodo). Il calcolatore usa il <strong>valore attuale</strong> delle rendite scontate al rendimento reale.</li>
 </ul>
-<strong>Esempio realistico:</strong> utente 45 anni, FIRE a 55, pensione INPS 866€/mese a 67, spese 15.000€/anno, rendimento reale 5%.
+<strong>Esempio realistico:</strong> utente 45 anni, FIRE a 55, pensione INPS 866€/mese a 67, spese 15.000€/anno, affitto netto 15.000€/anno (perpetuo), rendimento reale 5%.
 <ul>
 <li>Ponte 12 anni (55 → 67) a spese piene 15.000 € → PV ≈ 133.000 €</li>
-<li>Post-pensione 18 anni (67 → 85) a spese ridotte 3.742 € → PV alla pensione ≈ 43.700 €, scontato al FIRE ≈ 24.400 €</li>
-<li><strong>FIRE Number totale ≈ 157.000 €</strong> (non 93.550 € — quello è il numero "finale" post-67)</li>
+<li>Post-pensione 18 anni (67 → 85) a spese ridotte 3.742 € → PV ≈ 24.400 € al FIRE</li>
+<li>Meno PV affitti 30 anni (55 → 85) a 15.000 € → PV ≈ 230.600 €</li>
+<li><strong>FIRE Number totale ≈ 0 €</strong>: l'affitto copre da solo tutte le spese. In pratica sei già in FIRE con quel flusso passivo.</li>
 </ul>
-Se il numero ti sembra troppo basso o troppo alto, verifica <em>Profilo → Pensione</em> (stima e età pensionabile) e l'età di FIRE nel pannello "Esplora Scenari" del calcolatore.
+Se il numero ti sembra troppo basso o troppo alto, verifica <em>Profilo → Pensione</em> (stima e età pensionabile), <em>Profilo → Reddito</em> (altri redditi e loro durata), e l'età di FIRE nel pannello "Esplora Scenari" del calcolatore.
+</div>
+
+<div class="tip">
+<strong>Patrimonio liquido vs illiquido:</strong> nel tab <em>Profilo → Patrimonio</em> gli asset sono divisi in due gruppi. Solo i <strong>liquidi</strong> (ETF, azioni, obbligazioni, cash, oro, cripto, fondo pensione) entrano nel calcolo del FIRE Number perché sono prelevabili al 4%. Gli <strong>illiquidi</strong> (immobili, TFR) non vengono inclusi: producono reddito (che va in "Altri redditi") o hanno vincoli di prelievo. Questo evita il doppio conteggio classico: se conti il valore di un immobile come "patrimonio da prelevare" E il suo affitto come reddito, stai sommando due benefici dello stesso asset.
 </div>
 
 <div class="tip">

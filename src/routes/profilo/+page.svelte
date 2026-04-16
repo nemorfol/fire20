@@ -41,6 +41,7 @@
 	let annualIncome = $state(30000);
 	let incomeGrowthRate = $state(2.0);
 	let otherIncome = $state(0);
+	let otherIncomeEndAge = $state(85);
 	let annualExpenses = $state(20000);
 	let fireExpenses = $state(18000);
 	let expenseInflation = $state(2.0);
@@ -85,6 +86,7 @@
 			annualIncome: 30000,
 			incomeGrowthRate: 2.0,
 			otherIncome: 0,
+			otherIncomeEndAge: 85,
 			annualExpenses: 20000,
 			fireExpenses: 18000,
 			expenseInflation: 2.0,
@@ -123,6 +125,7 @@
 		annualIncome = p.annualIncome;
 		incomeGrowthRate = p.incomeGrowthRate;
 		otherIncome = p.otherIncome;
+		otherIncomeEndAge = p.otherIncomeEndAge ?? p.lifeExpectancy;
 		annualExpenses = p.annualExpenses;
 		fireExpenses = p.fireExpenses;
 		expenseInflation = p.expenseInflation;
@@ -141,6 +144,7 @@
 			annualIncome,
 			incomeGrowthRate,
 			otherIncome,
+			otherIncomeEndAge,
 			annualExpenses,
 			fireExpenses,
 			expenseInflation,
@@ -339,6 +343,9 @@
 								bind:annualIncome
 								bind:incomeGrowthRate
 								bind:otherIncome
+								bind:otherIncomeEndAge
+								{lifeExpectancy}
+								currentAge={new Date().getFullYear() - birthYear}
 							/>
 						</div>
 					</TabItem>

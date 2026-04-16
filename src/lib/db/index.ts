@@ -78,6 +78,14 @@ export interface Profile {
 	annualIncome: number;
 	incomeGrowthRate: number;
 	otherIncome: number;
+	/**
+	 * Eta' fino alla quale gli "altri redditi" (affitti, dividendi, royalties,
+	 * rendite) continuano a essere percepiti. Se omesso o <= retirementAge,
+	 * gli altri redditi cessano al FIRE (comportamento legacy: reddito attivo).
+	 * Se > retirementAge, vengono trattati come rendita passiva perpetua.
+	 * Default consigliato per rendite passive: lifeExpectancy.
+	 */
+	otherIncomeEndAge?: number;
 	annualExpenses: number;
 	fireExpenses: number;
 	expenseInflation: number;

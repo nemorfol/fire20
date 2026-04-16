@@ -10,7 +10,9 @@
 		hasPensionBridge = false,
 		bridgeYears = 0,
 		pensionAge = 67,
-		retirementAge = 65
+		retirementAge = 65,
+		otherIncome = 0,
+		otherIncomeEndAge = 0
 	}: {
 		fireNumber?: number;
 		annualExpenses?: number;
@@ -21,10 +23,13 @@
 		bridgeYears?: number;
 		pensionAge?: number;
 		retirementAge?: number;
+		otherIncome?: number;
+		otherIncomeEndAge?: number;
 	} = $props();
 
 	let hasPension = $derived(annualPension > 0);
 	let expensesNetOfPension = $derived(Math.max(0, annualExpenses - annualPension));
+	let hasOtherIncomeInFire = $derived(otherIncome > 0 && otherIncomeEndAge > retirementAge);
 </script>
 
 <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 p-8 text-white shadow-xl">
@@ -74,6 +79,17 @@
 				</p>
 				<p class="text-xs text-primary-300 mt-1">
 					Spese annuali / Tasso di prelievo sicuro = Numero FIRE
+				</p>
+			{/if}
+
+			{#if hasOtherIncomeInFire}
+				<p class="text-xs text-emerald-200 mt-3 border-t border-white/10 pt-3">
+					Altri redditi in FIRE: <strong>{formatCurrency(otherIncome)}/anno</strong>
+					{#if otherIncomeEndAge > retirementAge}
+						fino a {otherIncomeEndAge} anni
+					{/if}
+					(affitti, dividendi, rendite). Il valore attuale di questa rendita riduce
+					il FIRE Number: senza di essa sarebbe <strong>{formatCurrency(fireNumberClassic)}</strong>.
 				</p>
 			{/if}
 		</div>

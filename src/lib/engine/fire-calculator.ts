@@ -30,7 +30,7 @@ export interface YearlyProjection {
 
 /** Parametri per la proiezione deterministica del portafoglio */
 export interface ProjectionParams {
-	/** Portafoglio iniziale */
+	/** Portafoglio iniziale (solo asset liquidi!) */
 	initialPortfolio: number;
 	/** Contributo annuale (durante accumulazione) */
 	annualContribution: number;
@@ -50,6 +50,10 @@ export interface ProjectionParams {
 	annualPension?: number;
 	/** Eta' di accesso alla pensione INPS */
 	pensionAge?: number;
+	/** Altri redditi annui (affitti, dividendi, rendite): flusso passivo */
+	otherIncome?: number;
+	/** Eta' fino a cui otherIncome continua. Se <= retirementAge = solo reddito attivo */
+	otherIncomeEndAge?: number;
 	/** Età attuale */
 	currentAge: number;
 	/** Età di pensionamento FIRE */
@@ -97,6 +101,10 @@ export function calculateFireNumberWithPension(params: {
 	pensionAge: number;
 	lifeExpectancy: number;
 	realReturn?: number;
+	/** Altri redditi perpetui / a termine (affitti, dividendi, rendite) */
+	otherIncome?: number;
+	/** Eta' fino alla quale otherIncome continua. <= retirementAge = non conta in FIRE */
+	otherIncomeEndAge?: number;
 }): number {
 	const {
 		annualExpenses,
@@ -105,39 +113,48 @@ export function calculateFireNumberWithPension(params: {
 		retirementAge,
 		pensionAge,
 		lifeExpectancy,
-		realReturn = 0.02
+		realReturn = 0.02,
+		otherIncome = 0,
+		otherIncomeEndAge = 0
 	} = params;
 
 	if (withdrawalRate <= 0) return Infinity;
 	if (annualExpenses <= 0) return 0;
 
-	// Nessun beneficio dalla pensione: regola del 4% classica su spese piene
+	const r = realReturn;
+	const annuityPV = (cashflow: number, n: number) => {
+		if (n <= 0 || cashflow === 0) return 0;
+		if (Math.abs(r) < 1e-9) return cashflow * n;
+		return (cashflow * (1 - Math.pow(1 + r, -n))) / r;
+	};
+
+	// Calcolo PV del flusso "altri redditi" attivo dopo il FIRE fino a otherIncomeEndAge
+	const otherIncomeYears = Math.max(0, Math.min(otherIncomeEndAge, lifeExpectancy) - retirementAge);
+	const pvOtherIncome = annuityPV(otherIncome, otherIncomeYears);
+
+	// Nessun beneficio dalla pensione: regola del 4% classica su spese piene,
+	// ridotta dal PV degli altri redditi se presenti
 	if (annualPension <= 0 || pensionAge >= lifeExpectancy) {
-		return annualExpenses / withdrawalRate;
+		const base = annualExpenses / withdrawalRate;
+		return Math.max(0, base - pvOtherIncome);
 	}
 
-	// FIRE oltre l'eta' pensionabile: pensione gia' attiva, si applica lo sconto diretto
+	// FIRE oltre l'eta' pensionabile: pensione gia' attiva
 	if (pensionAge <= retirementAge) {
-		return Math.max(0, annualExpenses - annualPension) / withdrawalRate;
+		const base = Math.max(0, annualExpenses - annualPension) / withdrawalRate;
+		return Math.max(0, base - pvOtherIncome);
 	}
 
 	// FIRE prima della pensione INPS: calcolo in due fasi con PV delle rendite
 	const bridgeYears = pensionAge - retirementAge;
 	const pensionYears = Math.max(0, lifeExpectancy - pensionAge);
 	const netExpensesAfterPension = Math.max(0, annualExpenses - annualPension);
-	const r = realReturn;
-
-	const annuityPV = (cashflow: number, n: number) => {
-		if (n <= 0) return 0;
-		if (Math.abs(r) < 1e-9) return cashflow * n;
-		return (cashflow * (1 - Math.pow(1 + r, -n))) / r;
-	};
 
 	const pvBridge = annuityPV(annualExpenses, bridgeYears);
 	const pvPostPensionAtStart = annuityPV(netExpensesAfterPension, pensionYears);
 	const pvPostPension = pvPostPensionAtStart / Math.pow(1 + r, bridgeYears);
 
-	return pvBridge + pvPostPension;
+	return Math.max(0, pvBridge + pvPostPension - pvOtherIncome);
 }
 
 /**
@@ -203,6 +220,36 @@ export function calculateNetWorth(portfolio: Record<string, number>): number {
 }
 
 /**
+ * Asset liquidi: prelevabili direttamente o quasi, usati per il calcolo
+ * del FIRE Number e della proiezione con SWR (regola del 4%).
+ */
+export const LIQUID_ASSET_KEYS = [
+	'stocks', 'bonds', 'cash', 'gold', 'crypto', 'pensionFund', 'other'
+] as const;
+
+/**
+ * Asset illiquidi: producono reddito (affitti) o hanno vincoli di prelievo
+ * (TFR). NON fanno parte del portafoglio da cui si applica la regola del 4%.
+ */
+export const ILLIQUID_ASSET_KEYS = ['realEstate', 'tfr'] as const;
+
+/**
+ * Patrimonio liquido: somma degli asset dai quali si puo' effettivamente
+ * prelevare con la regola del 4% per coprire le spese in FIRE.
+ */
+export function calculateLiquidNetWorth(portfolio: Record<string, number>): number {
+	return LIQUID_ASSET_KEYS.reduce((sum, key) => sum + (portfolio[key] || 0), 0);
+}
+
+/**
+ * Patrimonio illiquido: immobili e TFR. Non prelevabile al 4% ma puo'
+ * generare redditi passivi (affitti) o essere liquidato eccezionalmente.
+ */
+export function calculateIlliquidNetWorth(portfolio: Record<string, number>): number {
+	return ILLIQUID_ASSET_KEYS.reduce((sum, key) => sum + (portfolio[key] || 0), 0);
+}
+
+/**
  * Genera una proiezione deterministica anno per anno del portafoglio.
  * Include fase di accumulazione e fase di decumulo.
  *
@@ -221,6 +268,8 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 		withdrawalStrategy = 'fixed',
 		annualPension = 0,
 		pensionAge = 67,
+		otherIncome = 0,
+		otherIncomeEndAge = 0,
 		currentAge,
 		retirementAge,
 		lifeExpectancy,
@@ -243,6 +292,12 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 
 		// Inflazione cumulata dall'inizio
 		const inflationCumulative = Math.pow(1 + inflationRate, i);
+
+		// "Altri redditi" attivi in questo anno (se l'eta' non ha ancora superato
+		// otherIncomeEndAge). Vengono inflazionati come gli altri flussi.
+		const otherIncomeActive = otherIncome > 0 && age <= otherIncomeEndAge
+			? otherIncome * inflationCumulative
+			: 0;
 
 		// Contributi (solo in fase di accumulazione)
 		// I contributi crescono con l'inflazione (stipendio si adegua).
@@ -294,8 +349,9 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 				});
 			}
 
-			// La pensione riduce quanto serve prelevare dal portafoglio
-			actualWithdrawals = Math.max(0, actualWithdrawals - pensionIncome);
+			// Pensione INPS e altri redditi (affitti/dividendi) riducono quanto serve
+			// prelevare dal portafoglio
+			actualWithdrawals = Math.max(0, actualWithdrawals - pensionIncome - otherIncomeActive);
 			previousWithdrawal = actualWithdrawals;
 		}
 
