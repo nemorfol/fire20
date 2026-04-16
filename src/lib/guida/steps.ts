@@ -922,7 +922,9 @@ Per compensare, dovresti vendere un'azione o un'obbligazione singola con 5.000�
 		category: 'Fiscalità Italiana',
 		icon: '🏦',
 		summary:
-			"I vantaggi fiscali enormi dei fondi pensione complementari e come sfruttarli al massimo nel percorso FIRE.",
+			"I vantaggi fiscali dei fondi pensione, le 5 nuove strategie di erogazione 2026 (rendita vitalizia, durata definita, prelievi liberi, frazionata, capitale 60%), TFR, RITA e extradeducibilità.",
+		appLink: '/fondo-pensione/',
+		appLinkLabel: 'Vai al Simulatore Fondo Pensione',
 		content: `
 <h3>Il Pilastro Nascosto del FIRE Italiano</h3>
 <p>I <strong>fondi pensione complementari</strong> sono probabilmente lo strumento più sottovalutato dagli aspiranti FIRE italiani. Offrono vantaggi fiscali che nessun altro investimento può eguagliare, e possono essere una componente strategica fondamentale del piano di pensionamento anticipato.</p>
@@ -1011,8 +1013,72 @@ Versato: 3.000€ × 5 = 15.000€<br>
 Dal 2025 in poi, per i successivi 20 anni, Mario può dedurre fino a <strong>5.300€ + 548€ = 5.848€/anno</strong> (il plafond residuo spalmato su 20 anni), con un massimo extra di 2.650€/anno.<br>
 </div>
 
+<h3>Riforma 2026: Le 5 Modalità di Erogazione</h3>
+<p>La <strong>Legge di Bilancio 2026</strong> (in vigore dal 1° luglio 2026) ha rivoluzionato le opzioni di erogazione del fondo pensione. Prima esistevano solo rendita vitalizia e capitale (max 50%). Ora le opzioni sono 5:</p>
+
+<h3>1. Rendita Vitalizia (classica)</h3>
+<p>L'opzione tradizionale: il capitale viene trasferito a una compagnia assicurativa che paga un assegno mensile <strong>a vita</strong>. L'importo dipende dall'età, dal genere e dalle tavole attuariali.</p>
+<ul>
+<li><strong>Tassazione</strong>: 15% → 9% (scende dello 0,30%/anno dopo il 15° anno)</li>
+<li><strong>Pro</strong>: certezza dell'importo, protezione dalla longevità</li>
+<li><strong>Contro</strong>: il capitale esce dal fondo, nulla agli eredi al decesso, importo fisso</li>
+</ul>
+
+<h3>2. Rendita a Durata Definita <span style="color: #3b82f6; font-size: 0.8em;">[NUOVA 2026]</span></h3>
+<p>Il capitale <strong>resta nel fondo</strong> e continua a generare rendimenti. La rata annuale viene calcolata dividendo il montante per gli anni di vita residua secondo le tabelle ISTAT, e <strong>ricalcolata ogni anno</strong>.</p>
+<ul>
+<li><strong>Tassazione</strong>: 15% → 9% (identica alla vitalizia)</li>
+<li><strong>Pro</strong>: capitale resta investito, rata si adegua, <strong>eredi ricevono il capitale residuo</strong></li>
+<li><strong>Contro</strong>: importo variabile (dipende dai rendimenti del fondo)</li>
+</ul>
+
+<div class="example">
+<strong>Esempio:</strong> Montante 200.000€ a 67 anni. Aspettativa di vita: 17,2 anni.<br>
+Rata anno 1: 200.000€ / 17,2 = <strong>11.628€/anno</strong> (~893€/mese lordi).<br>
+Se il fondo rende il 3% netto, a fine anno il capitale è ~194.372€. Rata anno 2: 194.372€ / 16,2 = 11.998€/anno.<br>
+Se muori dopo 10 anni con 120.000€ residui → <strong>eredi ricevono 120.000€</strong>.
+</div>
+
+<h3>3. Prelievi Liberi <span style="color: #22c55e; font-size: 0.8em;">[NUOVA 2026 - IDEALE PER FIRE]</span></h3>
+<p>La modalità più flessibile: <strong>prelevi quando vuoi e quanto vuoi</strong>, senza vincoli di rata fissa. Il tetto massimo cumulativo è pari alla somma delle rate virtuali che avresti ricevuto con la rendita a durata definita.</p>
+<ul>
+<li><strong>Tassazione</strong>: 15% → 9% (identica alla vitalizia)</li>
+<li><strong>Pro</strong>: massima flessibilità, prelevi solo quando serve, capitale resta investito</li>
+<li><strong>Contro</strong>: richiede disciplina (rischio di prelevare troppo presto)</li>
+<li><strong>Perché è ideale per FIRE</strong>: puoi modulare i prelievi in base alle tue spese reali, prelevare meno negli anni buoni (quando il portafoglio rende) e di più quando serve</li>
+</ul>
+
+<h3>4. Erogazione Frazionata <span style="color: #ef4444; font-size: 0.8em;">[NUOVA 2026]</span></h3>
+<p>Rate fisse su un periodo minimo di 5 anni. Simile a un piano di ammortamento.</p>
+<ul>
+<li><strong>Tassazione</strong>: <strong>20%</strong> base → 15% (riduzione -0,25%/anno dopo il 15° anno) — <strong>PIÙ ALTA</strong> delle altre opzioni!</li>
+<li><strong>Pro</strong>: semplicità, importo prevedibile</li>
+<li><strong>Contro</strong>: tassazione significativamente superiore, meno flessibile</li>
+</ul>
+
+<div class="warning">
+<strong>Attenzione:</strong> L'erogazione frazionata costa mediamente il <strong>40-65% in più di tasse</strong> rispetto alle altre opzioni. Su un montante di 200.000€ con 25 anni di partecipazione, la differenza può essere di <strong>5.000-8.000€ in più di tasse</strong>. Sconsigliata nella maggior parte dei casi.
+</div>
+
+<h3>5. Capitale (ora fino al 60%)</h3>
+<p>La quota richiedibile in un'unica soluzione è stata alzata dal 50% al <strong>60%</strong>. Il restante 40% va in una delle forme di rendita sopra. Se la rendita annua risultante è inferiore al 50% dell'assegno sociale (~267€/mese nel 2026), puoi richiedere il <strong>100% in capitale</strong>.</p>
+<ul>
+<li><strong>Tassazione</strong>: 15% → 9%</li>
+<li><strong>Strategia FIRE</strong>: ritira il 60% come capitale per coprire i primi anni di FIRE, e lascia il 40% come rendita a durata definita o prelievi liberi</li>
+</ul>
+
+<div class="example">
+<strong>Confronto strategico per FIRE:</strong><br><br>
+<strong>Montante 200.000€, 25 anni nel fondo (aliquota 12%), età 62:</strong><br>
+- Rendita vitalizia: ~800€/mese netti, a vita, nulla agli eredi<br>
+- Rendita durata definita: ~750€/mese iniziali, ricalcolata, <strong>eredi ok</strong><br>
+- <strong>Prelievi liberi: prelevi ~9.000-10.000€/anno quando serve, capitale resta investito</strong><br>
+- 60% capitale (120.000€ netti ~106.000€) + 40% in rendita (~320€/mese)<br><br>
+Per un FIRE seeker, i <strong>prelievi liberi</strong> o il <strong>mix capitale 60% + rendita durata definita</strong> sono generalmente le opzioni migliori.
+</div>
+
 <div class="tip">
-<strong>Consiglio:</strong> Anche se punti al FIRE, versa sempre almeno i 5.300€ annui nel fondo pensione (o fino a 7.950€ se hai diritto all'extradeducibilità). Il risparmio fiscale in entrata (33-43%) supera enormemente la tassazione in uscita (9-15%). Usa la RITA come ponte tra il FIRE e la pensione INPS. È uno strumento progettato quasi su misura per i FIRE seeker italiani.
+<strong>Consiglio:</strong> Anche se punti al FIRE, versa sempre almeno i 5.300€ annui nel fondo pensione (o fino a 7.950€ se hai diritto all'extradeducibilità). Il risparmio fiscale in entrata (33-43%) supera enormemente la tassazione in uscita (9-15%). Usa la RITA come ponte tra il FIRE e la pensione INPS, poi scegli tra prelievi liberi o rendita a durata definita. Usa la sezione <strong>Fondo Pensione</strong> dell'app per confrontare tutte le opzioni con i tuoi numeri.
 </div>
 
 <div class="warning">
