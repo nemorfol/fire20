@@ -26,6 +26,7 @@
 	import MetricsGrid from '$lib/components/calcolatore/MetricsGrid.svelte';
 	import WithdrawalStrategySelector from '$lib/components/calcolatore/WithdrawalStrategySelector.svelte';
 	import ParameterControls from '$lib/components/calcolatore/ParameterControls.svelte';
+	import WhatIfPanel from '$lib/components/calcolatore/WhatIfPanel.svelte';
 	import ProjectionChart from '$lib/components/calcolatore/ProjectionChart.svelte';
 	import ProjectionTable from '$lib/components/calcolatore/ProjectionTable.svelte';
 	import TaxOptimization from '$lib/components/calcolatore/TaxOptimization.svelte';
@@ -41,36 +42,55 @@
 	let taxMode = $state<'stocks' | 'btp' | 'blended'>('blended');
 	let withdrawalStrategy = $state<'fixed' | 'vpw' | 'guyton-klinger' | 'cape-based'>('fixed');
 
+	// === What-If overrides (initialized from profile in onMount) ===
+	let wiAnnualExpenses = $state(20000);
+	let wiInitialPortfolio = $state(0);
+	let wiAnnualContribution = $state(0);
+	let wiRetirementAge = $state(65);
+	let wiPensionAmount = $state(0);
+	let wiPensionAge = $state(67);
+	let wiLifeExpectancy = $state(90);
+
+	// Profile defaults for reset & change detection
+	let wiDefaults = $state({
+		annualExpenses: 20000,
+		initialPortfolio: 0,
+		annualContribution: 0,
+		retirementAge: 65,
+		pensionAmount: 0,
+		pensionAge: 67,
+		lifeExpectancy: 90
+	});
+
+	function resetWhatIf() {
+		wiAnnualExpenses = wiDefaults.annualExpenses;
+		wiInitialPortfolio = wiDefaults.initialPortfolio;
+		wiAnnualContribution = wiDefaults.annualContribution;
+		wiRetirementAge = wiDefaults.retirementAge;
+		wiPensionAmount = wiDefaults.pensionAmount;
+		wiPensionAge = wiDefaults.pensionAge;
+		wiLifeExpectancy = wiDefaults.lifeExpectancy;
+	}
+
 	// === Derived values ===
 	let taxRate = $derived(
 		taxMode === 'stocks' ? 0.26 : taxMode === 'btp' ? 0.125 : 0.20
 	);
 
-	let annualExpenses = $derived(profile ? (profile.fireExpenses || profile.annualExpenses) : 0);
+	let annualExpenses = $derived(wiAnnualExpenses);
 	let withdrawalRate = $derived(swr / 100);
 
-	let annualPensionIncome = $derived(profile ? (profile.pension?.estimatedMonthly || 0) * 13 : 0);
+	// FIRE number tiene conto della pensione INPS
+	let annualPensionIncome = $derived(wiPensionAmount * 13);
 	let expensesNetOfPension = $derived(Math.max(0, annualExpenses - annualPensionIncome));
 	let fireNumber = $derived(calculateFireNumber(expensesNetOfPension, withdrawalRate));
 
 	let netWorth = $derived(profile ? calculateNetWorth(profile.portfolio as unknown as Record<string, number>) : 0);
 
-	let monthlyContributionsTotal = $derived(
-		profile
-			? Object.values(profile.monthlyContributions).reduce((s, v) => s + (v || 0), 0) * 12
-			: 0
-	);
-
-	// I contributi non possono superare il reddito disponibile (reddito - spese)
-	let totalIncome = $derived(profile ? (profile.annualIncome || 0) + (profile.otherIncome || 0) : 0);
-	let annualSavings = $derived(
-		totalIncome > 0
-			? Math.min(monthlyContributionsTotal, Math.max(0, totalIncome - (profile?.annualExpenses || 0)))
-			: 0
-	);
+	let annualSavings = $derived(wiAnnualContribution);
 
 	let yearsToFire = $derived(
-		calculateYearsToFire(netWorth, annualSavings, expectedReturn / 100, fireNumber)
+		calculateYearsToFire(wiInitialPortfolio, annualSavings, expectedReturn / 100, fireNumber)
 	);
 
 	let savingsRate = $derived(
@@ -85,27 +105,21 @@
 		profile
 			? calculateCoastFireNumber(
 					currentAge,
-					profile.retirementAge,
+					wiRetirementAge,
 					fireNumber,
 					expectedReturn / 100
 				)
 			: 0
 	);
 
-	let gap = $derived(fireNumber - netWorth);
+	let gap = $derived(fireNumber - wiInitialPortfolio);
 
-	let retirementAge = $derived(
-		profile
-			? yearsToFire >= 0 && yearsToFire < 100
-				? currentAge + yearsToFire
-				: profile.retirementAge
-			: 65
-	);
+	let retirementAge = $derived(wiRetirementAge);
 
 	let projections = $derived<YearlyProjection[]>(
 		profile
 			? projectPortfolio({
-					initialPortfolio: netWorth,
+					initialPortfolio: wiInitialPortfolio,
 					annualContribution: annualSavings,
 					annualExpenses: annualExpenses,
 					expectedReturn: expectedReturn / 100,
@@ -113,11 +127,11 @@
 					taxRate: taxRate,
 					withdrawalRate: withdrawalRate,
 					withdrawalStrategy: withdrawalStrategy,
-					annualPension: (profile.pension?.estimatedMonthly || 0) * 13,
-					pensionAge: profile.pension?.pensionAge || 67,
+					annualPension: annualPensionIncome,
+					pensionAge: wiPensionAge,
 					currentAge: currentAge,
 					retirementAge: retirementAge,
-					lifeExpectancy: profile.lifeExpectancy,
+					lifeExpectancy: wiLifeExpectancy,
 					startYear: new Date().getFullYear()
 				})
 			: []
@@ -133,6 +147,36 @@
 				])
 			: []
 	);
+
+	// === Helper: initialize What-If state from profile ===
+	function initWhatIfFromProfile(p: Profile) {
+		const nw = calculateNetWorth(p.portfolio as unknown as Record<string, number>);
+		const monthlyTotal = Object.values(p.monthlyContributions).reduce((s, v) => s + (v || 0), 0) * 12;
+		const income = (p.annualIncome || 0) + (p.otherIncome || 0);
+		// I contributi non possono superare il reddito disponibile
+		const contribution = income > 0
+			? Math.min(monthlyTotal, Math.max(0, income - (p.annualExpenses || 0)))
+			: 0;
+
+		const defaults = {
+			annualExpenses: p.fireExpenses || p.annualExpenses || 20000,
+			initialPortfolio: nw,
+			annualContribution: contribution,
+			retirementAge: p.retirementAge || 65,
+			pensionAmount: p.pension?.estimatedMonthly || 0,
+			pensionAge: p.pension?.pensionAge || 67,
+			lifeExpectancy: p.lifeExpectancy || 90
+		};
+
+		wiDefaults = { ...defaults };
+		wiAnnualExpenses = defaults.annualExpenses;
+		wiInitialPortfolio = defaults.initialPortfolio;
+		wiAnnualContribution = defaults.annualContribution;
+		wiRetirementAge = defaults.retirementAge;
+		wiPensionAmount = defaults.pensionAmount;
+		wiPensionAge = defaults.pensionAge;
+		wiLifeExpectancy = defaults.lifeExpectancy;
+	}
 
 	// === Load profile ===
 	onMount(async () => {
@@ -151,6 +195,7 @@
 					else if (strat === 'guyton-klinger') withdrawalStrategy = 'guyton-klinger';
 					else if (strat === 'cape-based') withdrawalStrategy = 'cape-based';
 				}
+				initWhatIfFromProfile(profile);
 			}
 		} catch (err) {
 			console.error('Errore caricamento profilo:', err);
@@ -218,6 +263,21 @@
 		<ParameterControls bind:swr bind:expectedReturn bind:inflationRate bind:taxMode />
 	</div>
 
+	<!-- What-If Panel -->
+	<div class="mb-8">
+		<WhatIfPanel
+			bind:annualExpenses={wiAnnualExpenses}
+			bind:initialPortfolio={wiInitialPortfolio}
+			bind:annualContribution={wiAnnualContribution}
+			bind:retirementAge={wiRetirementAge}
+			bind:pensionAmount={wiPensionAmount}
+			bind:pensionAge={wiPensionAge}
+			bind:lifeExpectancy={wiLifeExpectancy}
+			defaults={wiDefaults}
+			onreset={resetWhatIf}
+		/>
+	</div>
+
 	<!-- Projection Chart -->
 	<div class="mb-8">
 		<ProjectionChart
@@ -233,7 +293,7 @@
 		<ProjectionTable
 			{projections}
 			{retirementAge}
-			pensionAge={profile.pension?.pensionAge ?? 67}
+			pensionAge={wiPensionAge}
 		/>
 	</div>
 
