@@ -606,7 +606,7 @@ Dopo un anno negativo con inflazione al 3%: NON adegui per l'inflazione. Resti a
 </div>
 
 <div class="tip">
-<strong>Prova la modalita "Esplora Scenari":</strong> Nel calcolatore FIRE trovi il pannello What If con slider su tutti i parametri (spese, portafoglio, eta pensionamento, pensione INPS, aspettativa di vita). Cambiando i valori il grafico si aggiorna in tempo reale, permettendoti di confrontare rapidamente l'impatto di ogni strategia e parametro.
+<strong>Prova la modalita "Esplora Scenari":</strong> Nel calcolatore FIRE trovi il pannello What If con slider su tutti i parametri (spese, portafoglio, eta FIRE target, pensione INPS, aspettativa di vita). Cambiando i valori il grafico si aggiorna in tempo reale, permettendoti di confrontare rapidamente l'impatto di ogni strategia e parametro.
 </div>
 
 <div class="warning">

@@ -54,7 +54,7 @@
 	<StatCard
 		title="Anni al FIRE"
 		value={yearsLabel}
-		subtitle={yearsToFire > 0 ? `Pensionamento nel ${new Date().getFullYear() + yearsToFire}` : ''}
+		subtitle={yearsToFire > 0 ? `FIRE nel ${new Date().getFullYear() + yearsToFire}` : ''}
 		icon={CalendarMonthSolid}
 		trend={yearsTrend}
 		color="blue"

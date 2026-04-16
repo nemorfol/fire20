@@ -170,7 +170,7 @@
 					</div>
 					<div>
 						<Label for="sc-rage" class="mb-1 text-xs">
-							Eta pensionamento <span class="text-gray-400">Profilo: {selectedProfile.retirementAge}</span>
+							Eta FIRE target <span class="text-gray-400">Profilo: {selectedProfile.retirementAge}</span>
 						</Label>
 						<Input id="sc-rage" type="number" step="1" bind:value={retirementAge} placeholder={String(selectedProfile.retirementAge)} />
 					</div>

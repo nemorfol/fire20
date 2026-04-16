@@ -90,7 +90,7 @@
 		{ key: 'expectedReturn', label: 'Rendimento atteso (%)', fmt: (v: number) => formatPercent(v) },
 		{ key: 'annualExpenses', label: 'Spese annuali', fmt: (v: number) => formatCurrency(v) },
 		{ key: 'fireExpenses', label: 'Spese FIRE', fmt: (v: number) => formatCurrency(v) },
-		{ key: 'retirementAge', label: 'Eta pensionamento', fmt: (v: number) => String(v) }
+		{ key: 'retirementAge', label: 'Eta FIRE target', fmt: (v: number) => String(v) }
 	];
 
 	function isHighlighted(key: string): boolean {

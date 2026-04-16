@@ -170,11 +170,11 @@
 					Fase di Decumulo
 				</h4>
 				<div class="space-y-5">
-					<!-- Et&agrave; pensionamento -->
+					<!-- Et&agrave; FIRE target -->
 					<div>
 						<div class="flex justify-between items-center mb-2">
 							<Label>
-								Et&agrave; pensionamento
+								Et&agrave; FIRE target
 								{#if isChanged(retirementAge, defaults.retirementAge)}
 									<span class="inline-block w-1.5 h-1.5 rounded-full bg-yellow-400 ml-1"></span>
 								{/if}
