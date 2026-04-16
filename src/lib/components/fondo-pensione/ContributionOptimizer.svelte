@@ -81,7 +81,7 @@
 	});
 </script>
 
-<Card class="mb-6">
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
 	<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
 		Ottimizzatore Contributi
 	</h3>
@@ -135,11 +135,11 @@
 	<Button color="primary" onclick={calculate}>
 		Calcola Ottimizzazione
 	</Button>
-</Card>
+</div>
 
 {#if computed && result}
 	<!-- Riepilogo deducibilita' -->
-	<Card class="mb-6">
+	<div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
 		<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
 			Deducibilita' Fiscale
 		</h3>
@@ -177,10 +177,10 @@
 				(stipendio / 13,5)
 			</p>
 		{/if}
-	</Card>
+	</div>
 
 	<!-- Livelli di contribuzione -->
-	<Card class="mb-6">
+	<div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
 		<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
 			Confronto Livelli di Contribuzione
 		</h3>
@@ -217,10 +217,10 @@
 			<strong>Contributo ottimale consigliato: {formatCurrency(result.optimalContribution)}/anno</strong>
 			(al netto di contributo datore e TFR). Questo massimizza la deduzione fiscale senza superare il tetto.
 		</Alert>
-	</Card>
+	</div>
 
 	<!-- Proiezione montante -->
-	<Card class="mb-6">
+	<div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
 		<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
 			Proiezione del Montante ai Diversi Livelli
 		</h3>
@@ -234,5 +234,5 @@
 				equivalente a una rendita di circa <strong>{formatCurrency(result.projectedMonthlyPension)}/mese</strong>.
 			</p>
 		</div>
-	</Card>
+	</div>
 {/if}

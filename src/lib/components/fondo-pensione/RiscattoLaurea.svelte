@@ -43,51 +43,51 @@
 	);
 </script>
 
-<Card class="mb-6">
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
 	<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
 		Riscatto Laurea
 	</h3>
-	<p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+	<p class="text-sm text-gray-500 dark:text-gray-400 mb-5">
 		Il riscatto della laurea permette di "comprare" anni di contributi previdenziali
 		corrispondenti alla durata del corso di studi. Con la Legge di Bilancio 2024/2026,
 		la deduzione fiscale e' del 50% del costo.
 	</p>
 
-	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+	<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4 mb-6">
 		<div>
-			<Label for="rl-years" class="mb-1">Anni da riscattare (1-5)</Label>
+			<Label for="rl-years" class="mb-1.5">Anni da riscattare (1-5)</Label>
 			<Input id="rl-years" type="number" bind:value={yearsToRedeem} min={1} max={5} />
 		</div>
 		<div>
-			<Label for="rl-salary" class="mb-1">Stipendio annuo lordo (EUR)</Label>
+			<Label for="rl-salary" class="mb-1.5">Stipendio annuo lordo (EUR)</Label>
 			<Input id="rl-salary" type="number" bind:value={annualSalary} min={10000} step={1000} />
 		</div>
 		<div>
-			<Label for="rl-type" class="mb-1">Tipo di riscatto</Label>
+			<Label for="rl-type" class="mb-1.5">Tipo di riscatto</Label>
 			<Select id="rl-type" items={typeOptions} bind:value={riscattoType} />
 		</div>
 		<div>
-			<Label for="rl-age" class="mb-1">Eta' attuale</Label>
+			<Label for="rl-age" class="mb-1.5">Eta' attuale</Label>
 			<Input id="rl-age" type="number" bind:value={currentAge} min={25} max={60} />
 		</div>
 		<div>
-			<Label for="rl-contr" class="mb-1">Anni di contributi attuali</Label>
+			<Label for="rl-contr" class="mb-1.5">Anni di contributi attuali</Label>
 			<Input id="rl-contr" type="number" bind:value={currentContributionYears} min={0} max={40} />
 		</div>
 		<div>
-			<Label for="rl-retire" class="mb-1">Eta' pensionamento prevista</Label>
+			<Label for="rl-retire" class="mb-1.5">Eta' pensionamento prevista</Label>
 			<Input id="rl-retire" type="number" bind:value={retirementAge} min={57} max={71} />
 		</div>
 	</div>
 
-	<Button color="primary" onclick={calculate}>
+	<Button color="primary" size="lg" onclick={calculate}>
 		Calcola Costo e Convenienza
 	</Button>
-</Card>
+</div>
 
 {#if computed && resultStandard && resultAgevolato}
 	<!-- Confronto Standard vs Agevolato -->
-	<Card class="mb-6">
+	<div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
 		<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
 			Confronto: Riscatto Standard vs Agevolato
 		</h3>
@@ -138,7 +138,7 @@
 				</TableBodyRow>
 			</TableBody>
 		</Table>
-	</Card>
+	</div>
 
 	<!-- Verdetto -->
 	{@const best = resultAgevolato.netCost < resultStandard.netCost ? resultAgevolato : resultStandard}

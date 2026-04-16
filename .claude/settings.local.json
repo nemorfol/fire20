@@ -56,7 +56,8 @@
       "Bash(npx tsc *)",
       "Bash(npx svelte-kit *)",
       "Bash(git commit -m ' *)",
-      "WebFetch(domain:www.ciaoelsa.com)"
+      "WebFetch(domain:www.ciaoelsa.com)",
+      "Bash(node -e ' *)"
     ]
   }
 }

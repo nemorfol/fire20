@@ -141,7 +141,7 @@
 	];
 </script>
 
-<Card class="mb-6">
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
 	<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
 		Parametri della Simulazione
 	</h3>
@@ -184,16 +184,16 @@
 		<ChartMixedDollarSolid class="w-4 h-4 me-2" />
 		Confronta Tutte le Strategie
 	</Button>
-</Card>
+</div>
 
 {#if computed && results.length > 0}
 	<!-- Grafico di confronto -->
-	<Card class="mb-6">
+	<div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
 		<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
 			Confronto Strategie di Erogazione
 		</h3>
 		<EChart options={comparisonChartOptions()} height="350px" />
-	</Card>
+	</div>
 
 	<!-- Card per ogni strategia -->
 	<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
@@ -262,7 +262,7 @@
 
 	<!-- Dettaglio strategia selezionata -->
 	{#if selectedResult}
-		<Card class="mb-6">
+		<div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
 			<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
 				Dettaglio: {selectedResult.strategyName}
 			</h3>
@@ -313,6 +313,6 @@
 					</ul>
 				</div>
 			</div>
-		</Card>
+		</div>
 	{/if}
 {/if}

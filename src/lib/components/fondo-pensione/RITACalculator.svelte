@@ -63,7 +63,7 @@
 	});
 </script>
 
-<Card class="mb-6">
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
 	<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
 		Calcolo RITA
 	</h3>
@@ -110,7 +110,7 @@
 	<Button color="primary" onclick={calculate}>
 		Verifica Idoneita' e Calcola RITA
 	</Button>
-</Card>
+</div>
 
 {#if computed && result}
 	<!-- Risultato idoneita' -->
@@ -129,7 +129,7 @@
 
 	{#if result.eligible}
 		<!-- Dettaglio RITA -->
-		<Card class="mb-6">
+		<div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
 			<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
 				Stima RITA
 			</h3>
@@ -158,13 +158,13 @@
 				<p>Mensile lordo: <strong>{formatCurrency(result.monthlyGross)}</strong></p>
 				<p>Totale netto ricevuto: <strong>{formatCurrency(result.totalNetReceived)}</strong></p>
 			</div>
-		</Card>
+		</div>
 
 		<!-- Confronto RITA vs attesa -->
 		{#if comparison()}
 			{@const comp = comparison()}
 			{#if comp}
-				<Card class="mb-6">
+				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
 					<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
 						Confronto: RITA ora vs Attendere la Pensione
 					</h3>
@@ -204,7 +204,7 @@
 						"reddito ponte" tra il pensionamento anticipato e la pensione INPS, riducendo i prelievi
 						dal portafoglio investito.
 					</Alert>
-				</Card>
+				</div>
 			{/if}
 		{/if}
 	{/if}
