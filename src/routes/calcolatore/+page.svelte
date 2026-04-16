@@ -108,7 +108,12 @@
 	);
 
 	let savingsRate = $derived(
-		profile ? calculateSavingsRate(profile.annualIncome, profile.annualExpenses) : 0
+		profile
+			? calculateSavingsRate(
+					(profile.annualIncome || 0) + (profile.otherIncome || 0),
+					profile.annualExpenses
+				)
+			: 0
 	);
 
 	let currentAge = $derived(

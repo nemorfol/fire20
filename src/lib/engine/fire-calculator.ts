@@ -245,8 +245,15 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 		const inflationCumulative = Math.pow(1 + inflationRate, i);
 
 		// Contributi (solo in fase di accumulazione)
-		// I contributi crescono con l'inflazione (stipendio si adegua)
-		const contributions = isRetired ? 0 : annualContribution * inflationCumulative;
+		// I contributi crescono con l'inflazione (stipendio si adegua).
+		// Se la pensione INPS arriva DURANTE l'accumulazione (pensionAge < retirementAge),
+		// viene aggiunta come flusso in entrata al portafoglio.
+		const accumPensionIncome = !isRetired && age >= pensionAge
+			? annualPension * inflationCumulative
+			: 0;
+		const contributions = isRetired
+			? 0
+			: annualContribution * inflationCumulative + accumPensionIncome;
 
 		// Prelievi (solo in fase di decumulo)
 		let actualWithdrawals = 0;
