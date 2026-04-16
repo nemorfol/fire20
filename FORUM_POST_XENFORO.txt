@@ -26,7 +26,7 @@ E' un simulatore/pianificatore FIRE completo che vi permette di:
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-[SIZE=5][B]Le 10 sezioni dell'app in dettaglio[/B][/SIZE]
+[SIZE=5][B]Le 11 sezioni dell'app in dettaglio[/B][/SIZE]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -60,7 +60,7 @@ Supporta [B]profili multipli[/B] (es. "Scenario base", "Scenario aggressivo"). S
 
 Il cuore dell'app:
 [LIST]
-[*][B]FIRE Number[/B] prominente con calcolo esplicito (Spese Annuali / SWR)
+[*][B]FIRE Number[/B] prominente con calcolo esplicito (Spese Annuali / SWR), [B]ridotto automaticamente dalla pensione INPS[/B] stimata
 [*][B]6 metriche chiave[/B]: FIRE Number, Anni al FIRE, Coast FIRE, Tasso di Risparmio, Gap da colmare, Reddito mensile stimato in FIRE
 [*][B]4 strategie di prelievo[/B] selezionabili con spiegazione:
 [LIST]
@@ -70,8 +70,9 @@ Il cuore dell'app:
 [*][B]CAPE-Based[/B] - adattiva alle valutazioni di mercato: portfolio × (2% + 0.5/CAPE)
 [/LIST]
 [*][B]Parametri regolabili[/B] con slider: SWR (1-8%), rendimento atteso, inflazione, aliquota fiscale
+[*][COLOR=#8b5cf6][B]NUOVO: Modalita' "Esplora Scenari" (What If)[/B][/COLOR] - 7 slider interattivi raggruppati per fase (accumulo/decumulo) che aggiornano grafico e tabella [B]in tempo reale[/B]: spese FIRE, portafoglio, contributi, eta' pensionamento, pensione INPS, eta' INPS, aspettativa di vita. Indicatore visivo dei parametri modificati + pulsante Reset
 [*][B]Grafico proiezione[/B] interattivo con fase di accumulazione e decumulo
-[*][B]Tabella anno per anno[/B]: patrimonio, contributi, rendimenti, prelievi, tasse
+[*][B]Tabella anno per anno[/B]: patrimonio, contributi, [B]pensione INPS[/B], rendimenti, prelievi, tasse. La pensione riduce i prelievi dal portafoglio a partire dall'eta' pensionabile
 [*][B]Ottimizzatore fiscale[/B]: ordine ottimale di prelievo (conto titoli 26% → fondo pensione 9-15% → BTP 12.5%)
 [/LIST]
 
@@ -90,6 +91,7 @@ La funzionalita' piu' avanzata. Esegue migliaia di simulazioni con rendimenti ca
 [*]Bootstrap storico (campiona rendimenti reali S&P 500 dal 1928)
 [*]Block Bootstrap (preserva l'autocorrelazione dei mercati)
 [/LIST]
+[*][COLOR=#8b5cf6][B]NUOVO: Modalita' multi-asset avanzata[/B][/COLOR] - Oltre a azioni/obbligazioni, supporta [B]Oro, Cash, Immobiliare[/B] con matrice di correlazione NxN completa (decomposizione di Cholesky). Toggle "Modalita' avanzata" per attivare, con visualizzazione matrice correlazione color-coded e validazione allocazione (somma 100%)
 [*][B]Risultati[/B]:
 [LIST]
 [*][B]Tasso di successo[/B] - % simulazioni senza esaurimento portafoglio
@@ -208,7 +210,21 @@ Ogni capitolo ha esempi pratici con numeri reali italiani, consigli, avvertenze,
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-[SIZE=4][B][COLOR=#3b82f6]9. IMPOSTAZIONI / IMPORT-EXPORT[/COLOR][/B][/SIZE]
+[SIZE=4][B][COLOR=#3b82f6]9. PERFORMANCE PORTAFOGLIO (NUOVO)[/COLOR][/B][/SIZE]
+
+[COLOR=#8b5cf6][B]Nuova sezione[/B][/COLOR] per tracciare le performance reali del proprio portafoglio nel tempo:
+[LIST]
+[*][B]Time-Weighted Return (TWR)[/B] - Calcolo con metodo Modified Dietz, che isola il rendimento del portafoglio dagli effetti di versamenti/prelievi
+[*][B]Snapshot portafoglio[/B] - Registra il valore del portafoglio a date specifiche per costruire lo storico
+[*][B]Cash flow tracking[/B] - Registra versamenti, prelievi e dividendi per il calcolo TWR accurato
+[*][B]Confronto vs S&P 500[/B] - Grafico ECharts con curve sovrapposte base 100 (portafoglio vs benchmark)
+[*][B]4 metriche chiave[/B]: TWR totale, TWR annualizzato, Alpha vs benchmark, Max Drawdown
+[*][B]Selettore periodo[/B]: YTD, 1 Anno, 3 Anni, 5 Anni, Max
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=4][B][COLOR=#3b82f6]10. IMPOSTAZIONI / IMPORT-EXPORT[/COLOR][/B][/SIZE]
 
 [LIST]
 [*]Export profili e scenari in JSON
@@ -392,7 +408,22 @@ Aprite [URL='http://localhost:5173']http://localhost:5173[/URL] nel browser. Req
 [TR]
 [TD][B]Import broker italiani[/B][/TD]
 [TD][COLOR=#22c55e]✓ Fatto[/COLOR][/TD]
-[TD]Import CSV da Directa SIM, Fineco, DEGIRO, CSV generico. Auto-classificazione posizioni in classi di asset[/TD]
+[TD]Import CSV/XLS da Directa SIM, Fineco, DEGIRO, CSV generico. Auto-classificazione posizioni in classi di asset[/TD]
+[/TR]
+[TR]
+[TD][B]Monte Carlo multi-asset[/B][/TD]
+[TD][COLOR=#22c55e]✓ Fatto[/COLOR][/TD]
+[TD]Oltre azioni/obbligazioni: Oro, Cash, Immobiliare con matrice di correlazione NxN completa (Cholesky). Pannello avanzato con visualizzazione matrice color-coded[/TD]
+[/TR]
+[TR]
+[TD][B]Modalita' "Esplora Scenari" (What If)[/B][/TD]
+[TD][COLOR=#22c55e]✓ Fatto[/COLOR][/TD]
+[TD]7 slider interattivi che aggiornano grafico e tabella in tempo reale: spese FIRE, portafoglio, contributi, eta' pensionamento, pensione INPS, eta' INPS, aspettativa di vita[/TD]
+[/TR]
+[TR]
+[TD][B]Performance Portafoglio (TWR)[/B][/TD]
+[TD][COLOR=#22c55e]✓ Fatto[/COLOR][/TD]
+[TD]Time-Weighted Return con metodo Modified Dietz, snapshot portafoglio, cash flow tracking, confronto vs S&P 500 (base 100), Alpha, Max Drawdown[/TD]
 [/TR]
 [TR]
 [TD][B]Deploy Vercel[/B][/TD]
@@ -404,12 +435,16 @@ Aprite [URL='http://localhost:5173']http://localhost:5173[/URL] nel browser. Req
 [SIZE=5][B]Roadmap futura[/B][/SIZE]
 
 [LIST]
+[*][S]Simulazione Monte Carlo multi-asset (3+ classi con matrice di correlazione completa)[/S] [COLOR=#22c55e]✓ FATTO[/COLOR]
+[*][S]Confronto storico del proprio portafoglio (time-weighted return)[/S] [COLOR=#22c55e]✓ FATTO[/COLOR]
+[*][S]Modalita' "What If" interattiva (slider in tempo reale su tutti i parametri)[/S] [COLOR=#22c55e]✓ FATTO[/COLOR]
+[/LIST]
+
+[B]Prossimi sviluppi:[/B]
+[LIST]
 [*]Calcolo pensione INPS automatico direttamente da SPID/CIE (integrazione API INPS)
 [*]Notifiche push native (oltre al reminder in-app)
-[*]Simulazione Monte Carlo multi-asset (3+ classi con matrice di correlazione completa)
 [*]Import automatico transazioni bancarie (formato PSD2)
-[*]Confronto storico del proprio portafoglio (time-weighted return)
-[*]Modalita' "What If" interattiva (slider in tempo reale su tutti i parametri)
 [*]Community: condivisione anonima scenari per benchmark collaborativo
 [/LIST]
 
