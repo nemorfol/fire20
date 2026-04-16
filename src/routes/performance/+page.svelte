@@ -135,7 +135,7 @@
 <!-- Input sections side by side on larger screens -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 	<Card class="max-w-none">
-		<SnapshotForm {profileId} onsnapshatsChanged={handleDataChanged} />
+		<SnapshotForm {profileId} onsnapshotsChanged={handleDataChanged} />
 	</Card>
 	<Card class="max-w-none">
 		<CashFlowForm {profileId} onCashFlowsChanged={handleDataChanged} />

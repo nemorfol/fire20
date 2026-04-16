@@ -23,12 +23,12 @@
 
 		const twrResult = calculateTWR(snapshots, cashFlows);
 		const benchmarkReturn = calculateBenchmarkReturn(startDate, endDate, sp500Returns);
-		const alpha = calculateAlpha(twrResult.annualizedReturn, benchmarkReturn);
 		const maxDrawdown = calculateMaxDrawdown(snapshots);
 
-		// Annualizzare il benchmark per confronto
+		// Annualizzare il benchmark per confronto corretto con TWR annualizzato
 		const totalDays = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
 		const benchmarkAnnualized = totalDays > 0 ? Math.pow(1 + benchmarkReturn, 365 / totalDays) - 1 : 0;
+		const alpha = calculateAlpha(twrResult.annualizedReturn, benchmarkAnnualized);
 
 		return {
 			totalReturn: twrResult.totalReturn,

@@ -6,10 +6,10 @@
 
 	let {
 		profileId = 1,
-		onsnapshatsChanged = () => {}
+		onsnapshotsChanged = () => {}
 	}: {
 		profileId?: number;
-		onsnapshatsChanged?: () => void;
+		onsnapshotsChanged?: () => void;
 	} = $props();
 
 	let showModal = $state(false);
@@ -44,13 +44,13 @@
 		totalValue = 0;
 		notes = '';
 		showModal = false;
-		onsnapshatsChanged();
+		onsnapshotsChanged();
 	}
 
 	async function deleteSnapshot(id: number | undefined) {
 		if (id == null) return;
 		await db.portfolio_snapshots.delete(id);
-		onsnapshatsChanged();
+		onsnapshotsChanged();
 	}
 
 	function formatDate(d: Date): string {

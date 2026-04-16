@@ -21,6 +21,7 @@
 	import TabPatrimonio from '$lib/components/profilo/TabPatrimonio.svelte';
 	import TabDebiti from '$lib/components/profilo/TabDebiti.svelte';
 	import TabPensione from '$lib/components/profilo/TabPensione.svelte';
+	import BankImport from '$lib/components/profilo/BankImport.svelte';
 
 	// === State ===
 	let profiles = $state<Profile[]>([]);
@@ -366,6 +367,14 @@
 					<TabItem title="Pensione">
 						<div class="pt-4">
 							<TabPensione bind:pension {birthYear} {retirementAge} annualExpenses={fireExpenses} />
+						</div>
+					</TabItem>
+					<TabItem title="Import Banca">
+						<div class="pt-4">
+							<BankImport onApply={(result) => {
+								annualIncome = result.annualIncome;
+								annualExpenses = result.annualExpenses;
+							}} />
 						</div>
 					</TabItem>
 				</Tabs>

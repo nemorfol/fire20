@@ -11,6 +11,8 @@ export const translations: Record<Locale, Record<string, string>> = {
     'nav.risks': 'Scenari di Rischio',
     'nav.performance': 'Performance',
     'nav.history': 'Dati Storici',
+    'nav.pensionFund': 'Fondo Pensione',
+    'nav.community': 'Community',
     'nav.guide': 'Guida',
     'nav.settings': 'Impostazioni',
     // Common
@@ -85,6 +87,8 @@ export const translations: Record<Locale, Record<string, string>> = {
     'nav.risks': 'Risk Scenarios',
     'nav.performance': 'Performance',
     'nav.history': 'Historical Data',
+    'nav.pensionFund': 'Pension Fund',
+    'nav.community': 'Community',
     'nav.guide': 'Guide',
     'nav.settings': 'Settings',
     // Common

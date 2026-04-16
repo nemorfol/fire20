@@ -1,6 +1,7 @@
 <script lang="ts">
 	import '../app.css';
 	import { page } from '$app/state';
+	import { onMount } from 'svelte';
 	import {
 		Sidebar,
 		SidebarWrapper,
@@ -22,14 +23,25 @@
 		BookOpenSolid,
 		CogSolid,
 		FireSolid,
-		ChartLineUpOutline
+		ChartLineUpOutline,
+		UsersGroupSolid,
+		BuildingSolid
 	} from 'flowbite-svelte-icons';
 	import favicon from '$lib/assets/favicon.svg';
 	import { t } from '$lib/i18n/store.svelte';
+	import NotificationBanner from '$lib/components/shared/NotificationBanner.svelte';
+	import { startReminderChecks, stopReminderChecks, getNotificationPermission } from '$lib/utils/notifications';
 
 	let { children } = $props();
 
 	let sidebarOpen = $state(false);
+
+	onMount(() => {
+		if (getNotificationPermission() === 'granted') {
+			startReminderChecks();
+		}
+		return () => stopReminderChecks();
+	});
 
 	const iconClass = 'w-5 h-5 text-gray-500 dark:text-gray-400';
 
@@ -96,6 +108,12 @@
 					<SidebarItem label={t('nav.history')} href="/dati-storici/" active={isActive('/dati-storici/')} onclick={() => (sidebarOpen = false)}>
 						{#snippet icon()}<FileChartBarSolid class={iconClass} />{/snippet}
 					</SidebarItem>
+					<SidebarItem label={t('nav.pensionFund')} href="/fondo-pensione/" active={isActive('/fondo-pensione/')} onclick={() => (sidebarOpen = false)}>
+						{#snippet icon()}<BuildingSolid class={iconClass} />{/snippet}
+					</SidebarItem>
+					<SidebarItem label={t('nav.community')} href="/community/" active={isActive('/community/')} onclick={() => (sidebarOpen = false)}>
+						{#snippet icon()}<UsersGroupSolid class={iconClass} />{/snippet}
+					</SidebarItem>
 					<SidebarItem label={t('nav.guide')} href="/guida/" active={isActive('/guida/')} onclick={() => (sidebarOpen = false)}>
 						{#snippet icon()}<BookOpenSolid class={iconClass} />{/snippet}
 					</SidebarItem>
@@ -108,6 +126,7 @@
 
 		<!-- Main Content Area -->
 		<main class="flex-1 overflow-y-auto p-4 md:p-6 md:ml-64">
+			<NotificationBanner />
 			{@render children()}
 		</main>
 	</div>

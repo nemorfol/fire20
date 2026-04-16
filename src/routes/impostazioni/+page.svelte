@@ -38,11 +38,46 @@
 		calculateNextDate,
 		type RebalanceReminder
 	} from '$lib/utils/reminders';
+	import {
+		isNotificationSupported,
+		getNotificationPermission,
+		requestNotificationPermission,
+		sendNotification,
+		startReminderChecks
+	} from '$lib/utils/notifications';
 
 	let selectedLocale = $state<Locale>(getLocale());
 
 	// Rebalance reminder state
 	let reminder = $state<RebalanceReminder>(getReminder());
+
+	// Notification state
+	let notificationSupported = $state(false);
+	let notificationPermission = $state<NotificationPermission | 'unsupported'>('unsupported');
+
+	function refreshNotificationState() {
+		notificationSupported = isNotificationSupported();
+		notificationPermission = getNotificationPermission();
+	}
+
+	async function handleRequestNotificationPermission() {
+		const granted = await requestNotificationPermission();
+		refreshNotificationState();
+		if (granted) {
+			startReminderChecks();
+			notify('Notifiche attivate con successo!');
+		} else {
+			notify('Permesso notifiche non concesso. Controlla le impostazioni del browser.', 'warning');
+		}
+	}
+
+	function handleTestNotification() {
+		sendNotification(
+			'Test FIRE Planner',
+			'Le notifiche funzionano correttamente! Riceverai promemoria per il ribilanciamento.'
+		);
+		notify('Notifica di test inviata.');
+	}
 
 	const frequencyOptions = [
 		{ value: 1, name: 'Mensile' },
@@ -107,6 +142,7 @@
 
 	onMount(() => {
 		loadCounts();
+		refreshNotificationState();
 	});
 
 	// === Utility ===
@@ -496,6 +532,33 @@
 				</div>
 			</div>
 		{/if}
+
+		<!-- Notifiche -->
+		<hr class="border-gray-200 dark:border-gray-700 my-4" />
+		<Heading tag="h4" class="mb-3 text-base">Notifiche Browser</Heading>
+		<p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
+			Ricevi notifiche dal browser quando e il momento di ribilanciare il portafoglio.
+		</p>
+
+		<div class="flex flex-wrap items-center gap-3">
+			{#if notificationPermission === 'unsupported'}
+				<Badge color="red">Non supportate</Badge>
+				<p class="text-sm text-gray-500">Il tuo browser non supporta le notifiche.</p>
+			{:else if notificationPermission === 'granted'}
+				<Badge color="green">Attive</Badge>
+				<Button size="sm" color="alternative" onclick={handleTestNotification}>
+					Invia notifica di test
+				</Button>
+			{:else if notificationPermission === 'denied'}
+				<Badge color="red">Bloccate</Badge>
+				<p class="text-sm text-gray-500">Le notifiche sono state bloccate. Modificale dalle impostazioni del browser.</p>
+			{:else}
+				<Badge color="yellow">Non attive</Badge>
+				<Button size="sm" color="blue" onclick={handleRequestNotificationPermission}>
+					Attiva notifiche
+				</Button>
+			{/if}
+		</div>
 	</div>
 </Card>
 

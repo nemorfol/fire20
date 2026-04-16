@@ -5,6 +5,7 @@
 	import type { PensionInfo } from '$lib/db/index';
 	import PensionCalculator from './PensionCalculator.svelte';
 	import INPSImport from './INPSImport.svelte';
+	import INPSSimulator from './INPSSimulator.svelte';
 
 	let {
 		pension = $bindable<PensionInfo>({
@@ -75,5 +76,13 @@
 	<INPSImport onApply={(data) => {
 		pension.contributionYears = data.contributionYears;
 		pension.estimatedMonthly = data.estimatedMonthly;
+	}} />
+
+	<hr class="border-gray-200 dark:border-gray-700 my-6" />
+
+	<INPSSimulator {birthYear} {retirementAge} {annualExpenses} onApply={(data) => {
+		pension.contributionYears = data.contributionYears;
+		pension.estimatedMonthly = data.estimatedMonthly;
+		pension.pensionAge = data.pensionAge;
 	}} />
 </div>
