@@ -168,8 +168,12 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 		const year = startYear + i + 1;
 		const isRetired = age > retirementAge;
 
+		// Inflazione cumulata dall'inizio
+		const inflationCumulative = Math.pow(1 + inflationRate, i);
+
 		// Contributi (solo in fase di accumulazione)
-		const contributions = isRetired ? 0 : annualContribution;
+		// I contributi crescono con l'inflazione (stipendio si adegua)
+		const contributions = isRetired ? 0 : annualContribution * inflationCumulative;
 
 		// Prelievi (solo in fase di decumulo)
 		let actualWithdrawals = 0;
@@ -180,15 +184,14 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 				retirementYear = i;
 			}
 			const yearsSinceRetirement = i - retirementYear;
-			const inflationFactor = Math.pow(1 + inflationRate, yearsSinceRetirement);
 
 			// Pensione INPS: disponibile solo dopo l'eta' pensionabile
-			const pensionIncome = age >= pensionAge ? annualPension : 0;
+			// La pensione INPS cresce con l'inflazione (perequazione automatica)
+			const pensionIncome = age >= pensionAge ? annualPension * inflationCumulative : 0;
 
 			if (withdrawalStrategy === 'fixed') {
-				// Regola del 4%: preleva le spese effettive aggiustate per inflazione.
-				// Il SWR serve a determinare il FIRE number, non l'importo del prelievo.
-				actualWithdrawals = annualExpenses * inflationFactor;
+				// Regola del 4%: preleva le spese effettive aggiustate per inflazione dall'inizio
+				actualWithdrawals = annualExpenses * inflationCumulative;
 			} else {
 				// Strategie dinamiche (VPW, CAPE, Guyton-Klinger):
 				// l'importo dipende dal portafoglio corrente, eta', ecc.
