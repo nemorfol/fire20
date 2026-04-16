@@ -13,9 +13,15 @@
 		Toggle
 	} from 'flowbite-svelte';
 	import { InfoCircleSolid, PlaySolid } from 'flowbite-svelte-icons';
-	import type { MonteCarloParams } from '$lib/engine/monte-carlo';
+	import type { MonteCarloParams, AssetClassConfig } from '$lib/engine/monte-carlo';
 	import { sp500Stats } from '$lib/data/sp500';
 	import { bondStats } from '$lib/data/bonds';
+	import { goldStats } from '$lib/data/gold';
+	import {
+		correlationMatrix as fullCorrMatrix,
+		assetLabels,
+		type AssetClass
+	} from '$lib/data/correlations';
 
 	let {
 		onRun,
@@ -53,6 +59,25 @@
 	let withdrawalRate = $state(4.0);
 	let inflationRate = $state(2.0);
 
+	// Multi-asset advanced mode
+	let advancedMode = $state(false);
+	let goldEnabled = $state(false);
+	let cashEnabled = $state(false);
+	let realEstateEnabled = $state(false);
+
+	// Multi-asset allocations (%)
+	let goldAllocation = $state(10);
+	let cashAllocation = $state(5);
+	let realEstateAllocation = $state(10);
+
+	// Multi-asset parametric defaults
+	let goldReturn = $state(6.0);
+	let goldStdDevParam = $state(15.0);
+	let cashReturn = $state(2.0);
+	let cashStdDevParam = $state(1.0);
+	let realEstateReturn = $state(7.0);
+	let realEstateStdDevParam = $state(12.0);
+
 	const iterationOptions = [
 		{ value: 1000, name: '1.000 (veloce)' },
 		{ value: 5000, name: '5.000 (bilanciato)' },
@@ -61,31 +86,161 @@
 		{ value: 100000, name: '100.000 (molto preciso)' }
 	];
 
+	/** Mappa dai nomi interni alle chiavi della matrice di correlazione */
+	const assetKeyMap: Record<string, AssetClass> = {
+		stocks: 'usStocks',
+		bonds: 'bonds',
+		gold: 'gold',
+		cash: 'cash',
+		realEstate: 'realEstate'
+	};
+
+	/** Calcola le asset class attive in modalità avanzata */
+	let activeAssetKeys = $derived.by(() => {
+		const keys: string[] = ['stocks', 'bonds'];
+		if (goldEnabled) keys.push('gold');
+		if (cashEnabled) keys.push('cash');
+		if (realEstateEnabled) keys.push('realEstate');
+		return keys;
+	});
+
+	/** Etichette italiane per le asset class nel pannello */
+	const localLabels: Record<string, string> = {
+		stocks: 'Azioni',
+		bonds: 'Obbligazioni',
+		gold: 'Oro',
+		cash: 'Liquidità',
+		realEstate: 'Immobiliare'
+	};
+
+	/** Somma totale delle allocazioni in modalità avanzata */
+	let totalAllocation = $derived.by(() => {
+		if (!advancedMode) return stockAllocation + bondAllocation;
+		let total = stockAllocation + bondAllocation;
+		if (goldEnabled) total += goldAllocation;
+		if (cashEnabled) total += cashAllocation;
+		if (realEstateEnabled) total += realEstateAllocation;
+		return total;
+	});
+
+	let allocationValid = $derived(Math.abs(totalAllocation - 100) < 0.01);
+
+	/** Costruisci la sotto-matrice di correlazione per gli asset attivi */
+	function buildCorrelationMatrix(keys: string[]): number[][] {
+		return keys.map((rowKey) =>
+			keys.map((colKey) => {
+				const r = assetKeyMap[rowKey];
+				const c = assetKeyMap[colKey];
+				return fullCorrMatrix[r][c];
+			})
+		);
+	}
+
 	function handleRun() {
-		const params: Partial<MonteCarloParams> = {
-			iterations,
-			simulationMode,
-			yearsToFire,
-			yearsInRetirement: yearsToSimulate,
-			stockAllocation: stockAllocation / 100,
-			bondAllocation: bondAllocation / 100,
-			initialPortfolio,
-			annualContribution,
-			annualExpenses,
-			withdrawalRate: withdrawalRate / 100,
-			inflationRate: inflationRate / 100,
-			withdrawalStrategy: 'fixed'
-		};
+		if (advancedMode) {
+			// Multi-asset mode
+			const assetClasses: AssetClassConfig[] = [];
 
-		if (simulationMode === 'parametric') {
-			params.expectedStockReturn = stockReturn / 100;
-			params.stockStdDev = stockStdDev / 100;
-			params.expectedBondReturn = bondReturn / 100;
-			params.bondStdDev = bondStdDev / 100;
-			params.useCorrelation = useCorrelation;
+			// Stocks
+			assetClasses.push({
+				name: 'stocks',
+				allocation: stockAllocation / 100,
+				expectedReturn: stockReturn / 100,
+				stdDev: stockStdDev / 100
+			});
+
+			// Bonds
+			assetClasses.push({
+				name: 'bonds',
+				allocation: bondAllocation / 100,
+				expectedReturn: bondReturn / 100,
+				stdDev: bondStdDev / 100
+			});
+
+			if (goldEnabled) {
+				assetClasses.push({
+					name: 'gold',
+					allocation: goldAllocation / 100,
+					expectedReturn: goldReturn / 100,
+					stdDev: goldStdDevParam / 100
+				});
+			}
+
+			if (cashEnabled) {
+				assetClasses.push({
+					name: 'cash',
+					allocation: cashAllocation / 100,
+					expectedReturn: cashReturn / 100,
+					stdDev: cashStdDevParam / 100
+				});
+			}
+
+			if (realEstateEnabled) {
+				assetClasses.push({
+					name: 'realEstate',
+					allocation: realEstateAllocation / 100,
+					expectedReturn: realEstateReturn / 100,
+					stdDev: realEstateStdDevParam / 100
+				});
+			}
+
+			const corrMatrix = buildCorrelationMatrix(assetClasses.map((a) => a.name));
+
+			const params: Partial<MonteCarloParams> = {
+				iterations,
+				simulationMode,
+				yearsToFire,
+				yearsInRetirement: yearsToSimulate,
+				// Legacy fields for backwards compat
+				stockAllocation: stockAllocation / 100,
+				bondAllocation: bondAllocation / 100,
+				initialPortfolio,
+				annualContribution,
+				annualExpenses,
+				withdrawalRate: withdrawalRate / 100,
+				inflationRate: inflationRate / 100,
+				withdrawalStrategy: 'fixed',
+				// Multi-asset fields
+				assetClasses,
+				correlationMatrix: corrMatrix,
+				useCorrelation
+			};
+
+			if (simulationMode === 'parametric') {
+				params.expectedStockReturn = stockReturn / 100;
+				params.stockStdDev = stockStdDev / 100;
+				params.expectedBondReturn = bondReturn / 100;
+				params.bondStdDev = bondStdDev / 100;
+			}
+
+			onRun(params);
+		} else {
+			// Legacy 2-asset mode
+			const params: Partial<MonteCarloParams> = {
+				iterations,
+				simulationMode,
+				yearsToFire,
+				yearsInRetirement: yearsToSimulate,
+				stockAllocation: stockAllocation / 100,
+				bondAllocation: bondAllocation / 100,
+				initialPortfolio,
+				annualContribution,
+				annualExpenses,
+				withdrawalRate: withdrawalRate / 100,
+				inflationRate: inflationRate / 100,
+				withdrawalStrategy: 'fixed'
+			};
+
+			if (simulationMode === 'parametric') {
+				params.expectedStockReturn = stockReturn / 100;
+				params.stockStdDev = stockStdDev / 100;
+				params.expectedBondReturn = bondReturn / 100;
+				params.bondStdDev = bondStdDev / 100;
+				params.useCorrelation = useCorrelation;
+			}
+
+			onRun(params);
 		}
-
-		onRun(params);
 	}
 
 	let formattedElapsed = $derived.by(() => {
@@ -182,6 +337,149 @@
 				/>
 			</div>
 		</div>
+
+		<!-- Multi-asset advanced toggle -->
+		<div class="flex items-center gap-3">
+			<Toggle bind:checked={advancedMode} size="small">
+				Modalit&agrave; avanzata (multi-asset)
+			</Toggle>
+			<span id="tip-advanced">
+				<InfoCircleSolid class="w-4 h-4 text-gray-400 cursor-help" />
+			</span>
+			<Tooltip triggeredBy="#tip-advanced" class="max-w-xs">
+				Abilita la simulazione con pi&ugrave; di 2 asset class (oro, liquidit&agrave;, immobiliare) con matrice di correlazione completa NxN.
+			</Tooltip>
+		</div>
+
+		{#if advancedMode}
+			<div class="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800 space-y-4">
+				<p class="text-sm font-medium text-purple-800 dark:text-purple-300">
+					Asset class aggiuntive
+				</p>
+
+				<!-- Asset toggles + allocations -->
+				<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+					<div class="space-y-2">
+						<Toggle bind:checked={goldEnabled} size="small">Oro</Toggle>
+						{#if goldEnabled}
+							<div>
+								<Label for="gold-alloc" class="mb-1 text-xs">Allocazione (%)</Label>
+								<Input id="gold-alloc" type="number" bind:value={goldAllocation} min={0} max={100} step={5} size="sm" />
+							</div>
+						{/if}
+					</div>
+					<div class="space-y-2">
+						<Toggle bind:checked={cashEnabled} size="small">Liquidit&agrave;</Toggle>
+						{#if cashEnabled}
+							<div>
+								<Label for="cash-alloc" class="mb-1 text-xs">Allocazione (%)</Label>
+								<Input id="cash-alloc" type="number" bind:value={cashAllocation} min={0} max={100} step={5} size="sm" />
+							</div>
+						{/if}
+					</div>
+					<div class="space-y-2">
+						<Toggle bind:checked={realEstateEnabled} size="small">Immobiliare</Toggle>
+						{#if realEstateEnabled}
+							<div>
+								<Label for="re-alloc" class="mb-1 text-xs">Allocazione (%)</Label>
+								<Input id="re-alloc" type="number" bind:value={realEstateAllocation} min={0} max={100} step={5} size="sm" />
+							</div>
+						{/if}
+					</div>
+				</div>
+
+				<!-- Allocation total -->
+				<div class="flex items-center gap-2">
+					<span class="text-sm font-medium" class:text-green-700={allocationValid} class:text-red-600={!allocationValid}>
+						Totale allocazione: {totalAllocation}%
+					</span>
+					{#if !allocationValid}
+						<Badge color="red">Deve essere 100%</Badge>
+					{/if}
+				</div>
+
+				<!-- Parametric params for extra assets -->
+				{#if simulationMode === 'parametric'}
+					<div class="space-y-3">
+						<p class="text-xs font-medium text-purple-700 dark:text-purple-400">
+							Parametri distribuzione asset aggiuntivi
+						</p>
+						<div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+							{#if goldEnabled}
+								<div>
+									<Label for="gold-ret" class="mb-1 text-xs">Rendimento oro (%)</Label>
+									<Input id="gold-ret" type="number" bind:value={goldReturn} step={0.5} size="sm" />
+								</div>
+								<div>
+									<Label for="gold-std" class="mb-1 text-xs">Volatilit&agrave; oro (%)</Label>
+									<Input id="gold-std" type="number" bind:value={goldStdDevParam} step={0.5} size="sm" />
+								</div>
+							{/if}
+							{#if cashEnabled}
+								<div>
+									<Label for="cash-ret" class="mb-1 text-xs">Rendimento liquidit&agrave; (%)</Label>
+									<Input id="cash-ret" type="number" bind:value={cashReturn} step={0.5} size="sm" />
+								</div>
+								<div>
+									<Label for="cash-std" class="mb-1 text-xs">Volatilit&agrave; liquidit&agrave; (%)</Label>
+									<Input id="cash-std" type="number" bind:value={cashStdDevParam} step={0.5} size="sm" />
+								</div>
+							{/if}
+							{#if realEstateEnabled}
+								<div>
+									<Label for="re-ret" class="mb-1 text-xs">Rendimento immobiliare (%)</Label>
+									<Input id="re-ret" type="number" bind:value={realEstateReturn} step={0.5} size="sm" />
+								</div>
+								<div>
+									<Label for="re-std" class="mb-1 text-xs">Volatilit&agrave; immobiliare (%)</Label>
+									<Input id="re-std" type="number" bind:value={realEstateStdDevParam} step={0.5} size="sm" />
+								</div>
+							{/if}
+						</div>
+					</div>
+				{/if}
+
+				<!-- Correlation matrix (read-only) -->
+				{#if activeAssetKeys.length > 2}
+					<div class="space-y-2">
+						<p class="text-xs font-medium text-purple-700 dark:text-purple-400">
+							Matrice di correlazione (dati storici 1970-2024)
+						</p>
+						<div class="overflow-x-auto">
+							<table class="text-xs border-collapse">
+								<thead>
+									<tr>
+										<th class="p-1.5 text-left"></th>
+										{#each activeAssetKeys as key}
+											<th class="p-1.5 text-center font-medium text-purple-800 dark:text-purple-300">{localLabels[key]}</th>
+										{/each}
+									</tr>
+								</thead>
+								<tbody>
+									{#each activeAssetKeys as rowKey}
+										<tr>
+											<td class="p-1.5 font-medium text-purple-800 dark:text-purple-300">{localLabels[rowKey]}</td>
+											{#each activeAssetKeys as colKey}
+												{@const val = fullCorrMatrix[assetKeyMap[rowKey]][assetKeyMap[colKey]]}
+												<td
+													class="p-1.5 text-center tabular-nums"
+													class:font-bold={rowKey === colKey}
+													class:text-green-700={val > 0.3 && rowKey !== colKey}
+													class:text-red-600={val < -0.05}
+													class:text-gray-600={val >= -0.05 && val <= 0.3 && rowKey !== colKey}
+												>
+													{val.toFixed(3)}
+												</td>
+											{/each}
+										</tr>
+									{/each}
+								</tbody>
+							</table>
+						</div>
+					</div>
+				{/if}
+			</div>
+		{/if}
 
 		<hr class="border-gray-200 dark:border-gray-700" />
 
@@ -315,6 +613,12 @@
 						<span class="font-medium">Treasury Bond (1928-2024):</span>
 						media {bondStats.mean}%, dev.std {bondStats.stdDev}%
 					</div>
+					{#if advancedMode && goldEnabled}
+						<div>
+							<span class="font-medium">Oro (1971-2024):</span>
+							media {goldStats.mean}%, dev.std {goldStats.stdDev}%
+						</div>
+					{/if}
 				</div>
 				{#if simulationMode === 'block-bootstrap'}
 					<p class="text-xs text-emerald-600 dark:text-emerald-500 mt-2">
@@ -332,7 +636,7 @@
 				color="primary"
 				size="lg"
 				class="px-8"
-				disabled={running}
+				disabled={running || (advancedMode && !allocationValid)}
 				onclick={handleRun}
 			>
 				{#if running}

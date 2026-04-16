@@ -16,6 +16,7 @@
 	import type { SimulationResult } from '$lib/db/index';
 	import { sp500Returns } from '$lib/data/sp500';
 	import { bondReturns } from '$lib/data/bonds';
+	import { goldReturns } from '$lib/data/gold';
 	import { inflationUSReturns } from '$lib/data/inflation-us';
 	import {
 		createResult,
@@ -50,6 +51,7 @@
 	// Historical returns as decimals
 	const historicalStockReturns = sp500Returns.map((r) => r.value / 100);
 	const historicalBondReturns = bondReturns.map((r) => r.value / 100);
+	const historicalGoldReturns = goldReturns.map((r) => r.value / 100);
 	const historicalInflation = inflationUSReturns.map((r) => r.value / 100);
 
 	onMount(() => {
@@ -106,6 +108,20 @@
 			params.historicalStockReturns = historicalStockReturns;
 			params.historicalBondReturns = historicalBondReturns;
 			params.historicalInflation = historicalInflation;
+
+			// Attach historical returns to multi-asset configs
+			if (params.assetClasses) {
+				const histMap: Record<string, number[]> = {
+					stocks: historicalStockReturns,
+					bonds: historicalBondReturns,
+					gold: historicalGoldReturns
+				};
+				for (const ac of params.assetClasses) {
+					if (histMap[ac.name]) {
+						ac.historicalReturns = histMap[ac.name];
+					}
+				}
+			}
 		}
 
 		// Terminate previous worker if still running
@@ -161,7 +177,10 @@
 					bondStdDev: params.bondStdDev,
 					historicalStockReturns: params.historicalStockReturns,
 					historicalBondReturns: params.historicalBondReturns,
-					historicalInflation: params.historicalInflation
+					historicalInflation: params.historicalInflation,
+					useCorrelation: params.useCorrelation,
+					assetClasses: params.assetClasses,
+					correlationMatrix: params.correlationMatrix
 				} satisfies MonteCarloParams
 			});
 		} catch (err) {

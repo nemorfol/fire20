@@ -44,6 +44,14 @@ export interface PensionInfo {
 	pensionAge: number;
 }
 
+/** Configurazione di una asset class salvata nel DB */
+export interface SavedAssetClassConfig {
+	name: string;
+	allocation: number;
+	expectedReturn: number;
+	stdDev: number;
+}
+
 export interface SimulationParams {
 	withdrawalRate: number;
 	withdrawalStrategy: 'fixed' | 'vpw' | 'guyton-klinger' | 'cape-based';
@@ -53,6 +61,8 @@ export interface SimulationParams {
 	inflationRate: number;
 	expectedReturn: number;
 	iterations: number;
+	/** Configurazione multi-asset (opzionale, per simulazioni avanzate) */
+	assetClasses?: SavedAssetClassConfig[];
 }
 
 // === Interfacce delle tabelle ===
@@ -139,6 +149,24 @@ export interface RiskEvent {
 	impact: RiskEventImpact;
 }
 
+export interface PortfolioSnapshotRecord {
+	id?: number;
+	profileId: number;
+	date: Date;
+	totalValue: number;
+	allocation: Record<string, number>;
+	notes?: string;
+}
+
+export interface CashFlowRecord {
+	id?: number;
+	profileId: number;
+	date: Date;
+	amount: number;
+	type: 'contribution' | 'withdrawal' | 'dividend';
+	description?: string;
+}
+
 // === Database ===
 
 const db = new Dexie('FireDB') as Dexie & {
@@ -146,6 +174,8 @@ const db = new Dexie('FireDB') as Dexie & {
 	scenarios: EntityTable<Scenario, 'id'>;
 	simulation_results: EntityTable<SimulationResult, 'id'>;
 	risk_events: EntityTable<RiskEvent, 'id'>;
+	portfolio_snapshots: EntityTable<PortfolioSnapshotRecord, 'id'>;
+	cash_flows: EntityTable<CashFlowRecord, 'id'>;
 };
 
 db.version(1).stores({
@@ -153,6 +183,15 @@ db.version(1).stores({
 	scenarios: '++id, profileId, name, type, createdAt',
 	simulation_results: '++id, scenarioId, profileId, runAt',
 	risk_events: '++id, name, type'
+});
+
+db.version(2).stores({
+	profiles: '++id, name, createdAt, updatedAt',
+	scenarios: '++id, profileId, name, type, createdAt',
+	simulation_results: '++id, scenarioId, profileId, runAt',
+	risk_events: '++id, name, type',
+	portfolio_snapshots: '++id, profileId, date',
+	cash_flows: '++id, profileId, date, type'
 });
 
 export { db };

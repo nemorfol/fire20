@@ -18,6 +18,20 @@ import {
 } from './statistics.js';
 import { calculateWithdrawal } from './withdrawal.js';
 
+/** Configurazione di una singola asset class per simulazione multi-asset */
+export interface AssetClassConfig {
+	/** Identificativo: 'stocks', 'bonds', 'gold', 'cash', 'realEstate' */
+	name: string;
+	/** Allocazione (0..1) */
+	allocation: number;
+	/** Rendimento medio annuo atteso (es. 0.07 per 7%) */
+	expectedReturn: number;
+	/** Deviazione standard annua (es. 0.16 per 16%) */
+	stdDev: number;
+	/** Rendimenti storici per modalità historical/bootstrap (decimali) */
+	historicalReturns?: number[];
+}
+
 /** Parametri della simulazione Monte Carlo */
 export interface MonteCarloParams {
 	/** Portafoglio iniziale */
@@ -70,6 +84,10 @@ export interface MonteCarloParams {
 	useCorrelation?: boolean;
 	/** Correlazione azioni-obbligazioni (default 0.189) */
 	stockBondCorrelation?: number;
+	/** Configurazione multi-asset (opzionale, sovrascrive il modo 2-asset) */
+	assetClasses?: AssetClassConfig[];
+	/** Matrice di correlazione NxN per multi-asset (opzionale) */
+	correlationMatrix?: number[][];
 	/** Callback per aggiornamenti di progresso */
 	onProgress?: (percent: number) => void;
 }
@@ -102,7 +120,51 @@ export interface MonteCarloResult {
 }
 
 /**
+ * Genera rendimenti multi-asset per un singolo anno in base alla modalità.
+ * Restituisce un array di rendimenti (uno per asset class) e l'inflazione.
+ */
+function generateMultiAssetReturn(
+	params: MonteCarloParams,
+	assetClasses: AssetClassConfig[],
+	corrMatrix: number[][]
+): { assetReturns: number[]; inflation: number } {
+	const mode = params.simulationMode;
+	const n = assetClasses.length;
+
+	if (mode === 'parametric') {
+		const inflation = gaussianRandom(params.inflationRate, 0.01);
+		const useCorrelation = params.useCorrelation ?? true;
+
+		if (useCorrelation && corrMatrix.length === n) {
+			const means = assetClasses.map((a) => a.expectedReturn);
+			const stdDevs = assetClasses.map((a) => a.stdDev);
+			const assetReturns = correlatedReturns(means, stdDevs, corrMatrix);
+			return { assetReturns, inflation: Math.max(0, inflation) };
+		}
+
+		// Rendimenti indipendenti (fallback)
+		const assetReturns = assetClasses.map((a) =>
+			logNormalReturn(a.expectedReturn, a.stdDev)
+		);
+		return { assetReturns, inflation: Math.max(0, inflation) };
+	}
+
+	// historical / block-bootstrap: campiona dai rendimenti storici di ogni asset
+	const inflationHist = params.historicalInflation ?? [];
+	const assetReturns = assetClasses.map((a) => {
+		const hist = a.historicalReturns ?? [];
+		return bootstrapSample(hist.length > 0 ? hist : [a.expectedReturn]);
+	});
+
+	return {
+		assetReturns,
+		inflation: bootstrapSample(inflationHist.length > 0 ? inflationHist : [params.inflationRate])
+	};
+}
+
+/**
  * Genera un rendimento del portafoglio per un singolo anno in base alla modalità.
+ * Versione legacy 2-asset, usata quando assetClasses non è fornito.
  */
 function generateReturn(
 	params: MonteCarloParams,
@@ -182,29 +244,50 @@ function runSingleSimulation(params: MonteCarloParams): number[] {
 	let initialRetirementPortfolio = 0;
 	let previousWithdrawal = 0;
 
+	// Modalità multi-asset: usa assetClasses e correlationMatrix
+	const useMultiAsset = params.assetClasses && params.assetClasses.length > 0;
+	const assetClasses = params.assetClasses ?? [];
+	const corrMatrix = params.correlationMatrix ?? [];
+
 	// Pre-genera blocchi per block-bootstrap (preserva autocorrelazione)
+	// Multi-asset: un array di blocchi per ogni asset class
+	let pregenAssetReturns: number[][] | null = null;
 	let pregenStockReturns: number[] | null = null;
 	let pregenBondReturns: number[] | null = null;
 	let pregenInflation: number[] | null = null;
 
 	if (params.simulationMode === 'block-bootstrap') {
 		const blockSize = 5;
-		const stockData = params.historicalStockReturns ?? [0.07];
-		const bondData = params.historicalBondReturns ?? [0.03];
 		const inflData = params.historicalInflation ?? [params.inflationRate];
 
-		pregenStockReturns = [];
-		pregenBondReturns = [];
 		pregenInflation = [];
-
-		// Genera blocchi contigui fino a coprire tutti gli anni
 		for (let i = 0; i < totalYears; i += blockSize) {
-			const sBlock = blockBootstrapSample(stockData, blockSize);
-			const bBlock = blockBootstrapSample(bondData, blockSize);
 			const iBlock = blockBootstrapSample(inflData, blockSize);
-			pregenStockReturns.push(...sBlock);
-			pregenBondReturns.push(...bBlock);
 			pregenInflation.push(...iBlock);
+		}
+
+		if (useMultiAsset) {
+			pregenAssetReturns = assetClasses.map((ac) => {
+				const hist = ac.historicalReturns ?? [ac.expectedReturn];
+				const blocks: number[] = [];
+				for (let i = 0; i < totalYears; i += blockSize) {
+					blocks.push(...blockBootstrapSample(hist, blockSize));
+				}
+				return blocks;
+			});
+		} else {
+			const stockData = params.historicalStockReturns ?? [0.07];
+			const bondData = params.historicalBondReturns ?? [0.03];
+
+			pregenStockReturns = [];
+			pregenBondReturns = [];
+
+			for (let i = 0; i < totalYears; i += blockSize) {
+				const sBlock = blockBootstrapSample(stockData, blockSize);
+				const bBlock = blockBootstrapSample(bondData, blockSize);
+				pregenStockReturns.push(...sBlock);
+				pregenBondReturns.push(...bBlock);
+			}
 		}
 	}
 
@@ -218,22 +301,46 @@ function runSingleSimulation(params: MonteCarloParams): number[] {
 			previousWithdrawal = portfolio * params.withdrawalRate;
 		}
 
-		// Genera rendimenti casuali (usa blocchi pre-generati per block-bootstrap)
-		let stockReturn: number, bondReturn: number, inflation: number;
-		if (pregenStockReturns && pregenBondReturns && pregenInflation) {
-			stockReturn = pregenStockReturns[year] ?? 0.07;
-			bondReturn = pregenBondReturns[year] ?? 0.03;
-			inflation = Math.max(0, pregenInflation[year] ?? params.inflationRate);
-		} else {
-			const returns = generateReturn(params, year);
-			stockReturn = returns.stockReturn;
-			bondReturn = returns.bondReturn;
-			inflation = returns.inflation;
-		}
+		let portfolioReturn: number;
+		let inflation: number;
 
-		// Rendimento ponderato del portafoglio
-		const portfolioReturn =
-			stockReturn * params.stockAllocation + bondReturn * params.bondAllocation;
+		if (useMultiAsset) {
+			// === Multi-asset path ===
+			if (pregenAssetReturns && pregenInflation) {
+				// block-bootstrap con blocchi pre-generati
+				const assetReturns = assetClasses.map((_, idx) =>
+					pregenAssetReturns![idx][year] ?? assetClasses[idx].expectedReturn
+				);
+				inflation = Math.max(0, pregenInflation[year] ?? params.inflationRate);
+				portfolioReturn = assetClasses.reduce(
+					(sum, ac, idx) => sum + assetReturns[idx] * ac.allocation, 0
+				);
+			} else {
+				// parametric o historical
+				const ret = generateMultiAssetReturn(params, assetClasses, corrMatrix);
+				inflation = ret.inflation;
+				portfolioReturn = assetClasses.reduce(
+					(sum, ac, idx) => sum + ret.assetReturns[idx] * ac.allocation, 0
+				);
+			}
+		} else {
+			// === Legacy 2-asset path ===
+			let stockReturn: number, bondReturn: number;
+			if (pregenStockReturns && pregenBondReturns && pregenInflation) {
+				stockReturn = pregenStockReturns[year] ?? 0.07;
+				bondReturn = pregenBondReturns[year] ?? 0.03;
+				inflation = Math.max(0, pregenInflation[year] ?? params.inflationRate);
+			} else {
+				const returns = generateReturn(params, year);
+				stockReturn = returns.stockReturn;
+				bondReturn = returns.bondReturn;
+				inflation = returns.inflation;
+			}
+
+			// Rendimento ponderato del portafoglio
+			portfolioReturn =
+				stockReturn * params.stockAllocation + bondReturn * params.bondAllocation;
+		}
 
 		// Fase di accumulazione: aggiungi contributi
 		if (!isRetired) {
