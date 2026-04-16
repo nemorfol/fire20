@@ -248,22 +248,19 @@ export function parseINPSCsv(csv: string): INPSExtract | null {
 /**
  * Parse l'XML esportato direttamente dal sito INPS (Estratto Conto Contributivo).
  *
- * Struttura XML:
- * <EstrattoConto>
- *   <DatiAnagrafici>...</DatiAnagrafici>
- *   <RegimeGenerale>
- *     <Contributi>
- *       <RigaContributi>
- *         <Dal><Anno>2007</Anno>...</Dal>
- *         <Al><Anno>2007</Anno>...</Al>
- *         <TipoContribuzione>Lavoro dipendente</TipoContribuzione>
- *         <ContributiUtiliDiritto>40</ContributiUtiliDiritto>  (settimane)
- *         <RetribuzioneEuro>13225.0</RetribuzioneEuro>
- *         <Azienda><Descrizione>...</Descrizione></Azienda>
- *       </RigaContributi>
- *     </Contributi>
- *   </RegimeGenerale>
- * </EstrattoConto>
+ * L'XML puo' contenere fino a 3 sezioni contributive:
+ *
+ * 1. RegimeGenerale > Contributi > RigaContributi
+ *    (lavoro dipendente: anno, settimane, retribuzione EUR, tipo, azienda)
+ *
+ * 2. RegimeParasubordinati > Parasubordinati > RigaParasubordinati
+ *    (collaborazioni/gestione separata: anno, reddito imponibile, contributi versati, aliquota)
+ *
+ * 3. MontanteParasubordinati > RigaMontanteParasubordinati
+ *    (montante gia' calcolato dall'INPS con rivalutazione: anno, contributi, montante cumulativo)
+ *
+ * Il parser legge TUTTE le sezioni e le unifica in un unico estratto.
+ * Se disponibile, usa il montante precalcolato dall'INPS per i parasubordinati.
  */
 export function parseINPSXml(xmlString: string): INPSExtract | null {
   if (!xmlString || !xmlString.trim()) return null;
@@ -272,57 +269,64 @@ export function parseINPSXml(xmlString: string): INPSExtract | null {
     const parser = new DOMParser();
     const doc = parser.parseFromString(xmlString, 'text/xml');
 
-    // Verifica errori di parsing
     const parseError = doc.querySelector('parsererror');
     if (parseError) return null;
 
-    const righe = doc.querySelectorAll('RigaContributi');
-    if (righe.length === 0) return null;
+    // Mappa per aggregare contributi per anno
+    const yearMap = new Map<number, { weeks: number; salary: number; contributions: number; employer: string; source: string }>();
 
-    // Mappa per aggregare contributi per anno (possono esserci piu' righe per anno)
-    const yearMap = new Map<number, { weeks: number; salary: number; contributions: number; employer: string }>();
-
-    righe.forEach(riga => {
-      // Anno dal tag <Dal><Anno>
+    // --- 1. Regime Generale (lavoro dipendente) ---
+    const righeGenerale = doc.querySelectorAll('RegimeGenerale RigaContributi');
+    righeGenerale.forEach(riga => {
       const annoEl = riga.querySelector('Dal > Anno');
       if (!annoEl?.textContent) return;
       const year = parseInt(annoEl.textContent);
       if (isNaN(year) || year < 1950 || year > 2100) return;
 
-      // Settimane (ContributiUtiliDiritto)
-      const weeksEl = riga.querySelector('ContributiUtiliDiritto');
-      const weeks = weeksEl?.textContent ? parseFloat(weeksEl.textContent) : 0;
+      const weeks = parseFloat(riga.querySelector('ContributiUtiliDiritto')?.textContent || '0');
+      const salary = parseFloat(riga.querySelector('RetribuzioneEuro')?.textContent || '0');
+      const tipo = riga.querySelector('TipoContribuzione')?.textContent || 'Lavoro dipendente';
+      const employer = riga.querySelector('Azienda > Descrizione')?.textContent?.trim() || '';
 
-      // Retribuzione in EUR
-      const salaryEl = riga.querySelector('RetribuzioneEuro');
-      const salary = salaryEl?.textContent ? parseFloat(salaryEl.textContent) : 0;
-
-      // Tipo contribuzione
-      const tipoEl = riga.querySelector('TipoContribuzione');
-      const tipo = tipoEl?.textContent || '';
-
-      // Aliquota contributiva in base al tipo
-      let aliquota = 0.33; // default dipendente
-      if (tipo.toLowerCase().includes('autonomo') || tipo.toLowerCase().includes('artigian') || tipo.toLowerCase().includes('commerciant')) {
+      // Aliquota in base al tipo
+      let aliquota = 0.33;
+      if (tipo.toLowerCase().includes('autonomo') || tipo.toLowerCase().includes('artigian')) {
         aliquota = 0.2623;
-      } else if (tipo.toLowerCase().includes('parasubordinato') || tipo.toLowerCase().includes('gestione separata')) {
-        aliquota = 0.3372;
       }
       const contributions = salary * aliquota;
 
-      // Azienda
-      const aziendaEl = riga.querySelector('Azienda > Descrizione');
-      const employer = aziendaEl?.textContent || '';
+      addToYearMap(yearMap, year, weeks, salary, contributions, employer, 'Dipendente');
+    });
 
-      // Aggrega per anno
-      const existing = yearMap.get(year);
-      if (existing) {
-        existing.weeks += weeks;
-        existing.salary += salary;
-        existing.contributions += contributions;
-        if (!existing.employer && employer) existing.employer = employer;
-      } else {
-        yearMap.set(year, { weeks, salary, contributions, employer });
+    // --- 2. Regime Parasubordinati (gestione separata / collaborazioni) ---
+    const righeParasub = doc.querySelectorAll('RegimeParasubordinati RigaParasubordinati');
+    righeParasub.forEach(riga => {
+      const annoEl = riga.querySelector('AnnoSolare');
+      if (!annoEl?.textContent) return;
+      const year = parseInt(annoEl.textContent);
+      if (isNaN(year) || year < 1950 || year > 2100) return;
+
+      const salary = parseFloat(riga.querySelector('RedditoImponibile')?.textContent || '0');
+      const contributions = parseFloat(riga.querySelector('ContributiVersati')?.textContent || '0');
+      const aliquota = parseFloat(riga.querySelector('AliquotaContributiva')?.textContent || '0');
+      const employer = riga.querySelector('DescrizioneCommittente')?.textContent?.trim() || '';
+      const tipoDesc = riga.querySelector('TipoAttivitaOContribuzione > Descrizione')?.textContent?.trim() || '';
+
+      // Settimane stimate: 52 per anno intero, proporzionate se parziale
+      const weeks = salary > 0 ? 52 : 0;
+
+      addToYearMap(yearMap, year, weeks, salary, contributions, employer, tipoDesc || 'Parasubordinato');
+    });
+
+    // --- 3. Montante Parasubordinati (precalcolato dall'INPS) ---
+    // Usiamo l'ultimo valore come montante ufficiale parasubordinati
+    let montanteParasubINPS = 0;
+    const righeMontante = doc.querySelectorAll('MontanteParasubordinati RigaMontanteParasubordinati');
+    righeMontante.forEach(riga => {
+      const montanteEl = riga.querySelector('MontanteContributivo');
+      if (montanteEl?.textContent) {
+        const val = parseFloat(montanteEl.textContent);
+        if (val > montanteParasubINPS) montanteParasubINPS = val;
       }
     });
 
@@ -335,23 +339,52 @@ export function parseINPSXml(xmlString: string): INPSExtract | null {
         weeks: Math.min(Math.round(data.weeks), 52),
         grossSalary: Math.round(data.salary * 100) / 100,
         contributions: Math.round(data.contributions * 100) / 100,
-        employer: data.employer
+        employer: data.employer + (data.source ? ` [${data.source}]` : '')
       });
     });
 
     contributions.sort((a, b) => a.year - b.year);
 
-    // Estrai anche dati anagrafici se presenti
+    // Estrai dati anagrafici
     const cognome = doc.querySelector('DatiAnagrafici > Cognome')?.textContent || '';
     const nome = doc.querySelector('DatiAnagrafici > Nome')?.textContent || '';
-    if (cognome || nome) {
-      console.log(`[INPS XML] Estratto conto di: ${nome} ${cognome}`);
+
+    const extract = buildExtract(contributions);
+
+    // Se il montante parasubordinati precalcolato dall'INPS e' disponibile,
+    // usalo al posto del nostro calcolo per la parte parasubordinati
+    if (montanteParasubINPS > 0) {
+      // Ricalcola: montante nostro (solo dipendente) + montante INPS (parasubordinati)
+      const dipContribs = contributions.filter(c => !c.employer.includes('[Parasubordinato]') && !c.employer.includes('[Attivita'));
+      const montanteDipendente = calculateMontanteFromContributions(dipContribs);
+      extract.estimatedMontante = Math.round((montanteDipendente + montanteParasubINPS) * 100) / 100;
+
+      console.log(`[INPS XML] ${nome} ${cognome}: Montante dipendente (calcolato): ${montanteDipendente.toFixed(0)}€, Montante parasubordinati (INPS): ${montanteParasubINPS.toFixed(0)}€, TOTALE: ${extract.estimatedMontante.toFixed(0)}€`);
+    } else if (cognome || nome) {
+      console.log(`[INPS XML] Estratto conto di: ${nome} ${cognome}, montante stimato: ${extract.estimatedMontante.toFixed(0)}€`);
     }
 
-    return buildExtract(contributions);
+    return extract;
   } catch (err) {
     console.error('[INPS XML] Errore parsing:', err);
     return null;
+  }
+}
+
+/** Helper: aggiungi o aggrega dati per anno nella mappa */
+function addToYearMap(
+  map: Map<number, { weeks: number; salary: number; contributions: number; employer: string; source: string }>,
+  year: number, weeks: number, salary: number, contributions: number, employer: string, source: string
+) {
+  const existing = map.get(year);
+  if (existing) {
+    existing.weeks = Math.min(existing.weeks + weeks, 52);
+    existing.salary += salary;
+    existing.contributions += contributions;
+    if (!existing.employer && employer) existing.employer = employer;
+    if (source && !existing.source.includes(source)) existing.source += '+' + source;
+  } else {
+    map.set(year, { weeks, salary, contributions, employer, source });
   }
 }
 
