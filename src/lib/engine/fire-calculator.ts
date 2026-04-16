@@ -79,18 +79,23 @@ export function calculateFireNumber(annualExpenses: number, withdrawalRate: numb
 /**
  * Calcola gli anni necessari per raggiungere il numero FIRE
  * tramite iterazione anno per anno con interesse composto.
+ * Il confronto avviene in euro di oggi: portafoglio e contributi crescono al
+ * tasso nominale, ma il FIRE target viene inflazionato per ogni anno futuro,
+ * in modo che l'utente veda il vero impatto dell'inflazione.
  *
- * @param currentPortfolio - Portafoglio attuale
- * @param annualSavings - Risparmio annuale
- * @param expectedReturn - Rendimento atteso annuale (es. 0.07)
- * @param fireNumber - Il numero FIRE target
+ * @param currentPortfolio - Portafoglio attuale (euro di oggi)
+ * @param annualSavings - Risparmio annuale corrente (euro di oggi)
+ * @param expectedReturn - Rendimento nominale atteso annuale (es. 0.07)
+ * @param fireNumber - Il numero FIRE target in euro di oggi
+ * @param inflationRate - Tasso di inflazione annuale (es. 0.02). Default 0.
  * @returns Numero di anni per raggiungere il FIRE, -1 se irraggiungibile
  */
 export function calculateYearsToFire(
 	currentPortfolio: number,
 	annualSavings: number,
 	expectedReturn: number,
-	fireNumber: number
+	fireNumber: number,
+	inflationRate: number = 0
 ): number {
 	if (currentPortfolio >= fireNumber) return 0;
 	if (annualSavings <= 0 && expectedReturn <= 0) return -1;
@@ -99,8 +104,12 @@ export function calculateYearsToFire(
 	const maxYears = 100;
 
 	for (let year = 1; year <= maxYears; year++) {
-		portfolio = portfolio * (1 + expectedReturn) + annualSavings;
-		if (portfolio >= fireNumber) return year;
+		// I contributi crescono con l'inflazione (stipendio si adegua)
+		const inflatedContribution = annualSavings * Math.pow(1 + inflationRate, year - 1);
+		portfolio = portfolio * (1 + expectedReturn) + inflatedContribution;
+		// Il target FIRE si inflaziona pure: confronto in moneta dell'anno
+		const inflatedTarget = fireNumber * Math.pow(1 + inflationRate, year);
+		if (portfolio >= inflatedTarget) return year;
 	}
 
 	return -1; // Irraggiungibile entro 100 anni
@@ -258,22 +267,28 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
  * per poter smettere di contribuire e raggiungere comunque il FIRE
  * al momento del pensionamento grazie all'interesse composto.
  *
- * Formula: fireNumber / (1 + expectedReturn)^(retirementAge - currentAge)
+ * Usa il rendimento REALE (depurato dall'inflazione) perché il FIRE target
+ * è espresso in euro di oggi. Con rendimento reale negativo (inflazione >
+ * rendimento nominale), il Coast FIRE è irraggiungibile senza contributi.
  *
  * @param currentAge - Età attuale
  * @param retirementAge - Età di pensionamento target
- * @param fireNumber - Il numero FIRE target
- * @param expectedReturn - Rendimento atteso annuale (es. 0.07)
+ * @param fireNumber - Il numero FIRE target in euro di oggi
+ * @param expectedReturn - Rendimento nominale atteso annuale (es. 0.07)
+ * @param inflationRate - Tasso di inflazione annuale (es. 0.02). Default 0.
  * @returns Il patrimonio minimo necessario oggi per il Coast FIRE
  */
 export function calculateCoastFireNumber(
 	currentAge: number,
 	retirementAge: number,
 	fireNumber: number,
-	expectedReturn: number
+	expectedReturn: number,
+	inflationRate: number = 0
 ): number {
 	const years = retirementAge - currentAge;
 	if (years <= 0) return fireNumber;
-	if (expectedReturn <= -1) return Infinity;
-	return fireNumber / Math.pow(1 + expectedReturn, years);
+	const realReturn = (1 + expectedReturn) / (1 + inflationRate) - 1;
+	if (realReturn <= -1) return Infinity;
+	if (realReturn <= 0) return Infinity; // senza contributi non si recupera il potere d'acquisto
+	return fireNumber / Math.pow(1 + realReturn, years);
 }

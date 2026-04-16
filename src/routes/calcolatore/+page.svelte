@@ -90,7 +90,7 @@
 	let annualSavings = $derived(wiAnnualContribution);
 
 	let yearsToFire = $derived(
-		calculateYearsToFire(wiInitialPortfolio, annualSavings, expectedReturn / 100, fireNumber)
+		calculateYearsToFire(wiInitialPortfolio, annualSavings, expectedReturn / 100, fireNumber, inflationRate / 100)
 	);
 
 	let savingsRate = $derived(
@@ -107,7 +107,8 @@
 					currentAge,
 					wiRetirementAge,
 					fireNumber,
-					expectedReturn / 100
+					expectedReturn / 100,
+					inflationRate / 100
 				)
 			: 0
 	);
@@ -285,6 +286,7 @@
 			{fireNumber}
 			{retirementAge}
 			{currentAge}
+			inflationRate={inflationRate / 100}
 		/>
 	</div>
 

@@ -821,11 +821,18 @@ Una famiglia italiana che nel 1975 aveva 100 milioni di lire in un conto corrent
 <p>L'inflazione italiana potrebbe divergere da quella globale. Investire globalmente protegge da scenari di inflazione specificamente italiana (come negli anni '70).</p>
 
 <div class="tip">
-<strong>Consiglio:</strong> Il calcolatore dell'app lavora in termini reali. Quando inserisci il rendimento atteso, usa il rendimento reale (tipicamente 4-5% per un portafoglio bilanciato). Questo semplifica i calcoli perché le spese restano costanti in termini reali. L'inflazione è già incorporata.
+<strong>Come il calcolatore dell'app gestisce l'inflazione:</strong> il <strong>Calcolatore FIRE</strong> lavora in <em>termini nominali</em>. Inserisci il rendimento e l'inflazione separatamente come parametri. L'app:
+<ul>
+<li>Inflaziona automaticamente contributi, spese e pensione INPS anno per anno</li>
+<li>Mostra una <strong>linea rossa "Target FIRE" crescente</strong> nel grafico: se l'inflazione è alta, il target "scappa" visibilmente verso l'alto</li>
+<li>Calcola gli "Anni al FIRE" confrontando il portafoglio nominale con il target inflazionato dell'anno</li>
+<li>Nel tooltip del grafico, quando l'inflazione è &gt; 0, trovi anche il valore del portafoglio convertito in <em>euro di oggi</em></li>
+</ul>
+Sposta lo slider <strong>Inflazione</strong> da 2% a 6% per vedere chiaramente l'impatto sulla sostenibilità del piano.
 </div>
 
 <div class="warning">
-<strong>Attenzione:</strong> Non sottovalutare l'inflazione settoriale. I costi sanitari tendono a crescere più dell'inflazione media (importante per il FIRE, quando invecchi). Anche i costi dell'energia possono avere picchi improvvisi, come nel 2022. Prevedi un margine extra per queste voci.
+<strong>Attenzione al rendimento reale negativo:</strong> se il rendimento nominale è inferiore all'inflazione (es. 7% vs 10%), il potere d'acquisto del portafoglio <strong>diminuisce</strong> nel tempo anche se il valore nominale cresce. Il Coast FIRE in questi scenari diventa irraggiungibile senza nuovi contributi. Non sottovalutare l'inflazione settoriale: i costi sanitari tendono a crescere più dell'inflazione media, e l'energia può avere picchi improvvisi come nel 2022.
 </div>
 `
 	},
