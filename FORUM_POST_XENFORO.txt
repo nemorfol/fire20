@@ -296,16 +296,19 @@ L'app modella in dettaglio il sistema fiscale italiano:
 [*][B]Web Workers[/B] - Le simulazioni pesanti girano in un thread separato
 [*][B]PapaParse 5.5[/B] - Import/export CSV
 [*][B]jsPDF[/B] - Generazione report PDF lato client
-[*][B]@vite-pwa/sveltekit[/B] - Progressive Web App con service worker e cache offline
+[*][B]xlsx[/B] - Parsing file Excel (import Fineco/banche)
+[*][B]@vite-pwa/sveltekit[/B] - Progressive Web App con service worker, cache offline e notifiche push
 [/LIST]
 
 [B]Numeri:[/B]
 [LIST]
-[*]~110 file sorgente (55+ componenti Svelte + 35+ moduli TypeScript)
-[*]~27.000 righe di codice
+[*]~130 file sorgente (65+ componenti Svelte + 40+ moduli TypeScript)
+[*]~32.000 righe di codice
+[*]12 pagine dell'app
 [*]10 dataset storici embedded (dal 1881 al 2024)
 [*]8 benchmark FIRE internazionali
-[*]78 risorse precachate per uso offline (PWA)
+[*]93 risorse precachate per uso offline (PWA)
+[*]5 strategie erogazione fondo pensione (riforma 2026)
 [*]Build statica pronta per Vercel/Netlify/GitHub Pages
 [/LIST]
 
@@ -342,7 +345,7 @@ Aprite [URL='http://localhost:5173']http://localhost:5173[/URL] nel browser. Req
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-[SIZE=5][B][COLOR=#22c55e]Feature implementate (v1.0 → v1.2)[/COLOR][/B][/SIZE]
+[SIZE=5][B][COLOR=#22c55e]Feature implementate (v1.0 → v2.0)[/COLOR][/B][/SIZE]
 
 [TABLE]
 [TR]
@@ -426,6 +429,31 @@ Aprite [URL='http://localhost:5173']http://localhost:5173[/URL] nel browser. Req
 [TD]Time-Weighted Return con metodo Modified Dietz, snapshot portafoglio, cash flow tracking, confronto vs S&P 500 (base 100), Alpha, Max Drawdown[/TD]
 [/TR]
 [TR]
+[TD][B]Simulatore INPS avanzato[/B][/TD]
+[TD][COLOR=#22c55e]✓ Fatto[/COLOR][/TD]
+[TD]Proiezione montante anno per anno, riscatto laurea (standard vs agevolato) con ROI e break-even, career gaps, confronto pensione a eta' 62/64/67/70[/TD]
+[/TR]
+[TR]
+[TD][B]Notifiche push PWA[/B][/TD]
+[TD][COLOR=#22c55e]✓ Fatto[/COLOR][/TD]
+[TD]Browser Notification API per promemoria ribilanciamento. Banner richiesta permesso, check periodico, test notifica in Impostazioni[/TD]
+[/TR]
+[TR]
+[TD][B]Import movimenti bancari[/B][/TD]
+[TD][COLOR=#22c55e]✓ Fatto[/COLOR][/TD]
+[TD]Template Fineco, Intesa Sanpaolo, UniCredit, CSV generico. Auto-categorizzazione 12 categorie italiane (stipendio, bollette, supermercato, ecc.). Grafico spese, tabella con filtro[/TD]
+[/TR]
+[TR]
+[TD][B]Community Benchmark[/B][/TD]
+[TD][COLOR=#22c55e]✓ Fatto[/COLOR][/TD]
+[TD]Condivisione anonima scenari via URL (base64, no backend). Statistiche aggregate, confronto profilo vs community, filtri per tipo FIRE/regione/eta'[/TD]
+[/TR]
+[TR]
+[TD][B]Sezione Fondo Pensione 2026[/B][/TD]
+[TD][COLOR=#22c55e]✓ Fatto[/COLOR][/TD]
+[TD]5 strategie erogazione (Rendita Vitalizia, Durata Definita, Prelievi Liberi, Frazionata, Capitale 60%). Calcolatore RITA, riscatto laurea, ottimizzatore contributi. Riforma Legge di Bilancio 2026[/TD]
+[/TR]
+[TR]
 [TD][B]Deploy Vercel[/B][/TD]
 [TD][COLOR=#22c55e]✓ LIVE[/COLOR][/TD]
 [TD][URL='https://fire20.vercel.app/']fire20.vercel.app[/URL] - online e accessibile a tutti, nessuna installazione necessaria[/TD]
@@ -434,18 +462,15 @@ Aprite [URL='http://localhost:5173']http://localhost:5173[/URL] nel browser. Req
 
 [SIZE=5][B]Roadmap futura[/B][/SIZE]
 
-[LIST]
-[*][S]Simulazione Monte Carlo multi-asset (3+ classi con matrice di correlazione completa)[/S] [COLOR=#22c55e]✓ FATTO[/COLOR]
-[*][S]Confronto storico del proprio portafoglio (time-weighted return)[/S] [COLOR=#22c55e]✓ FATTO[/COLOR]
-[*][S]Modalita' "What If" interattiva (slider in tempo reale su tutti i parametri)[/S] [COLOR=#22c55e]✓ FATTO[/COLOR]
-[/LIST]
+Tutte le feature precedentemente pianificate sono state implementate! Ecco cosa stiamo valutando per le prossime versioni:
 
-[B]Prossimi sviluppi:[/B]
 [LIST]
-[*]Calcolo pensione INPS automatico direttamente da SPID/CIE (integrazione API INPS)
-[*]Notifiche push native (oltre al reminder in-app)
-[*]Import automatico transazioni bancarie (formato PSD2)
-[*]Community: condivisione anonima scenari per benchmark collaborativo
+[*]Integrazione diretta SPID/CIE per import automatico estratto conto INPS (richiede backend)
+[*]Sincronizzazione cloud opzionale (crittografata end-to-end)
+[*]App nativa Android/iOS (Capacitor)
+[*]Analisi spese avanzata con machine learning per categorizzazione automatica
+[*]Integrazione Open Banking (PSD2 API) per import automatico posizioni e movimenti
+[*]Simulazione scenari fiscali: confronto residenza in diversi paesi EU
 [/LIST]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

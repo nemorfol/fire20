@@ -5,8 +5,7 @@
 		BreadcrumbItem,
 		Alert,
 		Tabs,
-		TabItem,
-		Card
+		TabItem
 	} from 'flowbite-svelte';
 	import { InfoCircleSolid } from 'flowbite-svelte-icons';
 
@@ -31,69 +30,83 @@
 	</p>
 
 	<!-- Panoramica Riforma 2026 -->
-	<Card class="mb-6">
-		<h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">
-			Riforma 2026: Cosa Cambia
-		</h2>
-		<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-			La Legge di Bilancio 2026 introduce importanti novita' per i fondi pensione complementari,
-			con nuove modalita' di erogazione piu' flessibili e vantaggiose.
-		</p>
-
-		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-			<div class="p-3 border border-purple-200 dark:border-purple-800 rounded-lg">
-				<h3 class="font-semibold text-purple-700 dark:text-purple-400 mb-1">Rendita Vitalizia</h3>
-				<p class="text-xs text-gray-600 dark:text-gray-400">
-					Classica rendita a vita. Capitale trasferito alla compagnia assicurativa.
-					Tassazione dal 15% al 9%.
-				</p>
+	<div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
+		<div class="flex items-center gap-3 mb-4">
+			<div class="p-2 bg-primary-100 dark:bg-primary-900/30 rounded-lg">
+				<InfoCircleSolid class="w-6 h-6 text-primary-600 dark:text-primary-400" />
 			</div>
-			<div class="p-3 border border-blue-200 dark:border-blue-800 rounded-lg">
-				<div class="flex items-center gap-1 mb-1">
-					<h3 class="font-semibold text-blue-700 dark:text-blue-400">Rendita a Durata Definita</h3>
-					<span class="text-[10px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded-full font-bold">NUOVO</span>
-				</div>
-				<p class="text-xs text-gray-600 dark:text-gray-400">
-					Il capitale resta nel fondo e genera rendimenti. Rata ricalcolata ogni anno.
-					Gli eredi ricevono il capitale residuo.
-				</p>
-			</div>
-			<div class="p-3 border border-green-200 dark:border-green-800 rounded-lg">
-				<div class="flex items-center gap-1 mb-1">
-					<h3 class="font-semibold text-green-700 dark:text-green-400">Prelievi Liberi</h3>
-					<span class="text-[10px] bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-1.5 py-0.5 rounded-full font-bold">NUOVO</span>
-				</div>
-				<p class="text-xs text-gray-600 dark:text-gray-400">
-					Massima flessibilita': prelevi quando vuoi. Tetto massimo cumulativo.
-					Ideale per la strategia FIRE.
-				</p>
-			</div>
-			<div class="p-3 border border-red-200 dark:border-red-800 rounded-lg">
-				<div class="flex items-center gap-1 mb-1">
-					<h3 class="font-semibold text-red-700 dark:text-red-400">Erogazione Frazionata</h3>
-					<span class="text-[10px] bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 px-1.5 py-0.5 rounded-full font-bold">NUOVO</span>
-				</div>
-				<p class="text-xs text-gray-600 dark:text-gray-400">
-					Rate fisse su minimo 5 anni. Tassazione piu' alta (20% base).
-					Meno vantaggiosa delle altre opzioni.
-				</p>
-			</div>
-			<div class="p-3 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-				<h3 class="font-semibold text-yellow-700 dark:text-yellow-400 mb-1">Capitale (fino al 60%)</h3>
-				<p class="text-xs text-gray-600 dark:text-gray-400">
-					Limite alzato dal 50% al 60%. Il resto in rendita.
-					100% in capitale se la rendita e' sotto soglia.
-				</p>
-			</div>
-			<div class="p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
-				<h3 class="font-semibold text-gray-700 dark:text-gray-400 mb-1">Deducibilita' Aumentata</h3>
-				<p class="text-xs text-gray-600 dark:text-gray-400">
-					Limite ordinario portato a 5.300 EUR/anno (era 5.164,57 EUR).
-					Extra fino a 2.650 EUR per lavoratori post-2007.
-				</p>
+			<div>
+				<h2 class="text-xl font-bold text-gray-900 dark:text-white">Riforma 2026: Cosa Cambia</h2>
+				<p class="text-sm text-gray-500 dark:text-gray-400">Legge di Bilancio 2026 - In vigore dal 1 luglio 2026</p>
 			</div>
 		</div>
-	</Card>
+
+		<!-- Le 5 strategie di erogazione -->
+		<h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">5 Modalita' di Erogazione</h3>
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+			<!-- Rendita Vitalizia -->
+			<div class="flex gap-3 p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-xl">
+				<div class="shrink-0 w-10 h-10 flex items-center justify-center bg-purple-200 dark:bg-purple-800 rounded-lg text-lg">&#9854;</div>
+				<div>
+					<h4 class="font-semibold text-purple-700 dark:text-purple-300">Rendita Vitalizia</h4>
+					<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Assegno mensile a vita. Capitale trasferito alla compagnia assicurativa. Tassazione <strong>15% → 9%</strong>.</p>
+				</div>
+			</div>
+			<!-- Rendita a Durata Definita -->
+			<div class="flex gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
+				<div class="shrink-0 w-10 h-10 flex items-center justify-center bg-blue-200 dark:bg-blue-800 rounded-lg text-lg">&#128197;</div>
+				<div>
+					<div class="flex items-center gap-2">
+						<h4 class="font-semibold text-blue-700 dark:text-blue-300">Rendita a Durata Definita</h4>
+						<span class="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded-full font-bold uppercase">Nuovo</span>
+					</div>
+					<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Il capitale resta nel fondo e genera rendimenti. Rata ricalcolata ogni anno su aspettativa di vita ISTAT. <strong>Eredi ricevono il residuo</strong>. Tax: <strong>15% → 9%</strong>.</p>
+				</div>
+			</div>
+			<!-- Prelievi Liberi -->
+			<div class="flex gap-3 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl">
+				<div class="shrink-0 w-10 h-10 flex items-center justify-center bg-green-200 dark:bg-green-800 rounded-lg text-lg">&#128176;</div>
+				<div>
+					<div class="flex items-center gap-2">
+						<h4 class="font-semibold text-green-700 dark:text-green-300">Prelievi Liberi</h4>
+						<span class="text-[10px] bg-green-600 text-white px-2 py-0.5 rounded-full font-bold uppercase">Nuovo</span>
+						<span class="text-[10px] bg-yellow-500 text-black px-2 py-0.5 rounded-full font-bold uppercase">Ideale FIRE</span>
+					</div>
+					<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Massima flessibilita': prelevi quando vuoi, quanto vuoi. Tetto = rendita virtuale maturata. Tax: <strong>15% → 9%</strong>.</p>
+				</div>
+			</div>
+			<!-- Erogazione Frazionata -->
+			<div class="flex gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
+				<div class="shrink-0 w-10 h-10 flex items-center justify-center bg-red-200 dark:bg-red-800 rounded-lg text-lg">&#128467;</div>
+				<div>
+					<div class="flex items-center gap-2">
+						<h4 class="font-semibold text-red-700 dark:text-red-300">Erogazione Frazionata</h4>
+						<span class="text-[10px] bg-red-600 text-white px-2 py-0.5 rounded-full font-bold uppercase">Nuovo</span>
+					</div>
+					<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Rate fisse su minimo 5 anni. Tassazione piu' alta: <strong>20% → 15%</strong> (-0.25%/anno). Meno vantaggiosa.</p>
+				</div>
+			</div>
+		</div>
+
+		<!-- Altre novita' -->
+		<h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Altre Novita' 2026</h3>
+		<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+			<div class="flex gap-3 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl">
+				<div class="shrink-0 w-10 h-10 flex items-center justify-center bg-yellow-200 dark:bg-yellow-800 rounded-lg text-lg">&#128184;</div>
+				<div>
+					<h4 class="font-semibold text-yellow-700 dark:text-yellow-300">Capitale fino al 60%</h4>
+					<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Limite alzato dal 50% al 60%. Il resto in rendita. 100% capitale se la rendita e' sotto soglia (~267 EUR/mese).</p>
+				</div>
+			</div>
+			<div class="flex gap-3 p-4 bg-gray-50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-600 rounded-xl">
+				<div class="shrink-0 w-10 h-10 flex items-center justify-center bg-gray-200 dark:bg-gray-600 rounded-lg text-lg">&#128200;</div>
+				<div>
+					<h4 class="font-semibold text-gray-700 dark:text-gray-300">Deducibilita' Aumentata</h4>
+					<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Ordinaria: <strong>5.300 EUR/anno</strong>. Extra post-2007: <strong>+2.650 EUR</strong> (totale max 7.950 EUR).</p>
+				</div>
+			</div>
+		</div>
+	</div>
 
 	<!-- Tabs con le sezioni -->
 	<Tabs
