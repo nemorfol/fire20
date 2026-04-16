@@ -246,6 +246,139 @@ export function parseINPSCsv(csv: string): INPSExtract | null {
 }
 
 /**
+ * Parse l'XML esportato direttamente dal sito INPS (Estratto Conto Contributivo).
+ *
+ * Struttura XML:
+ * <EstrattoConto>
+ *   <DatiAnagrafici>...</DatiAnagrafici>
+ *   <RegimeGenerale>
+ *     <Contributi>
+ *       <RigaContributi>
+ *         <Dal><Anno>2007</Anno>...</Dal>
+ *         <Al><Anno>2007</Anno>...</Al>
+ *         <TipoContribuzione>Lavoro dipendente</TipoContribuzione>
+ *         <ContributiUtiliDiritto>40</ContributiUtiliDiritto>  (settimane)
+ *         <RetribuzioneEuro>13225.0</RetribuzioneEuro>
+ *         <Azienda><Descrizione>...</Descrizione></Azienda>
+ *       </RigaContributi>
+ *     </Contributi>
+ *   </RegimeGenerale>
+ * </EstrattoConto>
+ */
+export function parseINPSXml(xmlString: string): INPSExtract | null {
+  if (!xmlString || !xmlString.trim()) return null;
+
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(xmlString, 'text/xml');
+
+    // Verifica errori di parsing
+    const parseError = doc.querySelector('parsererror');
+    if (parseError) return null;
+
+    const righe = doc.querySelectorAll('RigaContributi');
+    if (righe.length === 0) return null;
+
+    // Mappa per aggregare contributi per anno (possono esserci piu' righe per anno)
+    const yearMap = new Map<number, { weeks: number; salary: number; contributions: number; employer: string }>();
+
+    righe.forEach(riga => {
+      // Anno dal tag <Dal><Anno>
+      const annoEl = riga.querySelector('Dal > Anno');
+      if (!annoEl?.textContent) return;
+      const year = parseInt(annoEl.textContent);
+      if (isNaN(year) || year < 1950 || year > 2100) return;
+
+      // Settimane (ContributiUtiliDiritto)
+      const weeksEl = riga.querySelector('ContributiUtiliDiritto');
+      const weeks = weeksEl?.textContent ? parseFloat(weeksEl.textContent) : 0;
+
+      // Retribuzione in EUR
+      const salaryEl = riga.querySelector('RetribuzioneEuro');
+      const salary = salaryEl?.textContent ? parseFloat(salaryEl.textContent) : 0;
+
+      // Tipo contribuzione
+      const tipoEl = riga.querySelector('TipoContribuzione');
+      const tipo = tipoEl?.textContent || '';
+
+      // Aliquota contributiva in base al tipo
+      let aliquota = 0.33; // default dipendente
+      if (tipo.toLowerCase().includes('autonomo') || tipo.toLowerCase().includes('artigian') || tipo.toLowerCase().includes('commerciant')) {
+        aliquota = 0.2623;
+      } else if (tipo.toLowerCase().includes('parasubordinato') || tipo.toLowerCase().includes('gestione separata')) {
+        aliquota = 0.3372;
+      }
+      const contributions = salary * aliquota;
+
+      // Azienda
+      const aziendaEl = riga.querySelector('Azienda > Descrizione');
+      const employer = aziendaEl?.textContent || '';
+
+      // Aggrega per anno
+      const existing = yearMap.get(year);
+      if (existing) {
+        existing.weeks += weeks;
+        existing.salary += salary;
+        existing.contributions += contributions;
+        if (!existing.employer && employer) existing.employer = employer;
+      } else {
+        yearMap.set(year, { weeks, salary, contributions, employer });
+      }
+    });
+
+    if (yearMap.size === 0) return null;
+
+    const contributions: INPSContribution[] = [];
+    yearMap.forEach((data, year) => {
+      contributions.push({
+        year,
+        weeks: Math.min(Math.round(data.weeks), 52),
+        grossSalary: Math.round(data.salary * 100) / 100,
+        contributions: Math.round(data.contributions * 100) / 100,
+        employer: data.employer
+      });
+    });
+
+    contributions.sort((a, b) => a.year - b.year);
+
+    // Estrai anche dati anagrafici se presenti
+    const cognome = doc.querySelector('DatiAnagrafici > Cognome')?.textContent || '';
+    const nome = doc.querySelector('DatiAnagrafici > Nome')?.textContent || '';
+    if (cognome || nome) {
+      console.log(`[INPS XML] Estratto conto di: ${nome} ${cognome}`);
+    }
+
+    return buildExtract(contributions);
+  } catch (err) {
+    console.error('[INPS XML] Errore parsing:', err);
+    return null;
+  }
+}
+
+/**
+ * Tenta di parsare automaticamente il contenuto (XML, CSV o testo).
+ * Rileva il formato dal contenuto.
+ */
+export function parseINPSAuto(content: string): INPSExtract | null {
+  if (!content || !content.trim()) return null;
+
+  const trimmed = content.trim();
+
+  // Se inizia con <?xml o <EstrattoConto, e' XML
+  if (trimmed.startsWith('<?xml') || trimmed.startsWith('<EstrattoConto')) {
+    return parseINPSXml(trimmed);
+  }
+
+  // Se contiene header CSV tipici
+  if (/^(anno|year|settimane)/im.test(trimmed)) {
+    return parseINPSCsv(trimmed);
+  }
+
+  // Fallback: prova come testo generico
+  return parseINPSExtract(trimmed);
+}
+
+/**
  * Calculate montante from a parsed extract.
  */
 export function calculateMontanteFromExtract(extract: INPSExtract): number {

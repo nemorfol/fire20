@@ -6,8 +6,7 @@
 	} from 'flowbite-svelte';
 	import { InfoCircleSolid, CheckCircleOutline, ExclamationCircleSolid } from 'flowbite-svelte-icons';
 	import {
-		parseINPSExtract,
-		parseINPSCsv,
+		parseINPSAuto,
 		type INPSExtract
 	} from '$lib/utils/inps-parser';
 	import { formatCurrency } from '$lib/utils/format';
@@ -31,11 +30,8 @@
 			return;
 		}
 
-		// Try CSV first, then plain text
-		let result = parseINPSCsv(pastedText);
-		if (!result) {
-			result = parseINPSExtract(pastedText);
-		}
+		// Auto-detect formato (XML, CSV, testo)
+		const result = parseINPSAuto(pastedText);
 
 		if (!result || result.contributions.length === 0) {
 			parseError = 'Impossibile analizzare i dati. Verifica il formato: ogni riga deve contenere almeno anno, retribuzione e contributi, separati da tabulazione, punto e virgola o virgola.';
@@ -113,7 +109,7 @@
 				</Button>
 
 				<div class="flex-1">
-					<Fileupload accept=".csv,.txt,.tsv" onchange={handleFileUpload} />
+					<Fileupload accept=".csv,.txt,.tsv,.xml" onchange={handleFileUpload} />
 					<p class="text-xs text-gray-400 mt-1">Oppure carica un file CSV o TXT</p>
 				</div>
 			</div>
