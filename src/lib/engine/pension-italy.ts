@@ -90,7 +90,7 @@ const CONTRIBUTION_RATE = 0.33;
  * @param age - Età di pensionamento
  * @returns Coefficiente di trasformazione
  */
-function getTransformationCoefficient(age: number): number {
+export function getTransformationCoefficient(age: number): number {
 	if (age <= TRANSFORMATION_COEFFICIENTS[0][0]) {
 		return TRANSFORMATION_COEFFICIENTS[0][1];
 	}

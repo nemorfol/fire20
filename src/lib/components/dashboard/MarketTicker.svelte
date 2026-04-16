@@ -6,6 +6,7 @@
 		DEFAULT_WATCHLIST,
 		type MarketQuote
 	} from '$lib/utils/market-data';
+	import { t } from '$lib/i18n/store.svelte';
 
 	let quotes = $state<MarketQuote[]>([]);
 	let loading = $state(true);
@@ -27,11 +28,10 @@
 					minute: '2-digit'
 				}).format(new Date());
 			} else {
-				error =
-					'Dati di mercato non disponibili. Possibile blocco CORS - i dati funzionano meglio con un proxy server.';
+				error = t('market.unavailable');
 			}
 		} catch (err) {
-			error = 'Impossibile caricare i dati di mercato.';
+			error = t('market.loadError');
 			console.warn('[MarketTicker]', err);
 		} finally {
 			loading = false;
@@ -78,7 +78,7 @@
 		<div class="flex items-center">
 			<!-- Label -->
 			<div class="flex-shrink-0 px-3 py-2 bg-gray-100 dark:bg-gray-700 border-r border-gray-200 dark:border-gray-600">
-				<span class="text-xs font-semibold text-gray-500 dark:text-gray-400 whitespace-nowrap">MERCATI</span>
+				<span class="text-xs font-semibold text-gray-500 dark:text-gray-400 whitespace-nowrap">{t('market.tickerLabel')}</span>
 				{#if lastRefresh}
 					<span class="text-xs text-gray-400 dark:text-gray-500 ml-1">{lastRefresh}</span>
 				{/if}
@@ -92,8 +92,8 @@
 							<span class="font-medium text-gray-700 dark:text-gray-300">{quote.name}</span>
 							<span class="font-semibold text-gray-900 dark:text-white">{formatPrice(quote)}</span>
 							<Badge
-								small
 								color={quote.change >= 0 ? 'green' : 'red'}
+								class="text-xs"
 							>
 								{formatChange(quote)}
 							</Badge>

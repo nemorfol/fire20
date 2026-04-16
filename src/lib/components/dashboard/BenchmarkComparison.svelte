@@ -2,6 +2,7 @@
 	import { Card, Badge, Table, TableHead, TableHeadCell, TableBody, TableBodyRow, TableBodyCell } from 'flowbite-svelte';
 	import { fireBenchmarks, type FIREBenchmark } from '$lib/data/benchmarks';
 	import { formatCurrency } from '$lib/utils/format';
+	import { t } from '$lib/i18n/store.svelte';
 
 	let {
 		userSavingsRate = 0,
@@ -27,16 +28,16 @@
 		return userVal > benchVal ? 'better' : 'worse';
 	}
 
-	function badgeColor(comparison: 'better' | 'worse' | 'similar'): 'green' | 'red' | 'dark' {
+	function badgeColor(comparison: 'better' | 'worse' | 'similar'): 'green' | 'red' | 'gray' {
 		if (comparison === 'better') return 'green';
 		if (comparison === 'worse') return 'red';
-		return 'dark';
+		return 'gray';
 	}
 
 	function comparisonLabel(comparison: 'better' | 'worse' | 'similar'): string {
-		if (comparison === 'better') return 'Meglio';
-		if (comparison === 'worse') return 'Sotto';
-		return 'Simile';
+		if (comparison === 'better') return t('compare.better');
+		if (comparison === 'worse') return t('compare.worse');
+		return t('compare.similar');
 	}
 
 	function barWidth(value: number): string {

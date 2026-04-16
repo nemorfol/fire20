@@ -26,13 +26,13 @@
 	let profileId = $state<number>(0);
 
 	// Override fields
-	let withdrawalRate = $state<number | null>(null);
-	let stockAllocation = $state<number | null>(null);
-	let inflationRate = $state<number | null>(null);
-	let expectedReturn = $state<number | null>(null);
-	let annualExpenses = $state<number | null>(null);
-	let fireExpenses = $state<number | null>(null);
-	let retirementAge = $state<number | null>(null);
+	let withdrawalRate = $state<number | undefined>(undefined);
+	let stockAllocation = $state<number | undefined>(undefined);
+	let inflationRate = $state<number | undefined>(undefined);
+	let expectedReturn = $state<number | undefined>(undefined);
+	let annualExpenses = $state<number | undefined>(undefined);
+	let fireExpenses = $state<number | undefined>(undefined);
+	let retirementAge = $state<number | undefined>(undefined);
 
 	const typeOptions = [
 		{ value: 'optimistic', name: 'Ottimistico' },
@@ -55,25 +55,25 @@
 				description = scenario.description;
 				type = scenario.type;
 				profileId = scenario.profileId;
-				withdrawalRate = scenario.overrides?.simulation?.withdrawalRate ?? null;
-				stockAllocation = scenario.overrides?.simulation?.stockAllocation ?? null;
-				inflationRate = scenario.overrides?.simulation?.inflationRate ?? null;
-				expectedReturn = scenario.overrides?.simulation?.expectedReturn ?? null;
-				annualExpenses = scenario.overrides?.annualExpenses ?? null;
-				fireExpenses = scenario.overrides?.fireExpenses ?? null;
-				retirementAge = scenario.overrides?.retirementAge ?? null;
+				withdrawalRate = scenario.overrides?.simulation?.withdrawalRate ?? undefined;
+				stockAllocation = scenario.overrides?.simulation?.stockAllocation ?? undefined;
+				inflationRate = scenario.overrides?.simulation?.inflationRate ?? undefined;
+				expectedReturn = scenario.overrides?.simulation?.expectedReturn ?? undefined;
+				annualExpenses = scenario.overrides?.annualExpenses ?? undefined;
+				fireExpenses = scenario.overrides?.fireExpenses ?? undefined;
+				retirementAge = scenario.overrides?.retirementAge ?? undefined;
 			} else {
 				name = '';
 				description = '';
 				type = 'custom';
 				profileId = profiles.length > 0 ? profiles[0].id : 0;
-				withdrawalRate = null;
-				stockAllocation = null;
-				inflationRate = null;
-				expectedReturn = null;
-				annualExpenses = null;
-				fireExpenses = null;
-				retirementAge = null;
+				withdrawalRate = undefined;
+				stockAllocation = undefined;
+				inflationRate = undefined;
+				expectedReturn = undefined;
+				annualExpenses = undefined;
+				fireExpenses = undefined;
+				retirementAge = undefined;
 			}
 		}
 	});
@@ -81,15 +81,15 @@
 	function handleSave() {
 		if (!name.trim() || !profileId) return;
 		const overrides: Partial<Profile> = {};
-		if (annualExpenses !== null) overrides.annualExpenses = annualExpenses;
-		if (fireExpenses !== null) overrides.fireExpenses = fireExpenses;
-		if (retirementAge !== null) overrides.retirementAge = retirementAge;
+		if (annualExpenses !== undefined) overrides.annualExpenses = annualExpenses;
+		if (fireExpenses !== undefined) overrides.fireExpenses = fireExpenses;
+		if (retirementAge !== undefined) overrides.retirementAge = retirementAge;
 
 		const simOverrides: Record<string, number> = {};
-		if (withdrawalRate !== null) simOverrides.withdrawalRate = withdrawalRate;
-		if (stockAllocation !== null) simOverrides.stockAllocation = stockAllocation;
-		if (inflationRate !== null) simOverrides.inflationRate = inflationRate;
-		if (expectedReturn !== null) simOverrides.expectedReturn = expectedReturn;
+		if (withdrawalRate !== undefined) simOverrides.withdrawalRate = withdrawalRate;
+		if (stockAllocation !== undefined) simOverrides.stockAllocation = stockAllocation;
+		if (inflationRate !== undefined) simOverrides.inflationRate = inflationRate;
+		if (expectedReturn !== undefined) simOverrides.expectedReturn = expectedReturn;
 
 		if (Object.keys(simOverrides).length > 0) {
 			(overrides as any).simulation = simOverrides;

@@ -28,11 +28,11 @@
 	]);
 
 	let {
-		options = {} as echarts.EChartsOption,
+		options = {} as echarts.EChartsCoreOption,
 		height = '400px',
 		class: className = ''
 	}: {
-		options?: echarts.EChartsOption;
+		options?: echarts.EChartsCoreOption;
 		height?: string;
 		class?: string;
 	} = $props();

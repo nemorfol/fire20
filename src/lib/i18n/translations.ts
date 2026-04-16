@@ -76,6 +76,23 @@ export const translations: Record<Locale, Record<string, string>> = {
     'pension.ritaEligible': 'Potenzialmente idoneo alla RITA',
     'pension.ritaNotEligible': 'Non idoneo alla RITA (troppo lontano dalla pensione di vecchiaia)',
     'pension.selfEmployedRate': 'Aliquota autonomi: 26,23% (vs 33% dipendenti)',
+    // Comparison badges
+    'compare.better': 'Meglio',
+    'compare.worse': 'Sotto',
+    'compare.similar': 'Simile',
+    // Rebalance alert
+    'rebalance.title': "E' il momento di ribilanciare il tuo portafoglio!",
+    'rebalance.daysSince': 'Sono passati {days} giorni dall\'ultimo ribilanciamento.',
+    'rebalance.never': 'Non hai ancora registrato un ribilanciamento.',
+    'rebalance.checkAllocation': "Controlla che l'allocazione del tuo portafoglio sia in linea con i tuoi obiettivi.",
+    'rebalance.done': 'Ho ribilanciato',
+    'rebalance.later': 'Ricordamelo dopo',
+    'rebalance.settings': 'Impostazioni',
+    // Market ticker
+    'market.tickerLabel': 'MERCATI',
+    'market.loading': 'Caricamento quotazioni...',
+    'market.unavailable': 'Dati di mercato non disponibili. Possibile blocco CORS - i dati funzionano meglio con un proxy server.',
+    'market.loadError': 'Impossibile caricare i dati di mercato.',
   },
   en: {
     // Navigation
@@ -152,5 +169,22 @@ export const translations: Record<Locale, Record<string, string>> = {
     'pension.ritaEligible': 'Potentially eligible for RITA',
     'pension.ritaNotEligible': 'Not eligible for RITA (too far from old-age pension)',
     'pension.selfEmployedRate': 'Self-employed rate: 26.23% (vs 33% for employees)',
+    // Comparison badges
+    'compare.better': 'Better',
+    'compare.worse': 'Worse',
+    'compare.similar': 'Similar',
+    // Rebalance alert
+    'rebalance.title': 'Time to rebalance your portfolio!',
+    'rebalance.daysSince': '{days} days have passed since your last rebalance.',
+    'rebalance.never': 'You have not recorded a rebalance yet.',
+    'rebalance.checkAllocation': 'Check that your portfolio allocation is aligned with your goals.',
+    'rebalance.done': 'I rebalanced',
+    'rebalance.later': 'Remind me later',
+    'rebalance.settings': 'Settings',
+    // Market ticker
+    'market.tickerLabel': 'MARKETS',
+    'market.loading': 'Loading quotes...',
+    'market.unavailable': 'Market data not available. Possible CORS block - data works best with a proxy server.',
+    'market.loadError': 'Unable to load market data.',
   }
 };

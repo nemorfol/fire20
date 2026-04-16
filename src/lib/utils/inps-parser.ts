@@ -378,7 +378,10 @@ function addToYearMap(
 ) {
   const existing = map.get(year);
   if (existing) {
-    existing.weeks = Math.min(existing.weeks + weeks, 52);
+    // Sommiamo le settimane reali (dipendente + parasubordinato nello stesso anno
+    // possono superare 52): il cap a 52 è applicato solo in uscita per la visualizzazione
+    // delle settimane retributive, mentre salary e contributions restano coerenti.
+    existing.weeks += weeks;
     existing.salary += salary;
     existing.contributions += contributions;
     if (!existing.employer && employer) existing.employer = employer;

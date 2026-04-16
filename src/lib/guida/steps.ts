@@ -1164,6 +1164,18 @@ La pensione INPS "vale" circa 120.000-150.000€ di patrimonio in meno da accumu
 <strong>Consiglio:</strong> Richiedi il tuo Estratto Conto Contributivo dall'INPS (accessibile con SPID su inps.it). Verifica i contributi versati e fai una simulazione della pensione futura con il servizio "La mia pensione futura". Questi dati sono essenziali per il profilo nell'app.
 </div>
 
+<h3>Importare l'Estratto Conto INPS nell'App</h3>
+<p>Nella sezione <strong>Profilo → Pensione</strong> trovi il componente <em>Import Estratto Conto INPS</em> che automatizza l'inserimento dei dati. Procedura:</p>
+<ol>
+<li>Accedi a <strong>inps.it</strong> con SPID/CIE e vai su "Estratto conto contributivo"</li>
+<li>Scarica il file nel formato disponibile: <strong>XML</strong> (preferito, più ricco di informazioni), <strong>CSV</strong> o <strong>TXT</strong></li>
+<li>Nel pannello Import dell'app, trascina o seleziona il file</li>
+<li>Il parser riconosce automaticamente regime generale, parasubordinati e montante precalcolato INPS</li>
+<li>Vedrai la stima del montante contributivo, gli anni di contributi validi e la pensione prevista</li>
+<li>Conferma per salvare i dati nel profilo: verranno usati per i calcoli di gap FIRE-pensione</li>
+</ol>
+<p>Il formato <strong>XML</strong> contiene anche il montante rivalutato ufficiale INPS per i parasubordinati, che l'app integra con il calcolo del regime generale per una stima più accurata.</p>
+
 <div class="warning">
 <strong>Attenzione:</strong> I coefficienti di trasformazione vengono rivisti periodicamente e tendono a scendere (per adeguarsi all'aumento dell'aspettativa di vita). Non contare sulla pensione INPS attuale: potrebbe essere il 10-15% inferiore quando la raggiungerai tra 20-30 anni. Pianifica con un margine conservativo.
 </div>
@@ -1664,6 +1676,9 @@ Ma il rendimento del 5% non è garantito. In scenari sfavorevoli, l'Opzione A po
 <li><strong>Anchoring:</strong> "Ho comprato a 100, non vendo sotto 100". Il prezzo di acquisto è irrilevante per le decisioni future.</li>
 </ul>
 
+<h3>Tracciare la Performance nel Tempo</h3>
+<p>La pagina <strong>Performance</strong> dell'app ti permette di registrare snapshot periodici del patrimonio e calcola automaticamente il <strong>TWR (Time-Weighted Return)</strong>, neutralizzando i flussi di cassa. È lo standard usato dai gestori professionali per valutare l'alpha rispetto a un benchmark come l'S&amp;P 500. Registrare uno snapshot una volta l'anno (o al ribilanciamento) costruisce una serie storica personale da confrontare con i mercati.</p>
+
 <div class="tip">
 <strong>Consiglio:</strong> La strategia migliore contro la finanza comportamentale è l'automazione: PAC automatico, ribilanciamento a date fisse, regole scritte per i momenti di crisi. Scrivi un "Investment Policy Statement" personale quando sei calmo e razionale, e seguilo alla lettera quando il mercato impazzisce.
 </div>
@@ -1671,7 +1686,9 @@ Ma il rendimento del 5% non è garantito. In scenari sfavorevoli, l'Opzione A po
 <div class="warning">
 <strong>Attenzione:</strong> Non controllare il portafoglio ogni giorno. Gli studi mostrano che più frequentemente controlli, più è probabile che fai operazioni inutili e dannose. Una volta al mese per un controllo rapido, una volta l'anno per la revisione completa.
 </div>
-`
+`,
+		appLink: '/performance/',
+		appLinkLabel: 'Vai alla pagina Performance'
 	},
 
 	// ============================================================

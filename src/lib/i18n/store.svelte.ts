@@ -22,6 +22,11 @@ export function setLocale(locale: Locale) {
   }
 }
 
-export function t(key: string): string {
-  return translations[currentLocale]?.[key] ?? translations['it']?.[key] ?? key;
+export function t(key: string, params?: Record<string, string | number>): string {
+  const raw = translations[currentLocale]?.[key] ?? translations['it']?.[key] ?? key;
+  if (!params) return raw;
+  return raw.replace(/\{(\w+)\}/g, (_, k) => {
+    const v = params[k];
+    return v === undefined ? `{${k}}` : String(v);
+  });
 }

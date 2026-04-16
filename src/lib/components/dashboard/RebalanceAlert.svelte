@@ -8,6 +8,7 @@
 		postpone,
 		daysSinceLastRebalance
 	} from '$lib/utils/reminders';
+	import { t } from '$lib/i18n/store.svelte';
 
 	let visible = $state(false);
 	let daysSince = $state<number | null>(null);
@@ -35,27 +36,27 @@
 				<ExclamationCircleSolid class="w-5 h-5 mt-0.5 flex-shrink-0" />
 				<div>
 					<h4 class="font-semibold text-lg text-yellow-800 dark:text-yellow-300">
-						E' il momento di ribilanciare il tuo portafoglio!
+						{t('rebalance.title')}
 					</h4>
 					<p class="text-sm text-yellow-700 dark:text-yellow-400 mt-1">
 						{#if daysSince !== null}
-							Sono passati <strong>{daysSince} giorni</strong> dall'ultimo ribilanciamento.
+							{t('rebalance.daysSince', { days: daysSince })}
 						{:else}
-							Non hai ancora registrato un ribilanciamento.
+							{t('rebalance.never')}
 						{/if}
-						Controlla che l'allocazione del tuo portafoglio sia in linea con i tuoi obiettivi.
+						{t('rebalance.checkAllocation')}
 					</p>
 				</div>
 			</div>
 			<div class="flex flex-wrap gap-2 ml-8">
 				<Button size="xs" color="yellow" onclick={handleRebalanced}>
-					Ho ribilanciato
+					{t('rebalance.done')}
 				</Button>
 				<Button size="xs" outline color="yellow" onclick={handlePostpone}>
-					Ricordamelo dopo
+					{t('rebalance.later')}
 				</Button>
 				<Button size="xs" outline color="yellow" href="/impostazioni/">
-					Impostazioni
+					{t('rebalance.settings')}
 				</Button>
 			</div>
 		</div>

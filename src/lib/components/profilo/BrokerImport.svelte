@@ -85,13 +85,13 @@
 		csvText = '';
 	}
 
-	function categoryBadgeColor(type: string): 'blue' | 'green' | 'yellow' | 'purple' | 'dark' {
+	function categoryBadgeColor(type: string): 'blue' | 'green' | 'yellow' | 'purple' | 'gray' {
 		const lower = type.toLowerCase();
 		if (lower.includes('azione') || lower.includes('etf') || lower.includes('azion')) return 'blue';
 		if (lower.includes('obbligaz') || lower.includes('bond')) return 'green';
 		if (lower.includes('oro') || lower.includes('gold')) return 'yellow';
 		if (lower.includes('liquid') || lower.includes('cash')) return 'purple';
-		return 'dark';
+		return 'gray';
 	}
 
 	let totalValue = $derived(parseResult ? parseResult.positions.reduce((s, p) => s + p.value, 0) : 0);
@@ -189,7 +189,7 @@
 					<Badge color="purple" large>Liquidita: {formatCurrency(parseResult.cash)}</Badge>
 				{/if}
 				{#if parseResult.other > 0}
-					<Badge color="dark" large>Altro: {formatCurrency(parseResult.other)}</Badge>
+					<Badge color="gray" large>Altro: {formatCurrency(parseResult.other)}</Badge>
 				{/if}
 				<Badge color="primary" large>Totale: {formatCurrency(totalValue)}</Badge>
 			</div>

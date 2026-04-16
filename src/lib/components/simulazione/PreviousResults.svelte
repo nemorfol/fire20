@@ -24,7 +24,7 @@
 		onDelete: (id: number) => void;
 	} = $props();
 
-	function successColor(rate: number): string {
+	function successColor(rate: number): 'green' | 'yellow' | 'red' {
 		if (rate >= 0.95) return 'green';
 		if (rate >= 0.80) return 'yellow';
 		return 'red';

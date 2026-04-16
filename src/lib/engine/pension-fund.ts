@@ -4,6 +4,8 @@
  * Include calcoli per RITA e Riscatto Laurea.
  */
 
+import { getTransformationCoefficient } from './pension-italy';
+
 // ─── Tipi di prestazione ───────────────────────────────────────────────────────
 
 export type PayoutStrategy = 'vitalizia' | 'durata-definita' | 'prelievi-liberi' | 'frazionata' | 'capitale-60';
@@ -167,6 +169,8 @@ function getConversionFactor(age: number, gender: 'M' | 'F', reversibile: boolea
 			}
 		}
 	}
+	// Nota: i due rami assegnano entrambi table[last][1] come fallback difensivo;
+	// l'interpolazione avviene nel ciclo solo se age cade tra a1 e a2.
 
 	// La reversibilita' riduce la rendita di circa 15%
 	if (reversibile) {
@@ -658,8 +662,9 @@ export function calculateRiscattoLaurea(params: RiscattoLaureaParams): RiscattoL
 	// Beneficio: piu' anni di contributi = montante piu' alto
 	// Stima approssimativa dell'incremento pensionistico
 	const additionalContributions = annualSalary * CONTRIBUTION_RATE * yearsToRedeem;
-	// Coefficiente medio di trasformazione a 67 anni = ~5.7%
-	const additionalAnnualPension = additionalContributions * 0.057;
+	// Coefficiente di trasformazione interpolato in base all'età di pensionamento
+	const transformationCoeff = getTransformationCoefficient(retirementAge);
+	const additionalAnnualPension = additionalContributions * transformationCoeff;
 	const additionalMonthlyPension = additionalAnnualPension / 13;
 
 	// Anticipo pensionistico
@@ -807,8 +812,8 @@ export function optimizeContributions(params: ContributionOptimizationParams): C
 		projectedMontante = (projectedMontante + annualTotal) * (1 + expectedReturnRate);
 	}
 
-	// Pensione stimata (coefficiente 67 = 5.723%)
-	const coefficient = retirementAge >= 67 ? 0.05723 : 0.05245;
+	// Pensione stimata con coefficiente interpolato per età
+	const coefficient = getTransformationCoefficient(retirementAge);
 	const projectedMonthlyPension = (projectedMontante * coefficient) / 13;
 
 	// Livelli di contribuzione
