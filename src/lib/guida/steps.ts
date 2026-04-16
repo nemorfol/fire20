@@ -589,6 +589,10 @@ Dopo un anno negativo con inflazione al 3%: NON adegui per l'inflazione. Resti a
 <strong>Consiglio:</strong> Qualsiasi strategia tu scelga, la chiave è la <strong>flessibilità delle spese</strong>. Se riesci a ridurre le spese del 15-20% negli anni di mercato negativo, la probabilità di successo del tuo piano sale enormemente, indipendentemente dalla strategia di prelievo.
 </div>
 
+<div class="tip">
+<strong>Prova la modalita "Esplora Scenari":</strong> Nel calcolatore FIRE trovi il pannello What If con slider su tutti i parametri (spese, portafoglio, eta pensionamento, pensione INPS, aspettativa di vita). Cambiando i valori il grafico si aggiorna in tempo reale, permettendoti di confrontare rapidamente l'impatto di ogni strategia e parametro.
+</div>
+
 <div class="warning">
 <strong>Attenzione:</strong> Le strategie dinamiche funzionano meglio sulla carta che nella vita reale. Ridurre le spese del 10-15% durante un crollo di mercato richiede disciplina emotiva e spese effettivamente comprimibili. Pianifica in anticipo quali spese puoi tagliare nei periodi difficili.
 </div>
@@ -649,6 +653,11 @@ Questo significa che nella maggior parte dei casi il piano funziona, ma c'è un 
 <li><strong>95-99%</strong> — Molto sicuro, ma richiede un patrimonio significativamente maggiore. Il costo opportunità è lavorare anni in più.</li>
 <li><strong>100%</strong> — Impossibile da garantire. Non inseguire la certezza assoluta.</li>
 </ul>
+
+<h3>Modalita Multi-Asset</h3>
+<p>L'app supporta simulazioni con <strong>3 o piu classi di asset</strong> (azioni, obbligazioni, oro, cash, immobiliare) con una <strong>matrice di correlazione completa</strong>. Attiva la "Modalita avanzata" nella pagina simulazione per configurare piu classi, impostare le allocazioni e visualizzare la matrice di correlazione storica.</p>
+
+<p>Questa funzionalita usa la <strong>decomposizione di Cholesky</strong> per generare rendimenti correlati tra tutte le classi di asset, producendo risultati piu realistici rispetto alla semplice media ponderata.</p>
 
 <h3>Limiti delle Simulazioni Monte Carlo</h3>
 <p>Le simulazioni non sono perfette:</p>
@@ -1567,6 +1576,7 @@ Ma il rendimento del 5% non è garantito. In scenari sfavorevoli, l'Opzione A po
 <p>Una volta l'anno (suggerimento: a gennaio), fai questa revisione:</p>
 <ul>
 <li>☐ Aggiorna il patrimonio netto totale</li>
+<li>☐ <strong>Registra uno snapshot nella pagina Performance</strong> per tracciare il TWR (Time-Weighted Return) nel tempo</li>
 <li>☐ Verifica le spese reali dell'anno vs budget</li>
 <li>☐ Ricalcola il FIRE Number con le spese aggiornate</li>
 <li>☐ Calcola la percentuale di avanzamento verso il FIRE</li>
@@ -1574,6 +1584,7 @@ Ma il rendimento del 5% non è garantito. In scenari sfavorevoli, l'Opzione A po
 <li>☐ Verifica la situazione delle minusvalenze (scadono dopo 4 anni!)</li>
 <li>☐ Rivedi l'assicurazione sanitaria e sulla vita</li>
 <li>☐ Aggiorna la simulazione Monte Carlo con i nuovi dati</li>
+<li>☐ <strong>Confronta il tuo rendimento vs S&amp;P 500</strong> nella pagina Performance per verificare l'alpha</li>
 <li>☐ Verifica i contributi al fondo pensione (massimizzati?)</li>
 <li>☐ Controlla l'estratto conto contributivo INPS</li>
 </ul>
