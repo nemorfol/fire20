@@ -1,7 +1,7 @@
 <script lang="ts">
 	import CurrencyInput from '$lib/components/shared/CurrencyInput.svelte';
 	import YearSlider from '$lib/components/shared/YearSlider.svelte';
-	import { Label, Input } from 'flowbite-svelte';
+	import { Label, Input, Tabs, TabItem } from 'flowbite-svelte';
 	import type { PensionInfo } from '$lib/db/index';
 	import PensionCalculator from './PensionCalculator.svelte';
 	import INPSImport from './INPSImport.svelte';
@@ -24,65 +24,68 @@
 	} = $props();
 
 	let annualPension = $derived(pension.estimatedMonthly * 13);
-</script>
 
-<div class="space-y-6">
-	<div>
-		<Label for="contributionYears" class="mb-2 text-base font-semibold">Anni di contribuzione maturati</Label>
-		<Input
-			id="contributionYears"
-			type="number"
-			bind:value={pension.contributionYears}
-			min={0}
-			max={50}
-			class="w-32"
-		/>
-		<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-			Anni di contributi INPS gia versati
-		</p>
-	</div>
-
-	<div>
-		<CurrencyInput
-			bind:value={pension.estimatedMonthly}
-			label="Pensione mensile stimata (lorda)"
-			id="estimatedMonthly"
-			step={50}
-		/>
-		<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-			Pensione annua lorda: <strong>{annualPension.toLocaleString('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}</strong> (13 mensilita).
-			Puoi usare il simulatore INPS per una stima precisa.
-		</p>
-	</div>
-
-	<div>
-		<YearSlider
-			bind:value={pension.pensionAge}
-			min={57}
-			max={71}
-			label="Eta di accesso alla pensione INPS"
-		/>
-		<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-			Pensione di vecchiaia: 67 anni. Anticipata: da 57 anni con requisiti contributivi.
-		</p>
-	</div>
-
-	<hr class="border-gray-200 dark:border-gray-700 my-6" />
-
-	<PensionCalculator {birthYear} {retirementAge} {annualExpenses} />
-
-	<hr class="border-gray-200 dark:border-gray-700 my-6" />
-
-	<INPSImport onApply={(data) => {
+	function handleINPSImport(data: { contributionYears: number; estimatedMonthly: number }) {
 		pension.contributionYears = data.contributionYears;
 		pension.estimatedMonthly = data.estimatedMonthly;
-	}} />
+	}
 
-	<hr class="border-gray-200 dark:border-gray-700 my-6" />
-
-	<INPSSimulator {birthYear} {retirementAge} {annualExpenses} onApply={(data) => {
+	function handleSimulatorApply(data: { contributionYears: number; estimatedMonthly: number; pensionAge: number }) {
 		pension.contributionYears = data.contributionYears;
 		pension.estimatedMonthly = data.estimatedMonthly;
 		pension.pensionAge = data.pensionAge;
-	}} />
+	}
+</script>
+
+<div class="space-y-4">
+	<!-- Dati base pensione (sempre visibili, compatti) -->
+	<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+		<div>
+			<Label for="contributionYears" class="mb-1.5">Anni di contribuzione</Label>
+			<Input
+				id="contributionYears"
+				type="number"
+				bind:value={pension.contributionYears}
+				min={0}
+				max={50}
+			/>
+		</div>
+		<div>
+			<CurrencyInput
+				bind:value={pension.estimatedMonthly}
+				label="Pensione mensile (lorda)"
+				id="estimatedMonthly"
+				step={50}
+			/>
+		</div>
+		<div>
+			<YearSlider
+				bind:value={pension.pensionAge}
+				min={57}
+				max={71}
+				label="Eta' pensione INPS"
+			/>
+		</div>
+	</div>
+	<p class="text-xs text-gray-500 dark:text-gray-400">
+		Pensione annua lorda: <strong>{annualPension.toLocaleString('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}</strong> (13 mensilita'). Usa gli strumenti sotto per una stima precisa.
+	</p>
+
+	<!-- Sotto-tab per gli strumenti avanzati -->
+	<Tabs tabStyle="underline" contentClass="mt-3">
+		<TabItem open title="Calcolatore INPS">
+			<PensionCalculator {birthYear} {retirementAge} {annualExpenses} />
+		</TabItem>
+
+		<TabItem title="Simulatore Avanzato">
+			<INPSSimulator {birthYear} {retirementAge} {annualExpenses} onApply={handleSimulatorApply} />
+		</TabItem>
+
+		<TabItem title="Import Estratto Conto">
+			<p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
+				Carica il file XML esportato dal sito INPS, oppure incolla il testo dell'estratto conto (CSV/TXT).
+			</p>
+			<INPSImport onApply={handleINPSImport} />
+		</TabItem>
+	</Tabs>
 </div>
