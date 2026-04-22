@@ -134,7 +134,7 @@
 
 						{#if event.type === 'bonus' || event.type === 'oneTimeExpense'}
 							<CurrencyInput
-								bind:value={event.amount as unknown as number}
+								bind:value={event.amount}
 								label={event.type === 'bonus' ? 'Importo bonus' : 'Importo spesa'}
 								id="evt-amount-{event.id}"
 								step={500}
@@ -150,14 +150,14 @@
 									type="number"
 									min={1}
 									max={20}
-									bind:value={event.durationYears as unknown as number}
+									bind:value={event.durationYears}
 								/>
 							</div>
 						{/if}
 
 						{#if event.type === 'partTime'}
 							<PercentInput
-								bind:value={event.percentage as unknown as number}
+								bind:value={event.percentage}
 								label="Riduzione reddito"
 								id="evt-pct-{event.id}"
 								min={0.05}
@@ -168,7 +168,7 @@
 
 						{#if event.type === 'incomeChange'}
 							<CurrencyInput
-								bind:value={event.amount as unknown as number}
+								bind:value={event.amount}
 								label="Variazione annua (€/anno, negativo per taglio)"
 								id="evt-delta-{event.id}"
 								step={500}

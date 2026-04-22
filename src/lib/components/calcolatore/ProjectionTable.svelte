@@ -205,6 +205,12 @@
 													<dd class="tabular-nums text-blue-600 dark:text-blue-400">+{formatCurrency(row.otherIncomeActive ?? 0)}</dd>
 												</div>
 											{/if}
+											{#if (row.lifeEventBonus ?? 0) > 0}
+												<div class="flex justify-between">
+													<dt class="text-gray-500 dark:text-gray-400">Bonus / eventi una-tantum</dt>
+													<dd class="tabular-nums text-green-600 dark:text-green-400">+{formatCurrency(row.lifeEventBonus ?? 0)}</dd>
+												</div>
+											{/if}
 										</dl>
 									</div>
 
@@ -226,6 +232,12 @@
 												<div class="flex justify-between">
 													<dt class="text-gray-500 dark:text-gray-400">Rata mutuo</dt>
 													<dd class="tabular-nums">{formatCurrency(row.mortgagePayment ?? 0)}</dd>
+												</div>
+											{/if}
+											{#if (row.lifeEventExpense ?? 0) > 0}
+												<div class="flex justify-between">
+													<dt class="text-gray-500 dark:text-gray-400">Spesa straordinaria</dt>
+													<dd class="tabular-nums text-red-600 dark:text-red-400">{formatCurrency(row.lifeEventExpense ?? 0)}</dd>
 												</div>
 											{/if}
 											<div class="flex justify-between font-medium border-t border-gray-200 dark:border-gray-700 pt-1">

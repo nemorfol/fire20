@@ -12,7 +12,11 @@ export type LifeEventType =
 	| 'partTime'           // riduzione reddito del X% per N anni
 	| 'incomeChange';      // variazione permanente del reddito da un certo anno
 
-/** Evento di vita configurato dall'utente */
+/** Evento di vita configurato dall'utente.
+ *  Tutti i campi numerici sono obbligatori (anche se non usati dal tipo
+ *  specifico) cosi' il bind:value di Svelte 5 funziona senza cast TS. I tipi
+ *  che non servono restano a 0 e vengono ignorati da computeYearlyImpact.
+ */
 export interface LifeEvent {
 	/** Identificatore univoco (UUID o simili) */
 	id: string;
@@ -23,11 +27,11 @@ export interface LifeEvent {
 	/** Anno di calendario di inizio */
 	year: number;
 	/** Durata in anni (usata per unemployment, partTime, incomeChange che si mantiene) */
-	durationYears?: number;
+	durationYears: number;
 	/** Importo per bonus / oneTimeExpense; per incomeChange e' l'aumento/diminuzione annuo */
-	amount?: number;
+	amount: number;
 	/** Percentuale per partTime (es. 0.50 = riduzione 50%) o incomeChange (es. -0.10 = taglio 10%) */
-	percentage?: number;
+	percentage: number;
 	/** Flag abilitato: se false l'evento viene ignorato (utile per what-if) */
 	enabled: boolean;
 }
@@ -88,21 +92,21 @@ export function computeYearlyImpact(
 
 		switch (e.type) {
 			case 'bonus': {
-				if (e.year === targetYear && e.amount) {
+				if (e.year === targetYear && e.amount > 0) {
 					bonusIncome += e.amount;
 					activeLabels.push(`Bonus: ${e.label} (+${Math.round(e.amount)} €)`);
 				}
 				break;
 			}
 			case 'oneTimeExpense': {
-				if (e.year === targetYear && e.amount) {
+				if (e.year === targetYear && e.amount > 0) {
 					oneTimeExpenses += e.amount;
 					activeLabels.push(`Spesa: ${e.label} (−${Math.round(e.amount)} €)`);
 				}
 				break;
 			}
 			case 'unemployment': {
-				const duration = Math.max(1, e.durationYears ?? 1);
+				const duration = Math.max(1, e.durationYears);
 				if (targetYear >= e.year && targetYear < e.year + duration) {
 					incomeMultiplier = 0;
 					activeLabels.push(`Disoccupazione: ${e.label}`);
@@ -110,16 +114,16 @@ export function computeYearlyImpact(
 				break;
 			}
 			case 'partTime': {
-				const duration = Math.max(1, e.durationYears ?? 1);
+				const duration = Math.max(1, e.durationYears);
 				if (targetYear >= e.year && targetYear < e.year + duration) {
-					const reduction = e.percentage ?? 0.5;
+					const reduction = e.percentage > 0 ? e.percentage : 0.5;
 					incomeMultiplier *= Math.max(0, 1 - reduction);
 					activeLabels.push(`Part-time ${Math.round((1 - reduction) * 100)}%: ${e.label}`);
 				}
 				break;
 			}
 			case 'incomeChange': {
-				if (targetYear >= e.year && e.amount) {
+				if (targetYear >= e.year && e.amount !== 0) {
 					incomeDelta += e.amount;
 					activeLabels.push(`${e.amount > 0 ? 'Aumento' : 'Taglio'} reddito: ${e.label}`);
 				}
@@ -136,16 +140,17 @@ export function computeYearlyImpact(
  */
 export function createDefaultLifeEvent(type: LifeEventType, year: number): LifeEvent {
 	const id = `le-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+	const base = { id, type, year, enabled: true, durationYears: 0, amount: 0, percentage: 0 };
 	switch (type) {
 		case 'bonus':
-			return { id, type, label: 'Bonus', year, amount: 3000, enabled: true };
+			return { ...base, type, label: 'Bonus', amount: 3000 };
 		case 'oneTimeExpense':
-			return { id, type, label: 'Spesa una-tantum', year, amount: 10000, enabled: true };
+			return { ...base, type, label: 'Spesa una-tantum', amount: 10000 };
 		case 'unemployment':
-			return { id, type, label: 'Disoccupazione', year, durationYears: 1, enabled: true };
+			return { ...base, type, label: 'Disoccupazione', durationYears: 1 };
 		case 'partTime':
-			return { id, type, label: 'Part-time', year, durationYears: 2, percentage: 0.5, enabled: true };
+			return { ...base, type, label: 'Part-time', durationYears: 2, percentage: 0.5 };
 		case 'incomeChange':
-			return { id, type, label: 'Variazione stipendio', year, amount: 5000, enabled: true };
+			return { ...base, type, label: 'Variazione stipendio', amount: 5000 };
 	}
 }
