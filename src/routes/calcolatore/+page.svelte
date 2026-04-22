@@ -5,9 +5,17 @@
 		Breadcrumb,
 		BreadcrumbItem,
 		Alert,
-		Spinner
+		Spinner,
+		Tabs,
+		TabItem
 	} from 'flowbite-svelte';
-	import { InfoCircleSolid } from 'flowbite-svelte-icons';
+	import {
+		InfoCircleSolid,
+		ChartPieOutline,
+		ChartMixedDollarSolid,
+		TableColumnSolid,
+		CashSolid
+	} from 'flowbite-svelte-icons';
 
 	import type { Profile } from '$lib/db/index';
 	import { getAllProfiles } from '$lib/db/profiles';
@@ -289,82 +297,110 @@
 		</a>
 	</Alert>
 {:else}
-	<!-- FIRE Number Hero -->
-	<div class="mb-8">
-		<FireHero
-			{fireNumber}
-			{annualExpenses}
-			{withdrawalRate}
-			annualPension={annualPensionIncome}
-			{fireNumberClassic}
-			{hasPensionBridge}
-			{bridgeYears}
-			pensionAge={wiPensionAge}
-			retirementAge={wiRetirementAge}
-			otherIncome={wiOtherIncome}
-			otherIncomeEndAge={wiOtherIncomeEndAge}
-		/>
-	</div>
+	<Tabs tabStyle="underline" contentClass="p-0 mt-6">
+		<TabItem open>
+			{#snippet titleSlot()}
+				<div class="flex items-center gap-2">
+					<ChartPieOutline class="w-4 h-4" />
+					Panoramica
+				</div>
+			{/snippet}
 
-	<!-- Key Metrics -->
-	<div class="mb-8">
-		<MetricsGrid
-			{fireNumber}
-			{yearsToFire}
-			{savingsRate}
-			{netWorth}
-			{liquidNetWorth}
-			{illiquidNetWorth}
-			{coastFireNumber}
-			{gap}
-		/>
-	</div>
+			<!-- FIRE Number Hero -->
+			<div class="mb-6">
+				<FireHero
+					{fireNumber}
+					{annualExpenses}
+					{withdrawalRate}
+					annualPension={annualPensionIncome}
+					{fireNumberClassic}
+					{hasPensionBridge}
+					{bridgeYears}
+					pensionAge={wiPensionAge}
+					retirementAge={wiRetirementAge}
+					otherIncome={wiOtherIncome}
+					otherIncomeEndAge={wiOtherIncomeEndAge}
+				/>
+			</div>
 
-	<!-- Controls Row: Strategy + Parameters -->
-	<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-		<WithdrawalStrategySelector bind:selected={withdrawalStrategy} />
-		<ParameterControls bind:swr bind:expectedReturn bind:inflationRate bind:taxMode />
-	</div>
+			<!-- Key Metrics -->
+			<MetricsGrid
+				{fireNumber}
+				{yearsToFire}
+				{savingsRate}
+				{netWorth}
+				{liquidNetWorth}
+				{illiquidNetWorth}
+				{coastFireNumber}
+				{gap}
+			/>
+		</TabItem>
 
-	<!-- What-If Panel -->
-	<div class="mb-8">
-		<WhatIfPanel
-			bind:annualExpenses={wiAnnualExpenses}
-			bind:initialPortfolio={wiInitialPortfolio}
-			bind:annualContribution={wiAnnualContribution}
-			bind:retirementAge={wiRetirementAge}
-			bind:pensionAmount={wiPensionAmount}
-			bind:pensionAge={wiPensionAge}
-			bind:lifeExpectancy={wiLifeExpectancy}
-			bind:otherIncome={wiOtherIncome}
-			bind:otherIncomeEndAge={wiOtherIncomeEndAge}
-			defaults={wiDefaults}
-			onreset={resetWhatIf}
-		/>
-	</div>
+		<TabItem>
+			{#snippet titleSlot()}
+				<div class="flex items-center gap-2">
+					<ChartMixedDollarSolid class="w-4 h-4" />
+					Simulazione
+				</div>
+			{/snippet}
 
-	<!-- Projection Chart -->
-	<div class="mb-8">
-		<ProjectionChart
-			{projections}
-			{fireNumber}
-			{retirementAge}
-			{currentAge}
-			inflationRate={inflationRate / 100}
-		/>
-	</div>
+			<!-- Controls Row: Strategy + Parameters -->
+			<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+				<WithdrawalStrategySelector bind:selected={withdrawalStrategy} />
+				<ParameterControls bind:swr bind:expectedReturn bind:inflationRate bind:taxMode />
+			</div>
 
-	<!-- Projection Table -->
-	<div class="mb-8">
-		<ProjectionTable
-			{projections}
-			{retirementAge}
-			pensionAge={wiPensionAge}
-		/>
-	</div>
+			<!-- What-If Panel -->
+			<div class="mb-6">
+				<WhatIfPanel
+					bind:annualExpenses={wiAnnualExpenses}
+					bind:initialPortfolio={wiInitialPortfolio}
+					bind:annualContribution={wiAnnualContribution}
+					bind:retirementAge={wiRetirementAge}
+					bind:pensionAmount={wiPensionAmount}
+					bind:pensionAge={wiPensionAge}
+					bind:lifeExpectancy={wiLifeExpectancy}
+					bind:otherIncome={wiOtherIncome}
+					bind:otherIncomeEndAge={wiOtherIncomeEndAge}
+					defaults={wiDefaults}
+					onreset={resetWhatIf}
+				/>
+			</div>
 
-	<!-- Tax Optimization -->
-	<div class="mb-8">
-		<TaxOptimization plans={withdrawalPlans} />
-	</div>
+			<!-- Projection Chart -->
+			<ProjectionChart
+				{projections}
+				{fireNumber}
+				{retirementAge}
+				{currentAge}
+				inflationRate={inflationRate / 100}
+			/>
+		</TabItem>
+
+		<TabItem>
+			{#snippet titleSlot()}
+				<div class="flex items-center gap-2">
+					<TableColumnSolid class="w-4 h-4" />
+					Cash flow
+				</div>
+			{/snippet}
+
+			<ProjectionTable
+				{projections}
+				{retirementAge}
+				pensionAge={wiPensionAge}
+			/>
+		</TabItem>
+
+		<TabItem>
+			{#snippet titleSlot()}
+				<div class="flex items-center gap-2">
+					<CashSolid class="w-4 h-4" />
+					Prelievi
+				</div>
+			{/snippet}
+
+			<TaxOptimization plans={withdrawalPlans} />
+		</TabItem>
+	</Tabs>
 {/if}
