@@ -3,6 +3,9 @@
  * Usa Dexie.js per IndexedDB con schema tipizzato.
  */
 import Dexie, { type EntityTable } from 'dexie';
+import type { LifeEvent } from '$lib/engine/life-events';
+
+export type { LifeEvent } from '$lib/engine/life-events';
 
 // === Interfacce per i sotto-oggetti ===
 
@@ -124,6 +127,10 @@ export interface Profile {
 	children?: Child[];
 	/** Mutuo prima casa. Additivo: assente su profili legacy. */
 	mortgage?: Mortgage;
+	/** Eventi di vita parametrici (bonus, disoccupazione, spese una-tantum, part-time). Additivo. */
+	lifeEvents?: LifeEvent[];
+	/** Stock minusvalenze pregresse (compensabili per 4 anni). Additivo. */
+	capitalLossStock?: { year: number; remaining: number }[];
 }
 
 export interface Scenario {
@@ -236,6 +243,16 @@ db.version(2).stores({
 // Schema store invariato (nessun nuovo indice): i campi nuovi sono additivi
 // e i profili esistenti continuano a funzionare senza migrazione.
 db.version(3).stores({
+	profiles: '++id, name, createdAt, updatedAt',
+	scenarios: '++id, profileId, name, type, createdAt',
+	simulation_results: '++id, scenarioId, profileId, runAt',
+	risk_events: '++id, name, type',
+	portfolio_snapshots: '++id, profileId, date',
+	cash_flows: '++id, profileId, date, type'
+});
+
+// v4: aggiunti lifeEvents[] e capitalLossStock[] al Profile (additivi).
+db.version(4).stores({
 	profiles: '++id, name, createdAt, updatedAt',
 	scenarios: '++id, profileId, name, type, createdAt',
 	simulation_results: '++id, scenarioId, profileId, runAt',

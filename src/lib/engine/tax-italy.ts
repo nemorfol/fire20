@@ -138,6 +138,112 @@ export function calculateCapitalGainsTax(
 	return Math.round(gains * rate * 100) / 100;
 }
 
+/** Stock di minusvalenze compensabili con scadenze */
+export interface CapitalLossStock {
+	/** Anno in cui e' stata realizzata la minusvalenza */
+	year: number;
+	/** Importo residuo ancora compensabile */
+	remaining: number;
+}
+
+/** Risultato della compensazione minusvalenze in un anno */
+export interface CapitalLossOffsetResult {
+	/** Plusvalenza originale dell'anno */
+	grossGain: number;
+	/** Minusvalenza utilizzata per compensare in questo anno */
+	lossUsed: number;
+	/** Plusvalenza netta tassabile (grossGain - lossUsed) */
+	netTaxableGain: number;
+	/** Imposta dovuta dopo compensazione */
+	taxDue: number;
+	/** Stock minusvalenze residuo dopo la compensazione (scadute escluse) */
+	updatedLossStock: CapitalLossStock[];
+}
+
+/**
+ * Gestione della compensazione di minusvalenze con plusvalenze in Italia.
+ *
+ * Regole (TUIR art. 68):
+ * - Le minusvalenze pregresse si possono portare in compensazione delle
+ *   plusvalenze future per 4 anni (l'anno della minus + 4 successivi).
+ * - La compensazione e' possibile solo tra redditi diversi dello STESSO tipo
+ *   (equiparati: azioni, ETF azionari, obbligazioni corporate; esclusi i
+ *   proventi da fondi comuni / ETF armonizzati che sono redditi di capitale
+ *   e non compensabili con minus di redditi diversi — semplificazione qui).
+ * - Aliquota 26% su etf/azioni/corporate, 12.5% sui titoli di stato.
+ * - FIFO: si usa prima la minusvalenza piu' vecchia (per non farla scadere).
+ *
+ * @param grossGain - Plusvalenza realizzata nell'anno corrente (stesso tipo delle minus)
+ * @param currentYear - Anno di realizzo della plusvalenza
+ * @param lossStock - Stock minusvalenze pregresse
+ * @param assetType - Tipo asset (determina aliquota)
+ * @param maxAgeYears - Numero di anni di validita' della minus (default 4: anno + 4)
+ */
+export function applyCapitalLossOffset(
+	grossGain: number,
+	currentYear: number,
+	lossStock: CapitalLossStock[],
+	assetType: 'stocks' | 'etf' | 'corporate_bonds' | 'government_bonds' = 'etf',
+	maxAgeYears: number = 4
+): CapitalLossOffsetResult {
+	// Rimuovi minusvalenze scadute (piu' vecchie di maxAgeYears anni)
+	const valid = lossStock
+		.filter((l) => currentYear - l.year <= maxAgeYears && l.remaining > 0)
+		.map((l) => ({ ...l }))
+		.sort((a, b) => a.year - b.year); // FIFO
+
+	if (grossGain <= 0) {
+		return {
+			grossGain,
+			lossUsed: 0,
+			netTaxableGain: 0,
+			taxDue: 0,
+			updatedLossStock: valid
+		};
+	}
+
+	let remainingGain = grossGain;
+	let lossUsed = 0;
+	for (const l of valid) {
+		if (remainingGain <= 0) break;
+		const use = Math.min(l.remaining, remainingGain);
+		l.remaining -= use;
+		remainingGain -= use;
+		lossUsed += use;
+	}
+
+	const netTaxableGain = Math.max(0, grossGain - lossUsed);
+	const taxDue = calculateCapitalGainsTax(netTaxableGain, assetType);
+
+	return {
+		grossGain,
+		lossUsed: Math.round(lossUsed * 100) / 100,
+		netTaxableGain: Math.round(netTaxableGain * 100) / 100,
+		taxDue,
+		updatedLossStock: valid.filter((l) => l.remaining > 0)
+	};
+}
+
+/**
+ * Registra una nuova minusvalenza nello stock.
+ * Se esiste gia' una minus per quell'anno, la somma; altrimenti la aggiunge.
+ */
+export function addCapitalLoss(
+	stock: CapitalLossStock[],
+	year: number,
+	amount: number
+): CapitalLossStock[] {
+	if (amount <= 0) return stock;
+	const copy = stock.map((l) => ({ ...l }));
+	const existing = copy.find((l) => l.year === year);
+	if (existing) {
+		existing.remaining += amount;
+	} else {
+		copy.push({ year, remaining: amount });
+	}
+	return copy;
+}
+
 /** Risultato dell'extradeducibilita' per nuovi lavoratori post-2007 */
 export interface ExtraDeductibilityResult {
 	/** Se il lavoratore ha diritto all'extradeducibilita' */

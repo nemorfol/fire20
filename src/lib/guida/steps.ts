@@ -189,6 +189,20 @@ Con spese annue di 22.000€ e FIRE number di 550.000€, è al <strong>15%</str
 <strong>Attenzione:</strong> Non includere la prima casa nel calcolo del patrimonio investibile per il FIRE, a meno che tu non abbia intenzione di venderla. La casa in cui vivi non genera reddito e non puoi "mangiare i muri".
 </div>
 
+<h3>Eventi di vita parametrici</h3>
+<p>La tab <strong>Eventi di vita</strong> nel profilo ti permette di aggiungere eventi discreti che alterano il piano FIRE in specifici anni:</p>
+<ul>
+<li><strong>Bonus:</strong> entrata una-tantum (es. premio aziendale, TFR liquidato al cambio lavoro, vendita auto usata)</li>
+<li><strong>Spesa una-tantum:</strong> matrimonio, acquisto auto nuova, ristrutturazione, viaggio importante</li>
+<li><strong>Disoccupazione:</strong> reddito a zero per N anni consecutivi</li>
+<li><strong>Part-time:</strong> riduzione del reddito del X% per un periodo (tipico post-nascita figli)</li>
+<li><strong>Variazione permanente stipendio:</strong> aumento/taglio che si applica dall'anno X in poi</li>
+</ul>
+<p>Ogni evento ha un toggle di attivazione (what-if rapido senza eliminarli) e appare nel cash flow dettagliato nell'anno corrispondente. Engine: <code>life-events.ts</code> con <code>computeYearlyImpact</code> che consolida tutti gli eventi di un anno.</p>
+
+<h3>Confronto side-by-side tra profili (pagina /confronto-profili)</h3>
+<p>Se hai creato piu' profili (es. "solo tu oggi" vs "famiglia in 3 anni" oppure "single" vs "coppia"), la voce navbar <strong>Confronto profili</strong> ti fa selezionare 2 profili dal DB e li confronta in una tabella con ~15 metriche (FIRE Number, anni al FIRE, patrimonio, costo figli, residuo mutuo, pensione INPS, ecc.), un grafico proiezione overlay dei due portafogli, e un'estrazione automatica delle 3 differenze piu' significative.</p>
+
 <h3>Planner familiare: figli e mutuo</h3>
 <p>La tab <strong>Famiglia</strong> nel profilo modella due voci tipicamente italiane con forte impatto sul FIRE Number:</p>
 <ul>
@@ -550,6 +564,15 @@ Per avere 24.000€ netti, serve prelevare circa 26.400€ lordi → tasso effet
 <div class="warning">
 <strong>Attenzione:</strong> Non trattare la regola del 4% come un dogma. È una stima basata su dati storici, non una garanzia. Il futuro potrebbe avere rendimenti inferiori alla media storica. Per questo è fondamentale avere un piano di backup: riduzione delle spese, reddito part-time, flessibilità.
 </div>
+
+<h3>Modalita' preset: Conservativa / Base / Aggressiva</h3>
+<p>Nel tab <strong>Simulazione</strong> del Calcolatore FIRE c'e' un selettore a 3 modalita' che applica in blocco ipotesi coerenti su SWR, rendimento atteso e inflazione:</p>
+<ul>
+<li><strong>Conservativa:</strong> SWR 3%, rendimento 5%, inflazione 3% — per orizzonti lunghi (40+ anni FIRE) e chi dorme male nei crash</li>
+<li><strong>Base:</strong> SWR 4%, rendimento 7%, inflazione 2% — regola del 4% classica, storicamente documentata per 30 anni</li>
+<li><strong>Aggressiva:</strong> SWR 4.5%, rendimento 8.5%, inflazione 1.5% — ipotesi ottimistiche, adatta a coppie con doppio reddito part-time come backup</li>
+</ul>
+<p>Spostando i singoli slider fine-grained, il selettore passa automaticamente a "Custom" per segnalare che le ipotesi non coincidono con nessun preset. Utile per fare confronti rapidi tra scenari senza dover rimettere i parametri ogni volta.</p>
 `
 	},
 
@@ -964,6 +987,20 @@ Per compensare, dovresti vendere un'azione o un'obbligazione singola con 5.000�
 <div class="warning">
 <strong>Attenzione:</strong> Se hai un broker estero (DEGIRO, Interactive Brokers, Trade Republic), sei obbligato al regime dichiarativo. Devi compilare il quadro RW per il monitoraggio fiscale anche se non hai fatto operazioni. La multa per omessa dichiarazione va dal 3% al 15% del valore degli investimenti. Non sottovalutare questo obbligo!
 </div>
+
+<h3>Confronto contenitori fiscali (pagina /contenitori)</h3>
+<p>Nella voce navbar <strong>Contenitori fiscali</strong> trovi uno strumento "what-if" che confronta a parita' di contributo mensile e orizzonte temporale i 4 principali contenitori italiani: <strong>ETF/azioni, fondo pensione, TFR, BTP</strong>. Per ognuno vedi:</p>
+<ul>
+<li>Contributi totali versati nel periodo</li>
+<li>Rendimenti lordi accumulati</li>
+<li>Tasse pagate (durante l'accumulo e all'uscita)</li>
+<li>Beneficio fiscale da deduzione (solo fondo pensione)</li>
+<li><strong>Netto finale</strong> dopo tutte le imposte</li>
+</ul>
+<p>Il "vincitore" non e' sempre lo stesso: dipende dall'aliquota IRPEF marginale (piu' alta = piu' conviene il FP per la deduzione), dalla durata (oltre 20 anni il FP tende a prevalere grazie alla riduzione della tassazione sulla prestazione fino al 9%), e dal profilo di rischio.</p>
+
+<h3>Compensazione minusvalenze modellata</h3>
+<p>Dalla versione corrente l'engine include le funzioni <code>applyCapitalLossOffset</code> e <code>addCapitalLoss</code> in <code>tax-italy.ts</code> che rispettano la regola dei 4 anni di scadenza e FIFO (si usa prima la minus piu' vecchia). E' possibile simulare scenari di realizzazione con un pacchetto di minus pregresse, per capire quale anno fiscale conviene chiudere posizioni in guadagno.</p>
 `
 	},
 
@@ -1149,6 +1186,16 @@ Se muori dopo 10 anni con 120.000€ residui → <strong>eredi ricevono 120.000�
 <div class="warning">
 <strong>Attenzione:</strong> I fondi pensione hanno costi di gestione che variano molto: dall'0,15% dei fondi pensione negoziali (es. Cometa, Fonchim) al 2%+ di alcuni fondi aperti bancari. La differenza su 30 anni è enorme. Scegli un fondo con costi bassi e una linea adeguata al tuo orizzonte temporale.
 </div>
+
+<h3>Anticipazione TFR: regole di liquidabilita'</h3>
+<p>Il TFR in azienda non e' cosi' illiquido come sembra. Con l'art. 2120 c.c. puoi chiedere un'<strong>anticipazione fino al 70% del TFR maturato</strong> una volta nel rapporto di lavoro, a determinate condizioni:</p>
+<ul>
+<li><strong>Anzianita' minima:</strong> 8 anni nello stesso datore di lavoro (alcuni CCNL deroghe per spese mediche)</li>
+<li><strong>Motivi ammessi:</strong> spese sanitarie straordinarie, acquisto prima casa (tua o dei figli), ristrutturazione prima casa, congedo parentale, spese formative</li>
+<li><strong>Limite aziendale:</strong> le aziende con piu' di 25 dipendenti possono applicare un tetto del 10% degli aventi diritto per anno</li>
+<li><strong>Tassazione:</strong> separata con aliquota media IRPEF degli ultimi 5 anni (tipicamente 20-30% per redditi medi)</li>
+</ul>
+<p>L'engine include il modulo <code>tfr-rules.ts</code> con <code>checkTFRAnticipationEligibility</code> (valuta eleggibilita') e <code>compareTFRDestination</code> (confronta TFR in azienda vs destinato al fondo pensione a parita' di contributo). Utile per decidere dove destinare il TFR all'inizio del rapporto di lavoro: la scelta e' permanente.</p>
 `
 	},
 
@@ -1430,6 +1477,13 @@ Se le tue spese sono 2.000€/mese, la RITA copre il 67%! Il portafoglio deve co
 <div class="warning">
 <strong>Attenzione:</strong> Il rischio più grande non è finanziario ma psicologico: il panico durante un crollo di mercato. La storia mostra che chi vende nel panico trasforma una perdita temporanea in una perdita permanente. Se non riesci a dormire con un -30% in portafoglio, la tua asset allocation è troppo aggressiva.
 </div>
+
+<h3>Nuovi scenari predefiniti</h3>
+<p>Alla libreria di 8 scenari preesistenti sono stati aggiunti due scenari che coprivano un gap:</p>
+<ul>
+<li><strong>Mercato Piatto (Decennio Perduto):</strong> per 10 anni i rendimenti reali sono quasi zero, stile Giappone post-1990 o S&P 500 2000-2010. Non c'e' crollo drammatico ma il mancato rendimento composto e' devastante per un FIRE appena iniziato.</li>
+<li><strong>Spese Sanitarie Ricorrenti Prolungate:</strong> 10 anni di spese mediche incrementali del 25% (malattia cronica, assistenza per un familiare, cure di lunga durata). Si attiva al 5° anno di FIRE, simula un drenaggio costante piuttosto che uno shock una-tantum.</li>
+</ul>
 
 <h3>Stress test combinabili</h3>
 <p>La pagina <strong>Scenari di Rischio</strong> permette di applicare piu' eventi contemporaneamente. Passi:</p>

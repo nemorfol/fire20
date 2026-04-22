@@ -26,7 +26,9 @@
 		ChartLineUpOutline,
 		UsersGroupSolid,
 		BuildingSolid,
-		LandmarkOutline
+		LandmarkOutline,
+		ScaleBalancedOutline,
+		UsersOutline
 	} from 'flowbite-svelte-icons';
 	import favicon from '$lib/assets/favicon.svg';
 	import { t } from '$lib/i18n/store.svelte';
@@ -114,6 +116,12 @@
 					</SidebarItem>
 					<SidebarItem label={t('nav.inpsPension')} href="/pensione/" active={isActive('/pensione/')} onclick={() => (sidebarOpen = false)}>
 						{#snippet icon()}<LandmarkOutline class={iconClass} />{/snippet}
+					</SidebarItem>
+					<SidebarItem label={t('nav.containers')} href="/contenitori/" active={isActive('/contenitori/')} onclick={() => (sidebarOpen = false)}>
+						{#snippet icon()}<ScaleBalancedOutline class={iconClass} />{/snippet}
+					</SidebarItem>
+					<SidebarItem label={t('nav.profileCompare')} href="/confronto-profili/" active={isActive('/confronto-profili/')} onclick={() => (sidebarOpen = false)}>
+						{#snippet icon()}<UsersOutline class={iconClass} />{/snippet}
 					</SidebarItem>
 					<SidebarItem label={t('nav.community')} href="/community/" active={isActive('/community/')} onclick={() => (sidebarOpen = false)}>
 						{#snippet icon()}<UsersGroupSolid class={iconClass} />{/snippet}

@@ -9,7 +9,7 @@
 		BriefcaseOutline, CreditCardOutline
 	} from 'flowbite-svelte-icons';
 	import { onMount } from 'svelte';
-	import type { Profile, PortfolioAllocation, MonthlyContributions, Debt, PensionInfo, Child, Mortgage } from '$lib/db/index';
+	import type { Profile, PortfolioAllocation, MonthlyContributions, Debt, PensionInfo, Child, Mortgage, LifeEvent } from '$lib/db/index';
 	import { getAllProfiles, createProfile, updateProfile, deleteProfile, getProfileById } from '$lib/db/profiles';
 	import { calculateSavingsRate, calculateNetWorth } from '$lib/engine/fire-calculator';
 	import { formatCurrency, formatPercent } from '$lib/utils/format';
@@ -22,6 +22,7 @@
 	import TabDebiti from '$lib/components/profilo/TabDebiti.svelte';
 	import TabPensione from '$lib/components/profilo/TabPensione.svelte';
 	import TabFamiglia from '$lib/components/profilo/TabFamiglia.svelte';
+	import TabEventiVita from '$lib/components/profilo/TabEventiVita.svelte';
 	import BankImport from '$lib/components/profilo/BankImport.svelte';
 
 	// === State ===
@@ -62,6 +63,7 @@
 	});
 	let children = $state<Child[]>([]);
 	let mortgage = $state<Mortgage | undefined>(undefined);
+	let lifeEvents = $state<LifeEvent[]>([]);
 
 	// === Computed metrics ===
 	let totalIncome = $derived(annualIncome + otherIncome);
@@ -104,6 +106,7 @@
 			debts: [] as Debt[],
 			children: [] as Child[],
 			mortgage: undefined as Mortgage | undefined,
+			lifeEvents: [] as LifeEvent[],
 			pension: {
 				contributionYears: 5,
 				estimatedMonthly: 1200,
@@ -140,6 +143,7 @@
 		pension = { ...p.pension };
 		children = (p.children ?? []).map((c: Child) => ({ ...c }));
 		mortgage = p.mortgage ? { ...p.mortgage } : undefined;
+		lifeEvents = (p.lifeEvents ?? []).map((e: LifeEvent) => ({ ...e }));
 	}
 
 	function getStateAsProfileData() {
@@ -160,7 +164,8 @@
 			debts: debts.map(d => ({ ...d })),
 			pension: { ...pension },
 			children: children.map((c: Child) => ({ ...c })),
-			mortgage: mortgage ? { ...mortgage } : undefined
+			mortgage: mortgage ? { ...mortgage } : undefined,
+			lifeEvents: lifeEvents.map((e: LifeEvent) => ({ ...e }))
 		};
 	}
 
@@ -204,6 +209,7 @@
 		void JSON.stringify(pension);
 		void JSON.stringify(children);
 		void JSON.stringify(mortgage);
+		void JSON.stringify(lifeEvents);
 		if (!loading && currentProfileId) {
 			scheduleSave();
 		}
@@ -372,6 +378,11 @@
 					<TabItem title="Famiglia">
 						<div class="pt-4">
 							<TabFamiglia bind:children bind:mortgage />
+						</div>
+					</TabItem>
+					<TabItem title="Eventi di vita">
+						<div class="pt-4">
+							<TabEventiVita bind:lifeEvents />
 						</div>
 					</TabItem>
 					<TabItem title="Patrimonio">

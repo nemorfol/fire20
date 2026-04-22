@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { formatCurrency, formatCompact } from '$lib/utils/format';
+	import AssumptionTooltip from '$lib/components/shared/AssumptionTooltip.svelte';
 
 	let {
 		fireNumber = 0,
@@ -37,8 +38,17 @@
 	<div class="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-white/5 blur-xl"></div>
 
 	<div class="relative">
-		<p class="text-sm font-medium uppercase tracking-wider text-primary-200 mb-2">
+		<p class="text-sm font-medium uppercase tracking-wider text-primary-200 mb-2 flex items-center">
 			Il tuo numero FIRE
+			<AssumptionTooltip id="tip-fire-number" variant="info">
+				<strong class="block mb-1 text-white">Come viene calcolato</strong>
+				<span class="text-gray-200">
+					Capitale per coprire le spese annue in FIRE applicando il tasso di
+					prelievo sicuro (SWR). Include: pensione INPS con "ponte" se il FIRE
+					arriva prima dei 67, PV delle spese future per figli/mutuo, sottrazione
+					PV degli "altri redditi" perpetui. Scontato al rendimento reale.
+				</span>
+			</AssumptionTooltip>
 		</p>
 		<p class="text-5xl font-extrabold tracking-tight mb-3">
 			{formatCurrency(fireNumber)}

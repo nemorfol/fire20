@@ -7,6 +7,7 @@
 import { calculateWithdrawal } from './withdrawal';
 import { calculateNetSalary } from './tax-italy';
 import { totalFamilyExpenses } from './family';
+import { computeYearlyImpact, type LifeEvent } from './life-events';
 import type { Child, Mortgage } from '$lib/db/index';
 
 /** Proiezione anno per anno del portafoglio */
@@ -48,8 +49,14 @@ export interface YearlyProjection {
 	mortgagePayment?: number;
 	/** Spese base (da profile.annualExpenses inflazionato), esclude famiglia/mutuo */
 	baseExpenses?: number;
-	/** Spese totali dell'anno (base + famiglia + mutuo) */
+	/** Spese totali dell'anno (base + famiglia + mutuo + life events) */
 	totalExpenses?: number;
+	/** Bonus / income una-tantum da life events attivi nell'anno */
+	lifeEventBonus?: number;
+	/** Spese una-tantum da life events attivi nell'anno */
+	lifeEventExpense?: number;
+	/** Etichette descrittive degli eventi di vita attivi (per tooltip UI) */
+	lifeEventLabels?: string[];
 }
 
 /** Parametri per la proiezione deterministica del portafoglio */
@@ -96,6 +103,8 @@ export interface ProjectionParams {
 	regionalTaxRate?: number;
 	/** Aliquota addizionale comunale (default media IT 0.7%) */
 	municipalTaxRate?: number;
+	/** Eventi di vita parametrici (bonus, disoccupazione, spese una-tantum, part-time) */
+	lifeEvents?: LifeEvent[];
 }
 
 /**
@@ -368,7 +377,8 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 		mortgage,
 		contractType = 'dipendente',
 		regionalTaxRate,
-		municipalTaxRate
+		municipalTaxRate,
+		lifeEvents
 	} = params;
 
 	const totalYears = lifeExpectancy - currentAge;
@@ -407,18 +417,28 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 		// inflazionate per i figli; mutuo nominale perche' la rata e' fissa).
 		const family = totalFamilyExpenses(children, mortgage, year, startYear, inflationRate);
 
+		// Life events (bonus, disoccupazione, part-time, spese una-tantum)
+		const lifeImpact = computeYearlyImpact(lifeEvents, year);
+		const lifeBonusNominal = lifeImpact.bonusIncome * inflationCumulative;
+		const lifeExpenseNominal = lifeImpact.oneTimeExpenses * inflationCumulative;
+		const lifeIncomeDeltaNominal = lifeImpact.incomeDelta * inflationCumulative;
+
 		// Contributi (solo in fase di accumulazione)
 		// Base: annualContribution inflazionato, ridotto dalle spese familiari
-		// che mangiano parte del risparmio. Non puo' scendere sotto zero.
+		// e dagli eventi di vita. incomeMultiplier modula il reddito (0 = disoccupato).
+		// Il bonus si aggiunge ai contributi, le spese una-tantum li riducono.
 		// Se la pensione INPS arriva DURANTE l'accumulazione, viene aggiunta.
 		const accumPensionIncome = !isRetired && age >= pensionAge
 			? annualPension * inflationCumulative
 			: 0;
 		const nominalContribution = annualContribution * inflationCumulative;
+		const incomeAdjusted = nominalContribution * lifeImpact.incomeMultiplier + lifeIncomeDeltaNominal;
 		const familyDrain = isRetired ? 0 : family.total;
+		const eventDrain = isRetired ? 0 : lifeExpenseNominal;
+		const eventBoost = isRetired ? 0 : lifeBonusNominal;
 		const contributions = isRetired
 			? 0
-			: Math.max(0, nominalContribution - familyDrain) + accumPensionIncome;
+			: Math.max(0, incomeAdjusted - familyDrain - eventDrain + eventBoost) + accumPensionIncome;
 
 		// Prelievi (solo in fase di decumulo)
 		let actualWithdrawals = 0;
@@ -460,8 +480,10 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 			}
 
 			// Spese aggiuntive familiari post-FIRE (figli ancora a carico, mutuo
-			// non ancora estinto): si aggiungono al prelievo richiesto
-			actualWithdrawals += family.total;
+			// non ancora estinto) + spese una-tantum da life events: si aggiungono
+			// al prelievo richiesto. I bonus si sottraggono (cassa aggiuntiva).
+			actualWithdrawals += family.total + lifeExpenseNominal - lifeBonusNominal;
+			actualWithdrawals = Math.max(0, actualWithdrawals);
 
 			// Pensione INPS e altri redditi (affitti/dividendi) riducono quanto serve
 			// prelevare dal portafoglio
@@ -516,7 +538,7 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 		// Spese base dell'anno (senza famiglia/mutuo): post-FIRE e' annualExpenses
 		// inflazionato, pre-FIRE e' annualExpenses inflazionato (vita corrente).
 		const baseExpensesYear = annualExpenses * inflationCumulative;
-		const totalExpensesYear = baseExpensesYear + family.total;
+		const totalExpensesYear = baseExpensesYear + family.total + lifeExpenseNominal;
 
 		projections.push({
 			year,
@@ -537,7 +559,10 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 			childrenExpenses: Math.round(family.children),
 			mortgagePayment: Math.round(family.mortgage),
 			baseExpenses: Math.round(baseExpensesYear),
-			totalExpenses: Math.round(totalExpensesYear)
+			totalExpenses: Math.round(totalExpensesYear),
+			lifeEventBonus: Math.round(lifeBonusNominal),
+			lifeEventExpense: Math.round(lifeExpenseNominal),
+			lifeEventLabels: lifeImpact.activeLabels.length > 0 ? lifeImpact.activeLabels : undefined
 		});
 	}
 

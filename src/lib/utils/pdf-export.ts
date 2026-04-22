@@ -224,8 +224,58 @@ export function generateFireReport(profile: Profile): void {
 	);
 	addRow('Eta\' pensionabile', `${profile.pension.pensionAge} anni`);
 
-	// Section 6: Asset Allocation
-	addSectionHeader('6. Asset Allocation');
+	// Section 5.5: Profilo familiare (figli + mutuo)
+	const hasFamily = (profile.children && profile.children.length > 0) || profile.mortgage;
+	if (hasFamily) {
+		addSectionHeader('6. Profilo familiare');
+		if (profile.children && profile.children.length > 0) {
+			addRow('Figli a carico', `${profile.children.length}`);
+			for (const child of profile.children) {
+				const age = currentYear - child.birthYear;
+				const monthlyStr = fmtEur(child.monthlyExpense || 0);
+				const uniInfo = child.universityStartAge
+					? `, universita' dai ${child.universityStartAge}`
+					: '';
+				addRow(`  ${child.name || 'Figlio'} (${age} anni)`, `${monthlyStr}/mese${uniInfo}`);
+			}
+		}
+		if (profile.mortgage && profile.mortgage.balance > 0) {
+			addSeparator();
+			addRow('Mutuo - capitale residuo', fmtEur(profile.mortgage.balance));
+			addRow('Mutuo - rata mensile', fmtEur(profile.mortgage.monthlyPayment));
+			addRow('Mutuo - mesi residui', `${profile.mortgage.remainingMonths} mesi`);
+			addRow(
+				'Mutuo - tasso annuo',
+				fmtPct(profile.mortgage.interestRate * 100)
+			);
+		}
+	}
+
+	// Section 5.6: Eventi di vita parametrici
+	if (profile.lifeEvents && profile.lifeEvents.length > 0) {
+		addSectionHeader(hasFamily ? '7. Eventi di vita' : '6. Eventi di vita');
+		const typeLabels: Record<string, string> = {
+			bonus: 'Bonus',
+			oneTimeExpense: 'Spesa una-tantum',
+			unemployment: 'Disoccupazione',
+			partTime: 'Part-time',
+			incomeChange: 'Variazione stipendio'
+		};
+		for (const event of profile.lifeEvents) {
+			const enabled = event.enabled ? '' : ' (disattivato)';
+			const amount = event.amount ? ` - ${fmtEur(event.amount)}` : '';
+			const duration = event.durationYears ? ` - ${event.durationYears} anni` : '';
+			addRow(
+				`${typeLabels[event.type] || event.type} - ${event.label}${enabled}`,
+				`${event.year}${amount}${duration}`
+			);
+		}
+	}
+
+	// Section: Asset Allocation (numerazione dinamica)
+	const hasEvents = profile.lifeEvents && profile.lifeEvents.length > 0;
+	const allocSectionNum = 6 + (hasFamily ? 1 : 0) + (hasEvents ? 1 : 0);
+	addSectionHeader(`${allocSectionNum}. Asset Allocation`);
 	if (netWorth > 0) {
 		const entries = Object.entries(portfolio).filter(([, v]) => v > 0);
 		for (const [key, value] of entries) {

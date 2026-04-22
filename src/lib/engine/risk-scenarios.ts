@@ -148,6 +148,34 @@ export const PREDEFINED_RISK_EVENTS: RiskEvent[] = [
 			yearOfOccurrence: 15,
 			returnReduction: 0
 		}
+	},
+	{
+		id: 'flat-market',
+		name: 'Mercato Piatto (Decennio Perduto)',
+		description: 'Uno scenario stile "decennio perduto" giapponese o quello azionario USA 2000-2010: per 10 anni i mercati restano fermi, i rendimenti reali sono circa zero e il capitale non cresce. Lo shock iniziale e\' lieve ma l\'effetto composto del mancato rendimento e\' devastante.',
+		type: 'market',
+		impact: {
+			portfolioShock: 0,
+			expenseIncrease: 0,
+			incomeReduction: 0,
+			duration: 10,
+			yearOfOccurrence: 0,
+			returnReduction: 0.07
+		}
+	},
+	{
+		id: 'chronic-healthcare',
+		name: 'Spese Sanitarie Ricorrenti Prolungate',
+		description: 'Spese mediche elevate e ricorrenti per 10 anni (malattia cronica, assistenza per familiare, cure lunga durata). Costo annuo incrementale del 25% sulle spese ordinarie, senza shock di capitale ma con drenaggio costante.',
+		type: 'health',
+		impact: {
+			portfolioShock: 0,
+			expenseIncrease: 0.25,
+			incomeReduction: 0,
+			duration: 10,
+			yearOfOccurrence: 5,
+			returnReduction: 0
+		}
 	}
 ];
 

@@ -41,6 +41,7 @@
 	import ProjectionChart from '$lib/components/calcolatore/ProjectionChart.svelte';
 	import ProjectionTable from '$lib/components/calcolatore/ProjectionTable.svelte';
 	import TaxOptimization from '$lib/components/calcolatore/TaxOptimization.svelte';
+	import PresetSelector from '$lib/components/calcolatore/PresetSelector.svelte';
 
 	// === State ===
 	let loading = $state(true);
@@ -182,7 +183,8 @@
 					lifeExpectancy: wiLifeExpectancy,
 					startYear: new Date().getFullYear(),
 					children: profile.children,
-					mortgage: profile.mortgage
+					mortgage: profile.mortgage,
+					lifeEvents: profile.lifeEvents
 				})
 			: []
 	);
@@ -343,6 +345,11 @@
 					Simulazione
 				</div>
 			{/snippet}
+
+			<!-- Preset Modes -->
+			<div class="mb-6">
+				<PresetSelector bind:swr bind:expectedReturn bind:inflationRate />
+			</div>
 
 			<!-- Controls Row: Strategy + Parameters -->
 			<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
