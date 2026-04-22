@@ -105,26 +105,24 @@
 						</div>
 					</div>
 
-					<div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-3">
 						<div>
-							<Label for="evt-label-{event.id}" class="mb-1 text-xs">Etichetta</Label>
-							<Input id="evt-label-{event.id}" size="sm" bind:value={event.label} />
+							<Label for="evt-label-{event.id}" class="mb-2">Etichetta</Label>
+							<Input id="evt-label-{event.id}" bind:value={event.label} />
 						</div>
 						<div>
-							<Label for="evt-type-{event.id}" class="mb-1 text-xs">Tipo</Label>
+							<Label for="evt-type-{event.id}" class="mb-2">Tipo</Label>
 							<Select
 								id="evt-type-{event.id}"
-								size="sm"
 								items={typeOptions}
 								value={event.type}
 								onchange={(e) => toggleEventType(event, (e.target as HTMLSelectElement).value as LifeEventType)}
 							/>
 						</div>
 						<div>
-							<Label for="evt-year-{event.id}" class="mb-1 text-xs">Anno di inizio</Label>
+							<Label for="evt-year-{event.id}" class="mb-2">Anno di inizio</Label>
 							<Input
 								id="evt-year-{event.id}"
-								size="sm"
 								type="number"
 								min={currentYear}
 								max={currentYear + 80}
@@ -143,10 +141,9 @@
 
 						{#if event.type === 'unemployment' || event.type === 'partTime'}
 							<div>
-								<Label for="evt-duration-{event.id}" class="mb-1 text-xs">Durata (anni)</Label>
+								<Label for="evt-duration-{event.id}" class="mb-2">Durata (anni)</Label>
 								<Input
 									id="evt-duration-{event.id}"
-									size="sm"
 									type="number"
 									min={1}
 									max={20}
