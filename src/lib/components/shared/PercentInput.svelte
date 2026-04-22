@@ -60,21 +60,23 @@
 	});
 </script>
 
-{#if label}
-	<Label for={id} class="mb-2">{label}</Label>
-{/if}
-<div class="flex">
-	<Input
-		{id}
-		type="text"
-		inputmode="decimal"
-		placeholder="0,0"
-		value={displayValue}
-		oninput={handleInput}
-		onblur={handleBlur}
-		onfocus={handleFocus}
-		class="rounded-r-none"
-		aria-label={label || 'Percentuale'}
-	/>
-	<InputAddon>%</InputAddon>
+<div>
+	{#if label}
+		<Label for={id} class="mb-2">{label}</Label>
+	{/if}
+	<div class="flex">
+		<Input
+			{id}
+			type="text"
+			inputmode="decimal"
+			placeholder="0,0"
+			value={displayValue}
+			oninput={handleInput}
+			onblur={handleBlur}
+			onfocus={handleFocus}
+			class="rounded-r-none"
+			aria-label={label || 'Percentuale'}
+		/>
+		<InputAddon>%</InputAddon>
+	</div>
 </div>

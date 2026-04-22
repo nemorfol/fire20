@@ -141,17 +141,17 @@
 	<!-- Parametri -->
 	<Card class="max-w-none mb-6">
 		<Heading tag="h4" class="text-lg mb-4">Parametri simulazione</Heading>
-		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-5">
 			<div>
-				<Label for="gender" class="mb-1">Genere</Label>
+				<Label for="gender" class="mb-2">Genere</Label>
 				<Select id="gender" items={genderOptions} bind:value={gender} />
 			</div>
 			<div>
-				<Label for="contract" class="mb-1">Tipo contratto</Label>
+				<Label for="contract" class="mb-2">Tipo contratto</Label>
 				<Select id="contract" items={contractOptions} bind:value={contractType} />
 			</div>
 			<div>
-				<Label for="firstEmp" class="mb-1">Anno primo impiego</Label>
+				<Label for="firstEmp" class="mb-2">Anno primo impiego</Label>
 				<input
 					id="firstEmp"
 					type="number"
@@ -176,7 +176,7 @@
 				step={0.5}
 			/>
 			<div>
-				<Label for="years" class="mb-1">Anni di contributi gia versati</Label>
+				<Label for="years" class="mb-2">Anni di contributi gia versati</Label>
 				<input
 					id="years"
 					type="number"
@@ -192,7 +192,7 @@
 				id="montante"
 				step={1000}
 			/>
-			<div class="flex items-center pt-6">
+			<div class="flex items-end pb-2">
 				<Toggle bind:checked={partTime}>
 					<span class="font-medium text-gray-900 dark:text-white">Part-time</span>
 				</Toggle>

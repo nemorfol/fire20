@@ -62,21 +62,23 @@
 	});
 </script>
 
-{#if label}
-	<Label for={id} class="mb-2">{label}</Label>
-{/if}
-<div class="flex">
-	<InputAddon>EUR</InputAddon>
-	<Input
-		{id}
-		type="text"
-		inputmode="decimal"
-		{placeholder}
-		value={displayValue}
-		oninput={handleInput}
-		onblur={handleBlur}
-		onfocus={handleFocus}
-		class="rounded-l-none"
-		aria-label={label || 'Importo in EUR'}
-	/>
+<div>
+	{#if label}
+		<Label for={id} class="mb-2">{label}</Label>
+	{/if}
+	<div class="flex">
+		<InputAddon>EUR</InputAddon>
+		<Input
+			{id}
+			type="text"
+			inputmode="decimal"
+			{placeholder}
+			value={displayValue}
+			oninput={handleInput}
+			onblur={handleBlur}
+			onfocus={handleFocus}
+			class="rounded-l-none"
+			aria-label={label || 'Importo in EUR'}
+		/>
+	</div>
 </div>
