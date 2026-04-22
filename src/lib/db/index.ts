@@ -38,6 +38,32 @@ export interface Debt {
 	remainingMonths: number;
 }
 
+export interface Child {
+	name: string;
+	birthYear: number;
+	/** Spesa corrente mensile a carico della famiglia (abbigliamento, scuola, sport, cibo extra, ecc.) */
+	monthlyExpense: number;
+	/** Età in cui si prevede inizi l'università. Se omesso, niente costi universitari. */
+	universityStartAge?: number;
+	/** Durata prevista del percorso universitario in anni (es. 5) */
+	universityYears?: number;
+	/** Costo annuo universitario (tasse + vitto + alloggio fuori sede) in euro di oggi */
+	universityAnnualCost?: number;
+	/** Età in cui si assume che il figlio diventi autonomo e le spese cessino (default 25) */
+	independenceAge?: number;
+}
+
+export interface Mortgage {
+	/** Capitale residuo oggi */
+	balance: number;
+	/** Tasso annuo (0.035 = 3,5%). Indicativo: usato solo per info e calcolo rata. */
+	interestRate: number;
+	/** Rata mensile (capitale + interessi) */
+	monthlyPayment: number;
+	/** Mesi residui dalla data odierna */
+	remainingMonths: number;
+}
+
 export interface PensionInfo {
 	contributionYears: number;
 	estimatedMonthly: number;
@@ -94,6 +120,10 @@ export interface Profile {
 	debts: Debt[];
 	pension: PensionInfo;
 	simulation: SimulationParams;
+	/** Figli a carico (spese ricorrenti + eventuale università). Additivo: assente su profili legacy. */
+	children?: Child[];
+	/** Mutuo prima casa. Additivo: assente su profili legacy. */
+	mortgage?: Mortgage;
 }
 
 export interface Scenario {
@@ -194,6 +224,18 @@ db.version(1).stores({
 });
 
 db.version(2).stores({
+	profiles: '++id, name, createdAt, updatedAt',
+	scenarios: '++id, profileId, name, type, createdAt',
+	simulation_results: '++id, scenarioId, profileId, runAt',
+	risk_events: '++id, name, type',
+	portfolio_snapshots: '++id, profileId, date',
+	cash_flows: '++id, profileId, date, type'
+});
+
+// v3: aggiunta campi opzionali children[] e mortgage al Profile.
+// Schema store invariato (nessun nuovo indice): i campi nuovi sono additivi
+// e i profili esistenti continuano a funzionare senza migrazione.
+db.version(3).stores({
 	profiles: '++id, name, createdAt, updatedAt',
 	scenarios: '++id, profileId, name, type, createdAt',
 	simulation_results: '++id, scenarioId, profileId, runAt',

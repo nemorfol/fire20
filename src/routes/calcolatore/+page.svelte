@@ -104,7 +104,11 @@
 			lifeExpectancy: wiLifeExpectancy,
 			realReturn,
 			otherIncome: wiOtherIncome,
-			otherIncomeEndAge: wiOtherIncomeEndAge
+			otherIncomeEndAge: wiOtherIncomeEndAge,
+			children: profile?.children,
+			mortgage: profile?.mortgage,
+			baseYear: new Date().getFullYear(),
+			currentAge: profile ? new Date().getFullYear() - profile.birthYear : 30
 		})
 	);
 	let bridgeYears = $derived(Math.max(0, wiPensionAge - wiRetirementAge));
@@ -168,7 +172,9 @@
 					currentAge: currentAge,
 					retirementAge: retirementAge,
 					lifeExpectancy: wiLifeExpectancy,
-					startYear: new Date().getFullYear()
+					startYear: new Date().getFullYear(),
+					children: profile.children,
+					mortgage: profile.mortgage
 				})
 			: []
 	);

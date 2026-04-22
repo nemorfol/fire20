@@ -5,6 +5,9 @@
  */
 
 import { calculateWithdrawal } from './withdrawal';
+import { calculateNetSalary } from './tax-italy';
+import { totalFamilyExpenses } from './family';
+import type { Child, Mortgage } from '$lib/db/index';
 
 /** Proiezione anno per anno del portafoglio */
 export interface YearlyProjection {
@@ -18,14 +21,35 @@ export interface YearlyProjection {
 	contributions: number;
 	/** Prelievi effettuati nell'anno */
 	withdrawals: number;
-	/** Rendimenti ottenuti nell'anno */
+	/** Rendimenti ottenuti nell'anno (netti di tasse sui rendimenti) */
 	returns: number;
-	/** Tasse pagate nell'anno */
+	/** Tasse pagate nell'anno sui rendimenti del portafoglio */
 	taxes: number;
 	/** Patrimonio netto totale */
 	netWorth: number;
 	/** Reddito pensionistico nell'anno */
 	pensionIncome?: number;
+	// --- Breakdown dettagliato (cash flow) ---
+	/** Reddito lordo da lavoro in questo anno (inflazionato) */
+	grossSalary?: number;
+	/** IRPEF + addizionali stimate sul reddito da lavoro */
+	irpef?: number;
+	/** Contributi INPS a carico del lavoratore trattenuti in busta */
+	inpsContributions?: number;
+	/** Netto stimato in busta paga */
+	netSalary?: number;
+	/** Altri redditi percepiti nell'anno (affitti/dividendi/rendite) */
+	otherIncomeActive?: number;
+	/** Rendimenti lordi (prima delle tasse) */
+	investmentReturnsGross?: number;
+	/** Spese per figli a carico nell'anno */
+	childrenExpenses?: number;
+	/** Rata annuale mutuo */
+	mortgagePayment?: number;
+	/** Spese base (da profile.annualExpenses inflazionato), esclude famiglia/mutuo */
+	baseExpenses?: number;
+	/** Spese totali dell'anno (base + famiglia + mutuo) */
+	totalExpenses?: number;
 }
 
 /** Parametri per la proiezione deterministica del portafoglio */
@@ -62,6 +86,16 @@ export interface ProjectionParams {
 	lifeExpectancy: number;
 	/** Anno di calendario iniziale */
 	startYear: number;
+	/** Figli a carico (spese ricorrenti + universita) */
+	children?: Child[];
+	/** Mutuo attivo */
+	mortgage?: Mortgage;
+	/** Tipo di contratto per il calcolo della busta paga (breakdown) */
+	contractType?: 'dipendente' | 'autonomo' | 'parasubordinato';
+	/** Aliquota addizionale regionale (default media IT 1.73%) */
+	regionalTaxRate?: number;
+	/** Aliquota addizionale comunale (default media IT 0.7%) */
+	municipalTaxRate?: number;
 }
 
 /**
@@ -105,6 +139,15 @@ export function calculateFireNumberWithPension(params: {
 	otherIncome?: number;
 	/** Eta' fino alla quale otherIncome continua. <= retirementAge = non conta in FIRE */
 	otherIncomeEndAge?: number;
+	/** Figli a carico: aggiungono flussi futuri da finanziare */
+	children?: Child[];
+	/** Mutuo attivo: la rata residua post-FIRE fa parte del fabbisogno */
+	mortgage?: Mortgage;
+	/** Anno di inizio della simulazione (default: anno corrente). Serve per
+	 *  proiettare le spese future di figli e mutuo. */
+	baseYear?: number;
+	/** Eta attuale (serve a mappare retirementAge → calendar year) */
+	currentAge?: number;
 }): number {
 	const {
 		annualExpenses,
@@ -115,7 +158,11 @@ export function calculateFireNumberWithPension(params: {
 		lifeExpectancy,
 		realReturn = 0.02,
 		otherIncome = 0,
-		otherIncomeEndAge = 0
+		otherIncomeEndAge = 0,
+		children,
+		mortgage,
+		baseYear = new Date().getFullYear(),
+		currentAge = retirementAge
 	} = params;
 
 	if (withdrawalRate <= 0) return Infinity;
@@ -132,17 +179,60 @@ export function calculateFireNumberWithPension(params: {
 	const otherIncomeYears = Math.max(0, Math.min(otherIncomeEndAge, lifeExpectancy) - retirementAge);
 	const pvOtherIncome = annuityPV(otherIncome, otherIncomeYears);
 
+	// PV delle spese familiari future che cadono DOPO il FIRE: figli ancora a
+	// carico dopo il retirementAge, rate di mutuo residue. Usiamo euro di oggi
+	// (inflazione gia' neutralizzata dal rendimento reale).
+	let pvFamilyPostFire = 0;
+	const yearsToFire = Math.max(0, retirementAge - currentAge);
+	const yearsInFire = Math.max(0, lifeExpectancy - retirementAge);
+	if (children && children.length > 0) {
+		for (let offset = 0; offset < yearsInFire; offset++) {
+			const calendarYear = baseYear + yearsToFire + offset;
+			let yearCost = 0;
+			for (const c of children) {
+				// Usiamo euro di oggi (inflationRate=0) per coerenza col realReturn
+				const age = calendarYear - c.birthYear;
+				const indep = c.independenceAge ?? 25;
+				if (age < 0 || age >= indep) continue;
+				yearCost += (c.monthlyExpense || 0) * 12;
+				const uniStart = c.universityStartAge;
+				const uniYears = c.universityYears ?? 0;
+				const uniCost = c.universityAnnualCost ?? 0;
+				if (uniStart !== undefined && uniYears > 0 && uniCost > 0) {
+					if (age >= uniStart && age < uniStart + uniYears) yearCost += uniCost;
+				}
+			}
+			if (yearCost > 0) pvFamilyPostFire += yearCost / Math.pow(1 + r, offset);
+		}
+	}
+	if (mortgage && mortgage.monthlyPayment > 0 && mortgage.remainingMonths > 0) {
+		// Mesi di mutuo che cadono dopo il FIRE
+		const monthsBeforeFire = yearsToFire * 12;
+		const monthsAfterFire = Math.max(0, mortgage.remainingMonths - monthsBeforeFire);
+		const annualMortgage = mortgage.monthlyPayment * 12;
+		const fullYearsAfter = Math.floor(monthsAfterFire / 12);
+		const residualMonths = monthsAfterFire - fullYearsAfter * 12;
+		// PV delle rate intere
+		for (let y = 0; y < fullYearsAfter; y++) {
+			pvFamilyPostFire += annualMortgage / Math.pow(1 + r, y);
+		}
+		// PV dell'ultimo anno frazionario
+		if (residualMonths > 0) {
+			pvFamilyPostFire += (mortgage.monthlyPayment * residualMonths) / Math.pow(1 + r, fullYearsAfter);
+		}
+	}
+
 	// Nessun beneficio dalla pensione: regola del 4% classica su spese piene,
-	// ridotta dal PV degli altri redditi se presenti
+	// ridotta dal PV degli altri redditi e aumentata dal PV delle spese familiari
 	if (annualPension <= 0 || pensionAge >= lifeExpectancy) {
 		const base = annualExpenses / withdrawalRate;
-		return Math.max(0, base - pvOtherIncome);
+		return Math.max(0, base - pvOtherIncome + pvFamilyPostFire);
 	}
 
 	// FIRE oltre l'eta' pensionabile: pensione gia' attiva
 	if (pensionAge <= retirementAge) {
 		const base = Math.max(0, annualExpenses - annualPension) / withdrawalRate;
-		return Math.max(0, base - pvOtherIncome);
+		return Math.max(0, base - pvOtherIncome + pvFamilyPostFire);
 	}
 
 	// FIRE prima della pensione INPS: calcolo in due fasi con PV delle rendite
@@ -154,7 +244,7 @@ export function calculateFireNumberWithPension(params: {
 	const pvPostPensionAtStart = annuityPV(netExpensesAfterPension, pensionYears);
 	const pvPostPension = pvPostPensionAtStart / Math.pow(1 + r, bridgeYears);
 
-	return Math.max(0, pvBridge + pvPostPension - pvOtherIncome);
+	return Math.max(0, pvBridge + pvPostPension - pvOtherIncome + pvFamilyPostFire);
 }
 
 /**
@@ -273,7 +363,12 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 		currentAge,
 		retirementAge,
 		lifeExpectancy,
-		startYear
+		startYear,
+		children,
+		mortgage,
+		contractType = 'dipendente',
+		regionalTaxRate,
+		municipalTaxRate
 	} = params;
 
 	const totalYears = lifeExpectancy - currentAge;
@@ -284,6 +379,15 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 	let retirementPortfolio = 0; // portafoglio al momento del pensionamento
 	let previousWithdrawal = 0;
 	let retirementYear = 0; // anno (0-based) di inizio pensione
+
+	// Stima del reddito lordo da lavoro per l'anno base: partiamo dal contributo
+	// annuo come upper bound (non abbiamo annualIncome qui). Se il caller vuole
+	// un breakdown piu' preciso dovra' passare grossSalaryBase via futura estensione.
+	// Per ora inferiamo gross dal netto con busta-paga inversa: se il contributo
+	// e' positivo e pari a savings, il gross si puo' derivare approssimativamente
+	// assumendo che annualContribution sia il risparmio annuo e quindi la busta
+	// contenga annualContribution + annualExpenses come netto totale.
+	const workingNetEstimate = Math.max(0, annualContribution + annualExpenses);
 
 	for (let i = 0; i < totalYears; i++) {
 		const age = currentAge + i + 1;
@@ -299,16 +403,22 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 			? otherIncome * inflationCumulative
 			: 0;
 
+		// Spese familiari (figli + mutuo) dell'anno: in euro dell'anno (gia'
+		// inflazionate per i figli; mutuo nominale perche' la rata e' fissa).
+		const family = totalFamilyExpenses(children, mortgage, year, startYear, inflationRate);
+
 		// Contributi (solo in fase di accumulazione)
-		// I contributi crescono con l'inflazione (stipendio si adegua).
-		// Se la pensione INPS arriva DURANTE l'accumulazione (pensionAge < retirementAge),
-		// viene aggiunta come flusso in entrata al portafoglio.
+		// Base: annualContribution inflazionato, ridotto dalle spese familiari
+		// che mangiano parte del risparmio. Non puo' scendere sotto zero.
+		// Se la pensione INPS arriva DURANTE l'accumulazione, viene aggiunta.
 		const accumPensionIncome = !isRetired && age >= pensionAge
 			? annualPension * inflationCumulative
 			: 0;
+		const nominalContribution = annualContribution * inflationCumulative;
+		const familyDrain = isRetired ? 0 : family.total;
 		const contributions = isRetired
 			? 0
-			: annualContribution * inflationCumulative + accumPensionIncome;
+			: Math.max(0, nominalContribution - familyDrain) + accumPensionIncome;
 
 		// Prelievi (solo in fase di decumulo)
 		let actualWithdrawals = 0;
@@ -349,6 +459,10 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 				});
 			}
 
+			// Spese aggiuntive familiari post-FIRE (figli ancora a carico, mutuo
+			// non ancora estinto): si aggiungono al prelievo richiesto
+			actualWithdrawals += family.total;
+
 			// Pensione INPS e altri redditi (affitti/dividendi) riducono quanto serve
 			// prelevare dal portafoglio
 			actualWithdrawals = Math.max(0, actualWithdrawals - pensionIncome - otherIncomeActive);
@@ -371,7 +485,38 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 		if (portfolio < 0) portfolio = 0;
 
 		// Pensione INPS per la proiezione (calcolata anche fuori dal blocco isRetired)
-		const pensionIncomeForProjection = age >= pensionAge ? annualPension : 0;
+		const pensionIncomeForProjection = age >= pensionAge ? annualPension * inflationCumulative : 0;
+
+		// --- Breakdown stipendio pre-FIRE (busta paga) ---
+		// Stima del lordo che produce il netto target (contributo + spese personali).
+		// Approssimazione: aumento del ~30% per coprire IRPEF e INPS medi.
+		let grossSalary = 0;
+		let netSalary = 0;
+		let irpef = 0;
+		let inpsContributions = 0;
+		if (!isRetired && workingNetEstimate > 0) {
+			// Iterazione inversa: parto da gross stimato = netto / 0.72 (aliquota
+			// combinata tipica ~28%) e inflaziono. Per un calcolo piu' accurato
+			// iterativo in 1-2 step si converge.
+			const netTargetNominal = (annualContribution + annualExpenses) * inflationCumulative;
+			let grossGuess = netTargetNominal / 0.72;
+			for (let step = 0; step < 3; step++) {
+				const breakdown = calculateNetSalary(grossGuess, contractType, regionalTaxRate, municipalTaxRate);
+				if (breakdown.net === 0) break;
+				const ratio = netTargetNominal / breakdown.net;
+				grossGuess = grossGuess * ratio;
+			}
+			const finalBreakdown = calculateNetSalary(grossGuess, contractType, regionalTaxRate, municipalTaxRate);
+			grossSalary = finalBreakdown.gross;
+			netSalary = finalBreakdown.net;
+			irpef = finalBreakdown.totalTax;
+			inpsContributions = finalBreakdown.inpsContribution;
+		}
+
+		// Spese base dell'anno (senza famiglia/mutuo): post-FIRE e' annualExpenses
+		// inflazionato, pre-FIRE e' annualExpenses inflazionato (vita corrente).
+		const baseExpensesYear = annualExpenses * inflationCumulative;
+		const totalExpensesYear = baseExpensesYear + family.total;
 
 		projections.push({
 			year,
@@ -382,7 +527,17 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 			returns: netReturns,
 			taxes,
 			netWorth: portfolio,
-			pensionIncome: pensionIncomeForProjection
+			pensionIncome: pensionIncomeForProjection,
+			grossSalary: isRetired ? 0 : Math.round(grossSalary),
+			irpef: isRetired ? 0 : Math.round(irpef),
+			inpsContributions: isRetired ? 0 : Math.round(inpsContributions),
+			netSalary: isRetired ? 0 : Math.round(netSalary),
+			otherIncomeActive: Math.round(otherIncomeActive),
+			investmentReturnsGross: Math.round(grossReturns),
+			childrenExpenses: Math.round(family.children),
+			mortgagePayment: Math.round(family.mortgage),
+			baseExpenses: Math.round(baseExpensesYear),
+			totalExpenses: Math.round(totalExpensesYear)
 		});
 	}
 

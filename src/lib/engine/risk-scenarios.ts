@@ -242,6 +242,32 @@ export function applyRiskEvent(
 }
 
 /**
+ * Applica una sequenza di eventi di rischio a una proiezione. Ogni evento si
+ * applica sul risultato dell'evento precedente: i danni si sommano (non sono
+ * indipendenti). L'ordine degli eventi conta, ma il risultato aggregato e' lo
+ * stesso tranne per interazioni non lineari (es. uno shock sul portafoglio
+ * prima di un aumento spese ha un leggero effetto diverso dopo, perche' il
+ * portafoglio residuo e' gia' ridotto). Non modifica l'input.
+ *
+ * @param yearlyData - Proiezione baseline
+ * @param events - Eventi da applicare in sequenza
+ * @returns Nuova proiezione con tutti gli eventi applicati
+ */
+export function applyRiskEvents(
+	yearlyData: YearlyProjection[],
+	events: RiskEvent[]
+): YearlyProjection[] {
+	if (yearlyData.length === 0 || events.length === 0) {
+		return yearlyData.map((d) => ({ ...d }));
+	}
+	let current = yearlyData;
+	for (const event of events) {
+		current = applyRiskEvent(current, event);
+	}
+	return current;
+}
+
+/**
  * Restituisce uno scenario di rischio predefinito dato il suo ID.
  *
  * @param id - Identificatore dello scenario

@@ -1244,6 +1244,18 @@ La pensione INPS "vale" circa 120.000-150.000€ di patrimonio in meno da accumu
 <div class="warning">
 <strong>Attenzione:</strong> I coefficienti di trasformazione vengono rivisti periodicamente e tendono a scendere (per adeguarsi all'aumento dell'aspettativa di vita). Non contare sulla pensione INPS attuale: potrebbe essere il 10-15% inferiore quando la raggiungerai tra 20-30 anni. Pianifica con un margine conservativo.
 </div>
+
+<h3>La pagina dedicata /pensione</h3>
+<p>Oltre al simulatore inline nel profilo, c'e' una sezione dedicata <strong>Pensione INPS</strong> (voce navbar) che visualizza in tre blocchi:</p>
+<ul>
+<li><strong>Pensione mensile per eta di uscita</strong> — grafico a barre che confronta la pensione netta stimata a 57, 60, 62, 65, 67 e 70 anni. Una linea rossa orizzontale mostra le spese FIRE mensili del profilo, cosi' vedi subito a quale eta' la pensione da sola ti copre.</li>
+<li><strong>Confronto scenari pensionistici</strong> — tabella con 4 varianti: baseline, + riscatto laurea 3 anni, + 5 anni di lavoro aggiuntivi, + crescita salariale al 4%. Ogni scenario mostra pensione netta mensile, tasso di sostituzione e delta vs baseline, cosi' capisci quale leva ha l'impatto maggiore.</li>
+<li><strong>Analisi gap FIRE vs INPS</strong> — barra di copertura (quanto dell'INPS basta), gap annuo/mensile, capitale extra necessario al pensionamento per coprirlo e contributo mensile consigliato da oggi per arrivarci.</li>
+</ul>
+
+<div class="tip">
+<strong>Quando usarla:</strong> il simulatore nel profilo serve a salvare i dati; la pagina dedicata serve a <em>decidere</em>. Se il gap e' grande, usa la sezione "Scenari" per capire se conviene riscattare la laurea o posticipare l'uscita; se e' piccolo, la "Analisi gap" ti dice quanto extra mettere nel fondo pensione o nel portafoglio privato ogni mese.
+</div>
 `
 	},
 
@@ -1417,6 +1429,19 @@ Se le tue spese sono 2.000€/mese, la RITA copre il 67%! Il portafoglio deve co
 
 <div class="warning">
 <strong>Attenzione:</strong> Il rischio più grande non è finanziario ma psicologico: il panico durante un crollo di mercato. La storia mostra che chi vende nel panico trasforma una perdita temporanea in una perdita permanente. Se non riesci a dormire con un -30% in portafoglio, la tua asset allocation è troppo aggressiva.
+</div>
+
+<h3>Stress test combinabili</h3>
+<p>La pagina <strong>Scenari di Rischio</strong> permette di applicare piu' eventi contemporaneamente. Passi:</p>
+<ol>
+<li>Seleziona due o piu' scenari con il checkbox sulle card (es. Crash di Mercato + Crisi Sanitaria Grave + Inflazione Elevata).</li>
+<li>Appare una barra rossa "Hai selezionato N scenari": clicca <strong>"Combina selezionati"</strong>.</li>
+<li>Si apre il pannello <strong>Scenario Combinato</strong> con il grafico baseline vs combinato, le metriche aggregate (portafoglio finale, riduzione %, anno di esaurimento) e i badge degli eventi applicati.</li>
+</ol>
+<p>Gli eventi si applicano in sequenza: ogni shock agisce sul portafoglio gia' ridotto dal precedente, quindi gli effetti si accumulano in modo non lineare. Il baseline "side-by-side" (ciascun evento da solo vs piano di base) resta disponibile in fondo alla pagina come confronto.</p>
+
+<div class="tip">
+<strong>Come usarlo:</strong> il vero stress test non e' "crash del 40%" isolato, ma combinazioni realistiche. Prova "Crash di mercato + Crisi sanitaria" per il classico scenario "i mercati scendono proprio mentre servono piu' soldi", oppure "Inflazione elevata + Longevita' estrema" per testare la tenuta del piano sul lungo periodo. Se il portafoglio sopravvive alla combinazione dei due-tre rischi piu' probabili per il tuo profilo, il piano e' robusto.
 </div>
 `
 	},

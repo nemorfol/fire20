@@ -9,7 +9,7 @@
 		BriefcaseOutline, CreditCardOutline
 	} from 'flowbite-svelte-icons';
 	import { onMount } from 'svelte';
-	import type { Profile, PortfolioAllocation, MonthlyContributions, Debt, PensionInfo } from '$lib/db/index';
+	import type { Profile, PortfolioAllocation, MonthlyContributions, Debt, PensionInfo, Child, Mortgage } from '$lib/db/index';
 	import { getAllProfiles, createProfile, updateProfile, deleteProfile, getProfileById } from '$lib/db/profiles';
 	import { calculateSavingsRate, calculateNetWorth } from '$lib/engine/fire-calculator';
 	import { formatCurrency, formatPercent } from '$lib/utils/format';
@@ -21,6 +21,7 @@
 	import TabPatrimonio from '$lib/components/profilo/TabPatrimonio.svelte';
 	import TabDebiti from '$lib/components/profilo/TabDebiti.svelte';
 	import TabPensione from '$lib/components/profilo/TabPensione.svelte';
+	import TabFamiglia from '$lib/components/profilo/TabFamiglia.svelte';
 	import BankImport from '$lib/components/profilo/BankImport.svelte';
 
 	// === State ===
@@ -59,6 +60,8 @@
 		estimatedMonthly: 1200,
 		pensionAge: 67
 	});
+	let children = $state<Child[]>([]);
+	let mortgage = $state<Mortgage | undefined>(undefined);
 
 	// === Computed metrics ===
 	let totalIncome = $derived(annualIncome + otherIncome);
@@ -99,6 +102,8 @@
 				gold: 0, crypto: 0, pensionFund: 0, tfr: 0, other: 0
 			} as MonthlyContributions,
 			debts: [] as Debt[],
+			children: [] as Child[],
+			mortgage: undefined as Mortgage | undefined,
 			pension: {
 				contributionYears: 5,
 				estimatedMonthly: 1200,
@@ -133,6 +138,8 @@
 		monthlyContributions = { ...p.monthlyContributions };
 		debts = p.debts.map(d => ({ ...d }));
 		pension = { ...p.pension };
+		children = (p.children ?? []).map((c: Child) => ({ ...c }));
+		mortgage = p.mortgage ? { ...p.mortgage } : undefined;
 	}
 
 	function getStateAsProfileData() {
@@ -151,7 +158,9 @@
 			portfolio: { ...portfolio },
 			monthlyContributions: { ...monthlyContributions },
 			debts: debts.map(d => ({ ...d })),
-			pension: { ...pension }
+			pension: { ...pension },
+			children: children.map((c: Child) => ({ ...c })),
+			mortgage: mortgage ? { ...mortgage } : undefined
 		};
 	}
 
@@ -193,6 +202,8 @@
 		void JSON.stringify(monthlyContributions);
 		void JSON.stringify(debts);
 		void JSON.stringify(pension);
+		void JSON.stringify(children);
+		void JSON.stringify(mortgage);
 		if (!loading && currentProfileId) {
 			scheduleSave();
 		}
@@ -356,6 +367,11 @@
 								bind:fireExpenses
 								bind:expenseInflation
 							/>
+						</div>
+					</TabItem>
+					<TabItem title="Famiglia">
+						<div class="pt-4">
+							<TabFamiglia bind:children bind:mortgage />
 						</div>
 					</TabItem>
 					<TabItem title="Patrimonio">

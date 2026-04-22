@@ -407,3 +407,144 @@ export function calculateEffectiveTaxRate(
 
 	return Math.round(weightedRate * 10000) / 10000;
 }
+
+/** Risultato della tassazione complessiva sul reddito da lavoro */
+export interface TotalIncomeTaxResult {
+	/** IRPEF ordinaria calcolata a scaglioni */
+	irpef: number;
+	/** Addizionale regionale (media stimata) */
+	regional: number;
+	/** Addizionale comunale (media stimata) */
+	municipal: number;
+	/** Imposte totali (irpef + addizionali) */
+	total: number;
+	/** Aliquota effettiva totale */
+	effectiveRate: number;
+}
+
+/**
+ * Tassazione complessiva del reddito da lavoro dipendente: IRPEF + addizionali
+ * regionali e comunali. Le addizionali sono approssimate con medie nazionali
+ * perche' il valore esatto dipende da comune di residenza e reddito.
+ *
+ * - Addizionale regionale: media italiana ~1.73% (range 1.23%-3.33%)
+ * - Addizionale comunale: media italiana ~0.7% (range 0%-0.9%)
+ *
+ * @param grossIncome - Reddito lordo annuale imponibile
+ * @param regionalRate - Aliquota regionale (default 0.0173)
+ * @param municipalRate - Aliquota comunale (default 0.007)
+ */
+export function calculateTotalIncomeTax(
+	grossIncome: number,
+	regionalRate: number = 0.0173,
+	municipalRate: number = 0.007
+): TotalIncomeTaxResult {
+	if (grossIncome <= 0) {
+		return { irpef: 0, regional: 0, municipal: 0, total: 0, effectiveRate: 0 };
+	}
+	const irpef = calculateIRPEF(grossIncome).tax;
+	const regional = grossIncome * regionalRate;
+	const municipal = grossIncome * municipalRate;
+	const total = irpef + regional + municipal;
+	return {
+		irpef: Math.round(irpef * 100) / 100,
+		regional: Math.round(regional * 100) / 100,
+		municipal: Math.round(municipal * 100) / 100,
+		total: Math.round(total * 100) / 100,
+		effectiveRate: total / grossIncome
+	};
+}
+
+/**
+ * Contributi previdenziali INPS a carico del lavoratore (trattenuti in busta
+ * paga). Aliquote 2026:
+ * - Dipendente: 9.19% fino al massimale (~105.000€), poi 10.19%
+ * - Parasubordinato (co.co.co iscritti alla gestione separata): 1/3 del 33.72% a carico ~11.24%
+ * - Autonomo iscritto alla gestione separata: per convenzione consideriamo il
+ *   26.23% nominale (in realta' l'autonomo paga tutto ma qui si calcola la
+ *   quota "equivalente lavoratore" per simmetria, usata solo per il breakdown)
+ *
+ * @param grossIncome - Reddito lordo annuale
+ * @param contractType - Tipo di contratto
+ */
+export function calculateInpsWorkerContribution(
+	grossIncome: number,
+	contractType: 'dipendente' | 'autonomo' | 'parasubordinato' = 'dipendente'
+): number {
+	if (grossIncome <= 0) return 0;
+
+	// Massimale contributivo 2026 (approssimato)
+	const MASSIMALE = 105014;
+
+	let rate: number;
+	let additionalRate = 0; // quota eccedente il massimale
+	switch (contractType) {
+		case 'dipendente':
+			rate = 0.0919;
+			additionalRate = 0.0101; // oltre il massimale paga 10.19%
+			break;
+		case 'parasubordinato':
+			rate = 0.1124; // 1/3 a carico del collaboratore
+			break;
+		case 'autonomo':
+			// L'autonomo paga tutto ma per il breakdown da lavoratore mostriamo
+			// la quota "comparabile": usiamo comunque 0.2623 come indicativo
+			rate = 0.2623;
+			break;
+	}
+
+	if (grossIncome <= MASSIMALE || additionalRate === 0) {
+		return Math.round(grossIncome * rate * 100) / 100;
+	}
+	const base = MASSIMALE * rate;
+	const excess = (grossIncome - MASSIMALE) * (rate + additionalRate);
+	return Math.round((base + excess) * 100) / 100;
+}
+
+/** Breakdown della busta paga annuale stimata */
+export interface NetSalaryBreakdown {
+	gross: number;
+	inpsContribution: number;
+	irpef: number;
+	regionalTax: number;
+	municipalTax: number;
+	totalTax: number;
+	net: number;
+	/** Aliquota effettiva totale (fiscale + previdenziale) su gross */
+	effectiveRate: number;
+}
+
+/**
+ * Calcolo netto in busta paga approssimato: gross - INPS lavoratore - IRPEF
+ * su imponibile (gross - INPS) - addizionali. Non considera detrazioni da
+ * lavoro dipendente (dipendono da reddito e non vogliamo inventare valori).
+ * Utile per il breakdown del cash flow annuale.
+ */
+export function calculateNetSalary(
+	grossIncome: number,
+	contractType: 'dipendente' | 'autonomo' | 'parasubordinato' = 'dipendente',
+	regionalRate: number = 0.0173,
+	municipalRate: number = 0.007
+): NetSalaryBreakdown {
+	if (grossIncome <= 0) {
+		return {
+			gross: 0, inpsContribution: 0, irpef: 0, regionalTax: 0,
+			municipalTax: 0, totalTax: 0, net: 0, effectiveRate: 0
+		};
+	}
+	const inps = calculateInpsWorkerContribution(grossIncome, contractType);
+	const taxable = Math.max(0, grossIncome - inps);
+	const tax = calculateTotalIncomeTax(taxable, regionalRate, municipalRate);
+	const totalTax = tax.total;
+	const net = Math.max(0, grossIncome - inps - totalTax);
+	return {
+		gross: grossIncome,
+		inpsContribution: Math.round(inps * 100) / 100,
+		irpef: tax.irpef,
+		regionalTax: tax.regional,
+		municipalTax: tax.municipal,
+		totalTax: Math.round(totalTax * 100) / 100,
+		net: Math.round(net * 100) / 100,
+		effectiveRate: (inps + totalTax) / grossIncome
+	};
+}

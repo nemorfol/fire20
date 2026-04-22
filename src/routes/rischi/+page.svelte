@@ -4,11 +4,13 @@
 		Heading,
 		Breadcrumb,
 		BreadcrumbItem,
-		Alert
+		Alert,
+		Button
 	} from 'flowbite-svelte';
 	import {
 		ExclamationCircleOutline,
-		ArrowRightOutline
+		ArrowRightOutline,
+		LayersOutline
 	} from 'flowbite-svelte-icons';
 	import type { Profile } from '$lib/db/index';
 	import { getAllProfiles } from '$lib/db/profiles';
@@ -18,11 +20,12 @@
 		type ProjectionParams,
 		type YearlyProjection
 	} from '$lib/engine/fire-calculator';
-	import { PREDEFINED_RISK_EVENTS, applyRiskEvent, type RiskEvent } from '$lib/engine/risk-scenarios';
+	import { PREDEFINED_RISK_EVENTS, applyRiskEvent, applyRiskEvents, type RiskEvent } from '$lib/engine/risk-scenarios';
 	import RiskScenarioCard from '$lib/components/rischi/RiskScenarioCard.svelte';
 	import CustomScenarioForm from '$lib/components/rischi/CustomScenarioForm.svelte';
 	import StressTestResults from '$lib/components/rischi/StressTestResults.svelte';
 	import ScenarioComparison from '$lib/components/rischi/ScenarioComparison.svelte';
+	import CombinedScenarioPanel from '$lib/components/rischi/CombinedScenarioPanel.svelte';
 
 	let profile = $state<Profile | undefined>(undefined);
 	let loading = $state(true);
@@ -36,9 +39,15 @@
 	let selectedEventIds = $state<Set<string>>(new Set());
 	let comparisonScenarios = $state<{ event: RiskEvent; data: YearlyProjection[] }[]>([]);
 
+	// Combined stress test state
+	let combinedData = $state<YearlyProjection[]>([]);
+	let combinedEvents = $state<RiskEvent[]>([]);
+
 	let hasProfile = $derived(!!profile);
 	let hasResults = $derived(activeEvent !== undefined && stressedData.length > 0);
 	let hasComparison = $derived(comparisonScenarios.length > 0);
+	let hasCombined = $derived(combinedData.length > 0 && combinedEvents.length > 0);
+	let canCombine = $derived(selectedEventIds.size >= 2);
 
 	function getNetWorth(p: Profile): number {
 		const port = p.portfolio as unknown as Record<string, number>;
@@ -61,7 +70,9 @@
 			currentAge: new Date().getFullYear() - p.birthYear,
 			retirementAge: p.retirementAge,
 			lifeExpectancy: p.lifeExpectancy,
-			startYear: new Date().getFullYear()
+			startYear: new Date().getFullYear(),
+			children: p.children,
+			mortgage: p.mortgage
 		};
 	}
 
@@ -101,6 +112,21 @@
 
 	function handleCustomScenario(event: RiskEvent) {
 		applyStressTest(event);
+	}
+
+	function combineSelected() {
+		if (!profile || baseline.length === 0 || selectedEventIds.size < 2) return;
+		const events = PREDEFINED_RISK_EVENTS.filter((e) => selectedEventIds.has(e.id));
+		combinedEvents = events;
+		combinedData = applyRiskEvents(baseline, events);
+		setTimeout(() => {
+			document.getElementById('combined-scenario')?.scrollIntoView({ behavior: 'smooth' });
+		}, 100);
+	}
+
+	function resetCombined() {
+		combinedData = [];
+		combinedEvents = [];
 	}
 
 	onMount(async () => {
@@ -162,10 +188,46 @@
 		{/each}
 	</div>
 
+	<!-- Combine Action Bar -->
+	{#if canCombine || hasCombined}
+		<div class="mb-6 p-4 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+			<div class="flex items-start gap-2">
+				<LayersOutline class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" />
+				<div>
+					<p class="font-semibold text-gray-900 dark:text-white">
+						Hai selezionato {selectedEventIds.size} scenari
+					</p>
+					<p class="text-sm text-gray-600 dark:text-gray-400">
+						Applica tutti gli eventi insieme per vedere l'effetto combinato sul piano.
+					</p>
+				</div>
+			</div>
+			<div class="flex gap-2">
+				{#if hasCombined}
+					<Button color="alternative" size="sm" onclick={resetCombined}>
+						Reset
+					</Button>
+				{/if}
+				<Button color="red" size="sm" disabled={!canCombine} onclick={combineSelected}>
+					<LayersOutline class="w-4 h-4 me-1" />
+					Combina selezionati
+				</Button>
+			</div>
+		</div>
+	{/if}
+
+	<!-- Combined Scenario Panel -->
+	{#if hasCombined}
+		<div id="combined-scenario" class="mb-10">
+			<Heading tag="h2" class="text-xl mb-4">Scenario Combinato</Heading>
+			<CombinedScenarioPanel {baseline} combined={combinedData} events={combinedEvents} />
+		</div>
+	{/if}
+
 	<!-- Scenario Comparison -->
 	{#if hasComparison}
 		<div class="mb-10">
-			<Heading tag="h2" class="text-xl mb-4">Confronto Scenari</Heading>
+			<Heading tag="h2" class="text-xl mb-4">Confronto Scenari (side-by-side)</Heading>
 			<ScenarioComparison {baseline} scenarios={comparisonScenarios} />
 		</div>
 	{/if}

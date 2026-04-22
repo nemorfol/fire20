@@ -25,7 +25,8 @@
 		FireSolid,
 		ChartLineUpOutline,
 		UsersGroupSolid,
-		BuildingSolid
+		BuildingSolid,
+		LandmarkOutline
 	} from 'flowbite-svelte-icons';
 	import favicon from '$lib/assets/favicon.svg';
 	import { t } from '$lib/i18n/store.svelte';
@@ -110,6 +111,9 @@
 					</SidebarItem>
 					<SidebarItem label={t('nav.pensionFund')} href="/fondo-pensione/" active={isActive('/fondo-pensione/')} onclick={() => (sidebarOpen = false)}>
 						{#snippet icon()}<BuildingSolid class={iconClass} />{/snippet}
+					</SidebarItem>
+					<SidebarItem label={t('nav.inpsPension')} href="/pensione/" active={isActive('/pensione/')} onclick={() => (sidebarOpen = false)}>
+						{#snippet icon()}<LandmarkOutline class={iconClass} />{/snippet}
 					</SidebarItem>
 					<SidebarItem label={t('nav.community')} href="/community/" active={isActive('/community/')} onclick={() => (sidebarOpen = false)}>
 						{#snippet icon()}<UsersGroupSolid class={iconClass} />{/snippet}
