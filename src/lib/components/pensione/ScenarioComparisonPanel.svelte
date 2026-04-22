@@ -22,7 +22,21 @@
 		result: INPSSimulatorResult | null;
 	};
 
+	// L'engine INPS supporta eta massima 71 (coefficienti di trasformazione 2025-2026)
+	const MAX_RETIREMENT_AGE = 71;
+
 	let variants = $derived.by((): Variant[] => {
+		const baseAge = baseParams.targetRetirementAge ?? 67;
+		const lateAgeRaw = baseAge + 5;
+		const lateAge = Math.min(MAX_RETIREMENT_AGE, lateAgeRaw);
+		const extraYears = lateAge - baseAge;
+		const lateLabel = extraYears > 0
+			? `+ ${extraYears} ${extraYears === 1 ? 'anno' : 'anni'} di lavoro`
+			: 'Pensionamento posticipato';
+		const lateDescription = lateAge === MAX_RETIREMENT_AGE && lateAgeRaw > MAX_RETIREMENT_AGE
+			? `Posticipare fino a ${lateAge} anni (massimo supportato dai coefficienti INPS)`
+			: `Posticipare il pensionamento di ${extraYears} ${extraYears === 1 ? 'anno' : 'anni'}`;
+
 		const items: Variant[] = [
 			{
 				id: 'base',
@@ -46,11 +60,11 @@
 			},
 			{
 				id: 'late',
-				label: '+ 5 anni di lavoro',
-				description: 'Posticipare il pensionamento di 5 anni',
+				label: lateLabel,
+				description: lateDescription,
 				params: {
 					...baseParams,
-					targetRetirementAge: (baseParams.targetRetirementAge ?? 67) + 5
+					targetRetirementAge: lateAge
 				},
 				result: null
 			},
@@ -83,9 +97,15 @@
 	function pensionAtOptimal(v: Variant): number {
 		if (!v.result) return 0;
 		const target = v.params.targetRetirementAge ?? v.result.earliestRetirementAge;
-		const point = v.result.pensionAtAge.find((p) => p.age === target)
-			?? v.result.pensionAtAge.find((p) => p.age === v.result!.earliestRetirementAge);
-		return point?.monthlyNet ?? 0;
+		const exact = v.result.pensionAtAge.find((p) => p.age === target);
+		if (exact) return exact.monthlyNet;
+		// Fallback: cerca l'eta piu vicina disponibile (preferendo eta maggiori
+		// perche' l'utente ha chiesto "posticipare"). Evita di scivolare sulla
+		// pensione anticipata che sarebbe sempre piu' bassa del baseline.
+		const sorted = [...v.result.pensionAtAge].sort((a, b) => a.age - b.age);
+		const higher = sorted.find((p) => p.age >= target);
+		if (higher) return higher.monthlyNet;
+		return sorted[sorted.length - 1]?.monthlyNet ?? 0;
 	}
 
 	let baseMonthly = $derived(variants[0] ? pensionAtOptimal(variants[0]) : 0);
