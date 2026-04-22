@@ -1,10 +1,10 @@
 <script lang="ts">
 	import {
-		Card, Label, Input, Select, Button, Badge, Toggle,
+		Card, Label, Input, Select, Button, Badge, Toggle, Alert,
 		Table, TableHead, TableHeadCell, TableBody, TableBodyRow, TableBodyCell,
 		Tabs, TabItem
 	} from 'flowbite-svelte';
-	import { ArrowRightOutline, ChartMixedDollarSolid } from 'flowbite-svelte-icons';
+	import { ArrowRightOutline, ChartMixedDollarSolid, InfoCircleSolid } from 'flowbite-svelte-icons';
 	import EChart from '$lib/components/simulazione/EChart.svelte';
 	import { formatCurrency, formatPercent } from '$lib/utils/format';
 	import {
@@ -24,6 +24,10 @@
 	let inflationRate = $state(2);
 	let reversibile = $state(false);
 	let capitalPercentage = $state(50);
+	/** Rivalutazione annua della rendita vitalizia. Configurabile perche'
+	 * varia molto tra fondi e prodotti assicurativi (0% tasso fisso,
+	 * 1-2% gestione separata standard, indicizzati ISTAT rari). */
+	let annuityRevaluationPct = $state(1.5);
 
 	let results = $state<PayoutSimulationResult[]>([]);
 	let selectedStrategy = $state<PayoutStrategy | null>(null);
@@ -39,7 +43,8 @@
 			inflationRate: inflationRate / 100,
 			reversibile,
 			capitalPercentage,
-			contributionsBase
+			contributionsBase,
+			annuityRevaluationRate: annuityRevaluationPct / 100
 		};
 		results = compareAllStrategies(params);
 		selectedStrategy = null;
@@ -188,10 +193,30 @@
 			<Label for="capitalPct" class="mb-1">% in capitale (per opzione mista)</Label>
 			<Input id="capitalPct" type="number" bind:value={capitalPercentage} min={0} max={60} step={5} />
 		</div>
+		<div>
+			<Label for="annuityReval" class="mb-1">Rivalutazione rendita vitalizia (%/anno)</Label>
+			<Input id="annuityReval" type="number" bind:value={annuityRevaluationPct} min={0} max={5} step={0.1} />
+			<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+				0% = rendita fissa. 1-2% = gestione separata standard. Dipende dal fondo/compagnia (vedi sotto).
+			</p>
+		</div>
 		<div class="flex items-end">
 			<Toggle bind:checked={reversibile}>Rendita reversibile al coniuge</Toggle>
 		</div>
 	</div>
+
+	<Alert color="yellow" class="mb-4">
+		{#snippet icon()}
+			<InfoCircleSolid class="w-5 h-5" />
+		{/snippet}
+		<span class="font-semibold">La rendita vitalizia e' una giungla.</span>
+		Ogni fondo pensione ha convenzioni diverse con la compagnia assicurativa, e ogni prodotto ha
+		caratteristiche proprie: tasso di rivalutazione, spread trattenuto (tipicamente 1-1,5%),
+		eventuali garanzie di minimo, coefficienti di conversione. Le stime qui mostrate sono
+		<strong>indicative</strong>: per avere numeri precisi chiedi al tuo fondo il
+		<em>prospetto informativo</em> e la <em>nota informativa sulle prestazioni</em>, poi
+		inserisci nel campo sopra il tasso di rivalutazione effettivo del tuo prodotto.
+	</Alert>
 
 	<Button color="primary" onclick={runSimulation} class="w-full md:w-auto">
 		<ChartMixedDollarSolid class="w-4 h-4 me-2" />

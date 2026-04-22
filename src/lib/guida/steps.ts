@@ -188,6 +188,17 @@ Con spese annue di 22.000€ e FIRE number di 550.000€, è al <strong>15%</str
 <div class="warning">
 <strong>Attenzione:</strong> Non includere la prima casa nel calcolo del patrimonio investibile per il FIRE, a meno che tu non abbia intenzione di venderla. La casa in cui vivi non genera reddito e non puoi "mangiare i muri".
 </div>
+
+<h3>Planner familiare: figli e mutuo</h3>
+<p>La tab <strong>Famiglia</strong> nel profilo modella due voci tipicamente italiane con forte impatto sul FIRE Number:</p>
+<ul>
+<li><strong>Figli a carico:</strong> per ogni figlio inserisci anno di nascita, spesa mensile (default 500€), eta' di indipendenza (default 25) e, opzionalmente, il costo universitario (default 8.000€/anno × 5 anni dai 19). Le spese sono inflazionate anno per anno e cessano automaticamente al raggiungimento dell'eta' di indipendenza.</li>
+<li><strong>Mutuo prima casa:</strong> capitale residuo, tasso, rata mensile e mesi residui. Il pulsante "Calcola dalla formula" deriva la rata con ammortamento francese. Il mutuo rientra nel FIRE Number solo per le rate che cadono dopo il pensionamento; se si estingue prima, non pesa.</li>
+</ul>
+
+<div class="tip">
+<strong>Come entra nei calcoli:</strong> il FIRE Number include ora il valore attuale (PV) delle spese figli e delle rate mutuo che cadono post-FIRE, scontato al rendimento reale. Nella tabella di proiezione anno-per-anno (in "Vista dettagliata") vedi righe separate "Spese figli" e "Rata mutuo" e puoi verificare quanto del prelievo dal portafoglio va a coprirle.
+</div>
 `
 	},
 
@@ -288,6 +299,19 @@ Se il numero ti sembra troppo basso o troppo alto, verifica <em>Profilo → Pens
 
 <div class="warning">
 <strong>Attenzione:</strong> Il FIRE Number calcolato oggi dovrà essere aggiustato per l'inflazione. Se oggi servono 600.000€ e prevedi di raggiungerli tra 15 anni con un'inflazione media del 2%, il numero target in euro futuri sarà circa 807.000€. Il calcolatore dell'app gestisce questo automaticamente.
+</div>
+
+<h3>Cash flow annuale dettagliato</h3>
+<p>La tabella di proiezione del Calcolatore ha un toggle <strong>"Vista dettagliata"</strong> che apre per ogni anno un breakdown completo:</p>
+<ul>
+<li><strong>Entrate:</strong> stipendio lordo → contributi INPS (9,19% dipendente) → IRPEF + addizionali regionali/comunali → stipendio netto, + eventuale pensione INPS e altri redditi perpetui (affitti, dividendi).</li>
+<li><strong>Uscite:</strong> spese base (da profilo) + spese figli + rata mutuo = spese totali dell'anno.</li>
+<li><strong>Portafoglio:</strong> rendimenti lordi → tasse sui rendimenti → rendimenti netti → nuovi contributi → prelievi → valore fine anno.</li>
+</ul>
+<p>Accanto al toggle c'e' anche il pulsante <strong>"Esporta CSV"</strong> che scarica il cash flow completo in formato Excel italiano (separatore <code>;</code>, codifica UTF-8, decimali con virgola).</p>
+
+<div class="tip">
+<strong>Perche' serve:</strong> il FIRE Number e' solo un numero finale. Se vuoi capire <em>come</em> ci si arriva, il cash flow anno-per-anno ti mostra se in un certo anno servono piu' prelievi del previsto (es. perche' cadono 2 anni di universita' + mutuo), oppure se lo stipendio netto stimato corrisponde al netto reale che hai in busta paga. E' il modo per verificare che le ipotesi del modello siano coerenti con la tua realta'.
 </div>
 `
 	},
@@ -984,7 +1008,12 @@ Per compensare, dovresti vendere un'azione o un'obbligazione singola con 5.000�
 </div>
 
 <div class="tip">
-<strong>Rendita vitalizia: si rivaluta!</strong> In Italia la rendita vitalizia non e' fissa per tutta la vita. La compagnia assicurativa gestisce il capitale in una <em>gestione separata</em> e ogni anno rivaluta la rendita in base al rendimento realizzato, al netto di una trattenuta tipica dell'1-1,5%. Se il fondo rende il 3%, la rendita cresce di circa l'1,5-2% l'anno: non batte l'inflazione alta ma compensa in parte il potere d'acquisto. Il simulatore del FIRE Planner stima la rivalutazione usando <code>rendimento_atteso − 1,25%</code>; puoi vederla nel dettaglio anno per anno della strategia "Rendita Vitalizia".
+<strong>Rendita vitalizia: si rivaluta, ma quanto dipende dal prodotto.</strong> In Italia la rendita vitalizia non e' sempre fissa: molti prodotti prevedono una <em>rivalutazione annua</em> basata sulla gestione separata della compagnia assicurativa, al netto di una trattenuta tipica dell'1-1,5%. Pero' e' una giungla: ogni fondo ha convenzioni diverse, ci sono rendite fisse, rendite rivalutabili, rendite indicizzate ISTAT (rare), e coefficienti di conversione che variano. Nel simulatore del FIRE Planner trovi un campo <strong>"Rivalutazione rendita vitalizia (%/anno)"</strong> configurabile: il default 1,5% e' una stima "rivalutabile standard", ma per avere numeri precisi sul tuo caso dovresti chiedere al tuo fondo il <em>prospetto informativo</em> e la <em>nota informativa sulle prestazioni</em>. Range indicativi:
+<ul>
+<li><strong>0%</strong> — rendita a tasso fisso nominale (alcuni PIP e prodotti legacy)</li>
+<li><strong>1-2%</strong> — rendita rivalutabile su gestione separata standard (caso piu' comune)</li>
+<li><strong>2%+</strong> — prodotti con rivalutazione aggressiva o minimi garantiti alti (rari)</li>
+</ul>
 </div>
 
 <div class="example">
