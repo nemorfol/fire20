@@ -16,6 +16,7 @@
 	} from '$lib/engine/pension-fund';
 
 	let montante = $state(200000);
+	let contributionsBase = $state(150000);
 	let age = $state(67);
 	let gender = $state<'M' | 'F'>('M');
 	let yearsInFund = $state(25);
@@ -37,7 +38,8 @@
 			expectedReturnRate: expectedReturnRate / 100,
 			inflationRate: inflationRate / 100,
 			reversibile,
-			capitalPercentage
+			capitalPercentage,
+			contributionsBase
 		};
 		results = compareAllStrategies(params);
 		selectedStrategy = null;
@@ -150,6 +152,17 @@
 		<div>
 			<Label for="montante" class="mb-1">Montante accumulato (EUR)</Label>
 			<Input id="montante" type="number" bind:value={montante} min={1000} step={1000} />
+			<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+				Valore totale del fondo a fine accumulo (contributi + TFR + rendimenti).
+			</p>
+		</div>
+		<div>
+			<Label for="contributionsBase" class="mb-1">Contributi versati + TFR (base imponibile)</Label>
+			<Input id="contributionsBase" type="number" bind:value={contributionsBase} min={0} step={1000} max={montante} />
+			<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+				Solo questa quota e' tassata al 15%-9% in prestazione. I rendimenti sono gia'
+				stati tassati al 20% durante l'accumulo e non subiscono ulteriore tassazione.
+			</p>
 		</div>
 		<div>
 			<Label for="age" class="mb-1">Eta' al pensionamento</Label>

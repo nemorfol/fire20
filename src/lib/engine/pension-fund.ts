@@ -27,6 +27,21 @@ export interface PayoutSimulationParams {
 	reversibile: boolean;
 	/** Per erogazione in capitale: percentuale (0-60%) */
 	capitalPercentage: number;
+	/**
+	 * Base imponibile: contributi versati (dedotti) + TFR conferito.
+	 * NON include i rendimenti maturati nel fondo, che sono gia' tassati al 20%
+	 * annualmente durante l'accumulo. La tassazione agevolata (15%-9%) in fase di
+	 * prestazione si applica solo a questa quota.
+	 * Se omesso, fallback conservativo = montante (come se tutto fosse tassabile).
+	 */
+	contributionsBase?: number;
+	/**
+	 * Tasso di rivalutazione annua della rendita vitalizia (gestione separata
+	 * della compagnia assicurativa, al netto della trattenuta). Tipico in Italia:
+	 * max(0, rendimento gestione - 1.25%). Se omesso viene stimato a partire dal
+	 * rendimento atteso meno uno spread di 1.25%.
+	 */
+	annuityRevaluationRate?: number;
 }
 
 export interface YearlyPayout {
@@ -206,28 +221,63 @@ function calculateFrazionataTaxRate(yearsInFund: number): number {
 /** Assegno sociale mensile 2026 (stima) */
 const SOCIAL_ALLOWANCE_MONTHLY_2026 = 534.41;
 
+/**
+ * Spread tipico trattenuto dalla compagnia assicurativa sulla gestione
+ * separata della rendita vitalizia. Tipicamente 1-1.5%.
+ */
+const ANNUITY_INSURER_SPREAD = 0.0125;
+
+/**
+ * Frazione del montante soggetta a tassazione in fase di prestazione.
+ * I rendimenti maturati nel fondo sono stati gia' tassati al 20% annualmente
+ * durante l'accumulo, quindi la tassazione agevolata (15%-9%) si applica
+ * solo a contributi + TFR.
+ */
+function getTaxableFraction(montante: number, contributionsBase?: number): number {
+	if (!contributionsBase || contributionsBase <= 0 || montante <= 0) return 1;
+	return Math.min(1, contributionsBase / montante);
+}
+
 // ─── Simulazioni per strategia ──────────────────────────────────────────────────
 
 function simulateVitalizia(params: PayoutSimulationParams): PayoutSimulationResult {
-	const { montante, age, gender, yearsInFund, reversibile } = params;
+	const {
+		montante, age, gender, yearsInFund, reversibile,
+		expectedReturnRate, contributionsBase, annuityRevaluationRate
+	} = params;
 	const taxRate = calculateBenefitTaxRate(yearsInFund);
 	const convFactor = getConversionFactor(age, gender, reversibile);
 	const lifeExp = getLifeExpectancy(age, gender);
 	const duration = Math.round(lifeExp);
+	const taxableFraction = getTaxableFraction(montante, contributionsBase);
 
-	const annualGross = montante * convFactor;
-	const annualTax = annualGross * taxRate;
-	const annualNet = annualGross - annualTax;
+	// Rivalutazione annua: rendimento gestione separata - spread compagnia.
+	// Se non passato esplicitamente dall'utente, stimato dal rendimento atteso.
+	const revaluationRate = annuityRevaluationRate ?? Math.max(0, expectedReturnRate - ANNUITY_INSURER_SPREAD);
 
 	const yearlyPayouts: YearlyPayout[] = [];
+	let totalGross = 0;
+	let totalTax = 0;
+	let totalNet = 0;
+	let currentAnnualGross = montante * convFactor;
+
 	for (let y = 1; y <= duration; y++) {
+		// La rendita si rivaluta annualmente (dopo il primo anno)
+		if (y > 1) currentAnnualGross *= 1 + revaluationRate;
+		const annualTax = currentAnnualGross * taxableFraction * taxRate;
+		const annualNet = currentAnnualGross - annualTax;
+
 		yearlyPayouts.push({
 			year: y,
-			gross: Math.round(annualGross),
+			gross: Math.round(currentAnnualGross),
 			tax: Math.round(annualTax),
 			net: Math.round(annualNet),
 			remainingCapital: 0 // Capitale trasferito alla compagnia assicurativa
 		});
+
+		totalGross += currentAnnualGross;
+		totalTax += annualTax;
+		totalNet += annualNet;
 	}
 
 	return {
@@ -235,31 +285,32 @@ function simulateVitalizia(params: PayoutSimulationParams): PayoutSimulationResu
 		strategyName: 'Rendita Vitalizia',
 		taxRate,
 		yearlyPayouts,
-		totalGrossReceived: Math.round(annualGross * duration),
-		totalNetReceived: Math.round(annualNet * duration),
-		totalTaxPaid: Math.round(annualTax * duration),
+		totalGrossReceived: Math.round(totalGross),
+		totalNetReceived: Math.round(totalNet),
+		totalTaxPaid: Math.round(totalTax),
 		capitalToHeirs: 0, // Capitale perso alla morte (salvo reversibilita')
 		duration,
-		monthlyNetAverage: Math.round(annualNet / 12),
+		monthlyNetAverage: duration > 0 ? Math.round(totalNet / duration / 12) : 0,
 		pros: [
 			'Rendita garantita a vita, anche se si vive oltre l\'aspettativa',
-			'Importo certo e stabile ogni mese',
+			`La rendita si rivaluta annualmente (~${(revaluationRate * 100).toFixed(2)}% stimato): compensa in parte l'inflazione`,
 			reversibile ? 'Reversibile al coniuge (60% della rendita)' : 'Tassazione agevolata (dal 15% al 9%)'
 		],
 		cons: [
 			'Capitale trasferito alla compagnia assicurativa',
 			'Nessun capitale agli eredi (salvo opzione reversibile)',
-			'Rendita fissa, perde potere d\'acquisto con l\'inflazione',
+			'Rivalutazione spesso inferiore all\'inflazione reale',
 			'Fattore di conversione spesso poco vantaggioso'
 		]
 	};
 }
 
 function simulateDurataDefinita(params: PayoutSimulationParams): PayoutSimulationResult {
-	const { montante, age, gender, yearsInFund, expectedReturnRate } = params;
+	const { montante, age, gender, yearsInFund, expectedReturnRate, contributionsBase } = params;
 	const taxRate = calculateBenefitTaxRate(yearsInFund);
 	const lifeExp = getLifeExpectancy(age, gender);
 	const duration = Math.round(lifeExp);
+	const taxableFraction = getTaxableFraction(montante, contributionsBase);
 
 	const yearlyPayouts: YearlyPayout[] = [];
 	let remainingCapital = montante;
@@ -275,7 +326,7 @@ function simulateDurataDefinita(params: PayoutSimulationParams): PayoutSimulatio
 		// Rata annuale = capitale rimanente / anni restanti
 		const remainingYears = duration - y + 1;
 		const annualGross = remainingCapital / remainingYears;
-		const annualTax = annualGross * taxRate;
+		const annualTax = annualGross * taxableFraction * taxRate;
 		const annualNet = annualGross - annualTax;
 
 		remainingCapital -= annualGross;
@@ -324,10 +375,11 @@ function simulateDurataDefinita(params: PayoutSimulationParams): PayoutSimulatio
 }
 
 function simulatePrelieriLiberi(params: PayoutSimulationParams): PayoutSimulationResult {
-	const { montante, age, gender, yearsInFund, expectedReturnRate } = params;
+	const { montante, age, gender, yearsInFund, expectedReturnRate, contributionsBase } = params;
 	const taxRate = calculateBenefitTaxRate(yearsInFund);
 	const lifeExp = getLifeExpectancy(age, gender);
 	const duration = Math.round(lifeExp);
+	const taxableFraction = getTaxableFraction(montante, contributionsBase);
 
 	// I prelievi liberi hanno un tetto: non si puo' prelevare piu' di quanto
 	// si sarebbe ricevuto con la rendita a durata definita (cumulativamente).
@@ -348,7 +400,7 @@ function simulatePrelieriLiberi(params: PayoutSimulationParams): PayoutSimulatio
 		// Con prelievi liberi, si puo' scegliere quanto prelevare (entro i limiti)
 		// Simuliamo un prelievo uniforme
 		const annualGross = remainingCapital / remainingYears;
-		const annualTax = annualGross * taxRate;
+		const annualTax = annualGross * taxableFraction * taxRate;
 		const annualNet = annualGross - annualTax;
 
 		remainingCapital -= annualGross;
@@ -398,11 +450,12 @@ function simulatePrelieriLiberi(params: PayoutSimulationParams): PayoutSimulatio
 }
 
 function simulateFrazionata(params: PayoutSimulationParams): PayoutSimulationResult {
-	const { montante, age, gender, yearsInFund, expectedReturnRate } = params;
+	const { montante, age, gender, yearsInFund, expectedReturnRate, contributionsBase } = params;
 	const taxRate = calculateFrazionataTaxRate(yearsInFund);
 	const lifeExp = getLifeExpectancy(age, gender);
 	// Erogazione frazionata: minimo 5 anni, massimo aspettativa di vita
 	const duration = Math.max(5, Math.round(lifeExp));
+	const taxableFraction = getTaxableFraction(montante, contributionsBase);
 
 	const yearlyPayouts: YearlyPayout[] = [];
 	let remainingCapital = montante;
@@ -418,7 +471,7 @@ function simulateFrazionata(params: PayoutSimulationParams): PayoutSimulationRes
 		remainingCapital += returns;
 
 		const annualGross = annualGrossBase;
-		const annualTax = annualGross * taxRate;
+		const annualTax = annualGross * taxableFraction * taxRate;
 		const annualNet = annualGross - annualTax;
 
 		remainingCapital -= annualGross;
@@ -462,10 +515,15 @@ function simulateFrazionata(params: PayoutSimulationParams): PayoutSimulationRes
 }
 
 function simulateCapitale(params: PayoutSimulationParams): PayoutSimulationResult {
-	const { montante, age, gender, yearsInFund, capitalPercentage, expectedReturnRate, reversibile } = params;
+	const {
+		montante, age, gender, yearsInFund, capitalPercentage,
+		expectedReturnRate, reversibile, contributionsBase, annuityRevaluationRate
+	} = params;
 	const taxRate = calculateBenefitTaxRate(yearsInFund);
 	const lifeExp = getLifeExpectancy(age, gender);
 	const duration = Math.round(lifeExp);
+	const taxableFraction = getTaxableFraction(montante, contributionsBase);
+	const revaluationRate = annuityRevaluationRate ?? Math.max(0, expectedReturnRate - ANNUITY_INSURER_SPREAD);
 
 	// Massimo 60% in capitale, il resto in rendita
 	const capPct = Math.min(60, Math.max(0, capitalPercentage)) / 100;
@@ -487,8 +545,8 @@ function simulateCapitale(params: PayoutSimulationParams): PayoutSimulationResul
 	const capitalAmount = montante * effectiveCapPct;
 	const annuityMontante = montante * (1 - effectiveCapPct);
 
-	// Primo anno: capitale
-	const capitalTax = capitalAmount * taxRate;
+	// Primo anno: capitale (la stessa frazione tassabile si applica alla quota capitale)
+	const capitalTax = capitalAmount * taxableFraction * taxRate;
 	const capitalNet = capitalAmount - capitalTax;
 
 	const yearlyPayouts: YearlyPayout[] = [];
@@ -505,22 +563,24 @@ function simulateCapitale(params: PayoutSimulationParams): PayoutSimulationResul
 		remainingCapital: Math.round(annuityMontante)
 	});
 
-	// Anni successivi: rendita vitalizia sulla parte residua
+	// Anni successivi: rendita vitalizia sulla parte residua con rivalutazione annua
 	if (annuityMontante > 0) {
 		const convFactor = getConversionFactor(age, gender, reversibile);
-		const annualRenditaGross = annuityMontante * convFactor;
-		const annualRenditaTax = annualRenditaGross * taxRate;
-		const annualRenditaNet = annualRenditaGross - annualRenditaTax;
+		let currentRenditaGross = annuityMontante * convFactor;
 
 		for (let y = 2; y <= duration; y++) {
+			if (y > 2) currentRenditaGross *= 1 + revaluationRate;
+			const annualRenditaTax = currentRenditaGross * taxableFraction * taxRate;
+			const annualRenditaNet = currentRenditaGross - annualRenditaTax;
+
 			yearlyPayouts.push({
 				year: y,
-				gross: Math.round(annualRenditaGross),
+				gross: Math.round(currentRenditaGross),
 				tax: Math.round(annualRenditaTax),
 				net: Math.round(annualRenditaNet),
 				remainingCapital: 0
 			});
-			totalGross += annualRenditaGross;
+			totalGross += currentRenditaGross;
 			totalTax += annualRenditaTax;
 			totalNet += annualRenditaNet;
 		}

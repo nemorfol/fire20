@@ -979,6 +979,14 @@ Per compensare, dovresti vendere un'azione o un'obbligazione singola con 5.000�
 </ul>
 <p>Confronta: contribuisci deducendo al 35-43%, e paghi il 9-15% in uscita. Il vantaggio netto è enorme.</p>
 
+<div class="warning">
+<strong>Attenzione alla base imponibile:</strong> il 15%-9% si applica <em>solo alla quota di contributi versati (dedotti) e al TFR conferito</em>, NON all'intero montante. I rendimenti maturati dal fondo durante l'accumulo sono gia' stati tassati al 20% annualmente e non subiscono ulteriore tassazione in uscita. Di conseguenza, a parita' di versamenti, <strong>rendita vitalizia, durata definita, prelievi liberi e capitale 60% pagano tutte lo stesso ammontare totale di tasse</strong>. Cambia solo la distribuzione temporale del prelievo, non l'onere fiscale complessivo. Il simulatore FIRE Planner richiede il campo "Contributi versati + TFR" proprio per calcolare correttamente questa frazione.
+</div>
+
+<div class="tip">
+<strong>Rendita vitalizia: si rivaluta!</strong> In Italia la rendita vitalizia non e' fissa per tutta la vita. La compagnia assicurativa gestisce il capitale in una <em>gestione separata</em> e ogni anno rivaluta la rendita in base al rendimento realizzato, al netto di una trattenuta tipica dell'1-1,5%. Se il fondo rende il 3%, la rendita cresce di circa l'1,5-2% l'anno: non batte l'inflazione alta ma compensa in parte il potere d'acquisto. Il simulatore del FIRE Planner stima la rivalutazione usando <code>rendimento_atteso − 1,25%</code>; puoi vederla nel dettaglio anno per anno della strategia "Rendita Vitalizia".
+</div>
+
 <div class="example">
 <strong>Esempio completo su 20 anni:</strong><br>
 Contributo annuo: 5.300€. Aliquota marginale: 35%.<br><br>
