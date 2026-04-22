@@ -433,34 +433,42 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 			: 0;
 		const nominalContribution = annualContribution * inflationCumulative;
 		const incomeAdjusted = nominalContribution * lifeImpact.incomeMultiplier + lifeIncomeDeltaNominal;
-		const familyDrain = isRetired ? 0 : family.total;
-		const eventDrain = isRetired ? 0 : lifeExpenseNominal;
-		const eventBoost = isRetired ? 0 : lifeBonusNominal;
-		const contributions = isRetired
-			? 0
-			: Math.max(0, incomeAdjusted - familyDrain - eventDrain + eventBoost) + accumPensionIncome;
-
-		// Prelievi (solo in fase di decumulo)
+		// Contributi e prelievi: calcolo unificato che gestisce pre-FIRE
+		// (accumulazione) e post-FIRE (decumulo con surplus reinvestito).
+		let contributions = 0;
 		let actualWithdrawals = 0;
-		if (isRetired) {
-			// Salva il portafoglio al primo anno di pensione
+
+		if (!isRetired) {
+			// PRE-FIRE: il "risparmio netto" disponibile da reddito e' il
+			// contributo base, modulato dagli eventi di vita.
+			const savingsBase = incomeAdjusted - family.total - lifeExpenseNominal + lifeBonusNominal;
+			if (savingsBase >= 0) {
+				contributions = savingsBase + accumPensionIncome;
+			} else {
+				// Deficit: spese superano il reddito (es. grossa spesa una-tantum).
+				// Preleviamo la differenza dal portafoglio, accumPensionIncome comunque entra.
+				contributions = accumPensionIncome;
+				actualWithdrawals = -savingsBase;
+			}
+		} else {
+			// POST-FIRE: calcolo spese e redditi passivi dell'anno, poi
+			// determino se serve prelevare dal portafoglio o se c'e' surplus
+			// da reinvestire.
 			if (retirementPortfolio === 0) {
 				retirementPortfolio = portfolio;
 				retirementYear = i;
 			}
 			const yearsSinceRetirement = i - retirementYear;
 
-			// Pensione INPS: disponibile solo dopo l'eta' pensionabile
-			// La pensione INPS cresce con l'inflazione (perequazione automatica)
+			// Pensione INPS cresce con l'inflazione (perequazione automatica)
 			const pensionIncome = age >= pensionAge ? annualPension * inflationCumulative : 0;
 
+			// Prelievo BASE calcolato dalla strategia (per coprire annualExpenses)
+			let baseWithdrawal: number;
 			if (withdrawalStrategy === 'fixed') {
-				// Regola del 4%: preleva le spese effettive aggiustate per inflazione dall'inizio
-				actualWithdrawals = annualExpenses * inflationCumulative;
+				baseWithdrawal = annualExpenses * inflationCumulative;
 			} else {
-				// Strategie dinamiche (VPW, CAPE, Guyton-Klinger):
-				// l'importo dipende dal portafoglio corrente, eta', ecc.
-				actualWithdrawals = calculateWithdrawal(withdrawalStrategy, {
+				baseWithdrawal = calculateWithdrawal(withdrawalStrategy, {
 					initialPortfolio: retirementPortfolio,
 					portfolio,
 					rate: withdrawalRate,
@@ -479,15 +487,22 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 				});
 			}
 
-			// Spese aggiuntive familiari post-FIRE (figli ancora a carico, mutuo
-			// non ancora estinto) + spese una-tantum da life events: si aggiungono
-			// al prelievo richiesto. I bonus si sottraggono (cassa aggiuntiva).
-			actualWithdrawals += family.total + lifeExpenseNominal - lifeBonusNominal;
-			actualWithdrawals = Math.max(0, actualWithdrawals);
+			// Bilancio di cassa dell'anno:
+			// entrate passive = pensione + altri redditi + bonus una-tantum
+			// uscite = prelievo base + spese famiglia + spese una-tantum
+			const totalPassiveIncome = pensionIncome + otherIncomeActive + lifeBonusNominal;
+			const totalCashNeeds = baseWithdrawal + family.total + lifeExpenseNominal;
+			const netNeed = totalCashNeeds - totalPassiveIncome;
 
-			// Pensione INPS e altri redditi (affitti/dividendi) riducono quanto serve
-			// prelevare dal portafoglio
-			actualWithdrawals = Math.max(0, actualWithdrawals - pensionIncome - otherIncomeActive);
+			if (netNeed > 0) {
+				// Serve prelevare: le entrate non coprono le uscite.
+				actualWithdrawals = netNeed;
+			} else {
+				// Surplus: le entrate coprono tutto, l'eccesso va reinvestito
+				// nel portafoglio come contribuzione.
+				actualWithdrawals = 0;
+				contributions = -netNeed;
+			}
 			previousWithdrawal = actualWithdrawals;
 		}
 
