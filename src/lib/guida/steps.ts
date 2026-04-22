@@ -1053,11 +1053,11 @@ Dal 2025 in poi, per i successivi 20 anni, Mario può dedurre fino a <strong>5.3
 <p>La <strong>Legge di Bilancio 2026</strong> (in vigore dal 1° luglio 2026) ha rivoluzionato le opzioni di erogazione del fondo pensione. Prima esistevano solo rendita vitalizia e capitale (max 50%). Ora le opzioni sono 5:</p>
 
 <h3>1. Rendita Vitalizia (classica)</h3>
-<p>L'opzione tradizionale: il capitale viene trasferito a una compagnia assicurativa che paga un assegno mensile <strong>a vita</strong>. L'importo dipende dall'età, dal genere e dalle tavole attuariali.</p>
+<p>L'opzione tradizionale: il capitale viene trasferito a una compagnia assicurativa che paga un assegno mensile <strong>a vita</strong>. L'importo dipende dall'età, dal genere e dalle tavole attuariali. La rendita si <strong>rivaluta annualmente</strong> in base al rendimento della gestione separata della compagnia (tipicamente rendimento gestione meno uno spread dell'1-1,5%).</p>
 <ul>
-<li><strong>Tassazione</strong>: 15% → 9% (scende dello 0,30%/anno dopo il 15° anno)</li>
-<li><strong>Pro</strong>: certezza dell'importo, protezione dalla longevità</li>
-<li><strong>Contro</strong>: il capitale esce dal fondo, nulla agli eredi al decesso, importo fisso</li>
+<li><strong>Tassazione</strong>: 15% → 9% (scende dello 0,30%/anno dopo il 15° anno) sulla sola quota contributi+TFR; i rendimenti gia' tassati al 20% durante l'accumulo non vengono tassati di nuovo</li>
+<li><strong>Pro</strong>: protezione dalla longevità, rivalutazione che compensa parte dell'inflazione</li>
+<li><strong>Contro</strong>: il capitale esce dal fondo, nulla agli eredi al decesso (salvo reversibilita' al coniuge), rivalutazione spesso inferiore all'inflazione</li>
 </ul>
 
 <h3>2. Rendita a Durata Definita <span style="color: #3b82f6; font-size: 0.8em;">[NUOVA 2026]</span></h3>
@@ -1105,12 +1105,12 @@ Se muori dopo 10 anni con 120.000€ residui → <strong>eredi ricevono 120.000�
 
 <div class="example">
 <strong>Confronto strategico per FIRE:</strong><br><br>
-<strong>Montante 200.000€, 25 anni nel fondo (aliquota 12%), età 62:</strong><br>
-- Rendita vitalizia: ~800€/mese netti, a vita, nulla agli eredi<br>
-- Rendita durata definita: ~750€/mese iniziali, ricalcolata, <strong>eredi ok</strong><br>
+<strong>Montante 200.000€ (150k contributi + 50k rendimenti), 25 anni nel fondo (aliquota 12%), età 62:</strong><br>
+- Rendita vitalizia: ~800€/mese netti iniziali, rivalutata ~1,5-2%/anno, a vita, nulla agli eredi<br>
+- Rendita durata definita: ~750€/mese iniziali, ricalcolata in base ai rendimenti, <strong>eredi ok</strong><br>
 - <strong>Prelievi liberi: prelevi ~9.000-10.000€/anno quando serve, capitale resta investito</strong><br>
-- 60% capitale (120.000€ netti ~106.000€) + 40% in rendita (~320€/mese)<br><br>
-Per un FIRE seeker, i <strong>prelievi liberi</strong> o il <strong>mix capitale 60% + rendita durata definita</strong> sono generalmente le opzioni migliori.
+- 60% capitale (120.000€ netti ~112.000€) + 40% in rendita rivalutata (~340€/mese iniziali)<br><br>
+<strong>Nota:</strong> a parita' di montante e contributi dedotti, le tasse totali pagate sono le stesse per tutte le opzioni tranne la frazionata (piu' cara del 40-65%). Per un FIRE seeker, i <strong>prelievi liberi</strong> o il <strong>mix capitale 60% + rendita durata definita</strong> sono generalmente le opzioni migliori per flessibilita' ed eredita'.
 </div>
 
 <div class="tip">
