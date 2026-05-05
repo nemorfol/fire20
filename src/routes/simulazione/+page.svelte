@@ -14,10 +14,13 @@
 	} from 'flowbite-svelte-icons';
 	import type { MonteCarloParams, MonteCarloResult } from '$lib/engine/monte-carlo';
 	import type { SimulationResult } from '$lib/db/index';
-	import { sp500Returns } from '$lib/data/sp500';
-	import { bondReturns } from '$lib/data/bonds';
 	import { goldReturns } from '$lib/data/gold';
-	import { inflationUSReturns } from '$lib/data/inflation-us';
+	import {
+		ALL_SERIES_PRESETS,
+		getSeriesPreset,
+		type SeriesPresetId
+	} from '$lib/data/default-series';
+	import { DEFAULT_2026 } from '$lib/engine/assumptions';
 	import {
 		createResult,
 		getAllResults,
@@ -48,11 +51,13 @@
 	let worker: Worker | null = null;
 	let timerInterval: ReturnType<typeof setInterval> | null = null;
 
-	// Historical returns as decimals
-	const historicalStockReturns = sp500Returns.map((r) => r.value / 100);
-	const historicalBondReturns = bondReturns.map((r) => r.value / 100);
+	// Historical returns as decimals - default IT-centric (MSCI World + BTP + ISTAT).
+	// L'utente puo' switchare al preset US classico (S&P 500 + bond US + CPI USA).
+	let seriesPresetId = $state<SeriesPresetId>('it-default');
+	let historicalStockReturns = $derived(getSeriesPreset(seriesPresetId).stocks);
+	let historicalBondReturns = $derived(getSeriesPreset(seriesPresetId).bonds);
 	const historicalGoldReturns = goldReturns.map((r) => r.value / 100);
-	const historicalInflation = inflationUSReturns.map((r) => r.value / 100);
+	let historicalInflation = $derived(getSeriesPreset(seriesPresetId).inflation);
 
 	onMount(() => {
 		loadPreviousResults();
@@ -180,7 +185,13 @@
 					historicalInflation: params.historicalInflation,
 					useCorrelation: params.useCorrelation,
 					assetClasses: params.assetClasses,
-					correlationMatrix: params.correlationMatrix
+					correlationMatrix: params.correlationMatrix,
+					glidePathEnabled: params.glidePathEnabled,
+					glidePathStartEquity: params.glidePathStartEquity,
+					glidePathEndEquity: params.glidePathEndEquity,
+					stampDutyRate: params.stampDutyRate ?? DEFAULT_2026.capital.stampDuty,
+					ivafeRate: params.ivafeRate ?? DEFAULT_2026.capital.ivafe,
+					foreignBrokerShare: params.foreignBrokerShare ?? 0
 				} satisfies MonteCarloParams
 			});
 		} catch (err) {
@@ -322,6 +333,29 @@
 			Salva Risultato
 		</Button>
 	{/if}
+</div>
+
+<!-- Series preset switcher -->
+<div class="mb-4 p-4 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
+	<div class="flex flex-col sm:flex-row sm:items-center gap-3">
+		<div class="flex-1">
+			<label for="series-preset" class="text-sm font-semibold text-gray-700 dark:text-gray-200 block mb-1">
+				Serie storica di riferimento
+			</label>
+			<p class="text-xs text-gray-600 dark:text-gray-400">
+				{getSeriesPreset(seriesPresetId).description}
+			</p>
+		</div>
+		<select
+			id="series-preset"
+			bind:value={seriesPresetId}
+			class="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm"
+		>
+			{#each ALL_SERIES_PRESETS as preset (preset.id)}
+				<option value={preset.id}>{preset.label}</option>
+			{/each}
+		</select>
+	</div>
 </div>
 
 <!-- Configuration Panel -->

@@ -213,6 +213,11 @@ Con spese annue di 22.000€ e FIRE number di 550.000€, è al <strong>15%</str
 <div class="tip">
 <strong>Come entra nei calcoli:</strong> il FIRE Number include ora il valore attuale (PV) delle spese figli e delle rate mutuo che cadono post-FIRE, scontato al rendimento reale. Nella tabella di proiezione anno-per-anno (in "Vista dettagliata") vedi righe separate "Spese figli" e "Rata mutuo" e puoi verificare quanto del prelievo dal portafoglio va a coprirle.
 </div>
+
+<h3>Pianificazione di coppia (nucleo a due redditi)</h3>
+<p>Nel tab "Coniuge" del profilo puoi attivare il <strong>partner</strong>: nome, anno di nascita, reddito lordo, tipo contratto (dipendente/autonomo/parasubordinato), pensione INPS attesa, contributo annuo al fondo pensione. Il calcolatore modella il nucleo a <strong>due redditi distinti</strong>: la fiscalita' italiana e' individuale (no joint filing americano), quindi due IRPEF separate, due INPS, eventualmente due fondi pensione. Le spese restano di nucleo (definite in <code>annualExpenses</code>).</p>
+<p>Cosa cambia per il FIRE: il netto del coniuge si somma ai contributi pre-FIRE, e alla pensione del coniuge si somma alle entrate post-FIRE riducendo il prelievo necessario. In molti casi reali questo cambia drasticamente il piano: una coppia con entrambi al lavoro raggiunge il FIRE molto prima di quanto suggerirebbe un calcolo single-user.</p>
+<p>Nel cash flow tabellare trovi la colonna "Netto coniuge" anno per anno. La pensione del partner e' indicizzata all'inflazione e attivata alla sua <code>pensionAge</code> personale (puo' essere diversa dalla tua: gestione separata).</p>
 `
 	},
 
@@ -484,6 +489,14 @@ La differenza? Il FIRE Number è sceso di 342.000€ E il risparmio mensile è p
 <div class="warning">
 <strong>Attenzione:</strong> Il "home bias" è un errore comune: investire troppo in azioni italiane perché le conosci. L'Italia rappresenta meno del 1% del mercato azionario globale. Un portafoglio concentrato sull'Italia è un rischio non ricompensato. Diversifica globalmente.
 </div>
+
+<h3>Glide path: ridurre l'equity man mano che invecchi</h3>
+<p>Il <strong>glide path</strong> e' una strategia di asset allocation dinamica: invece di tenere fisso 70/30 azioni/bond per tutta la vita, la quota equity decresce linearmente avvicinandoti al pensionamento. Tipicamente: 70% equity oggi → 30-40% equity a fine vita. La logica e' duplice:</p>
+<ul>
+<li><strong>Capacita' di assorbire shock</strong>: a 30 anni hai 35+ anni davanti per recuperare un -50% di mercato; a 75 anni no.</li>
+<li><strong>Mitigazione del Sequence of Returns Risk</strong>: il rischio numero 1 nei primi 5-10 anni di pensione e' un crash che ti obbliga a vendere equity in ribasso. Con un equity al 30-40% l'impatto e' molto attenuato.</li>
+</ul>
+<p>Nel calcolatore puoi attivare il glide path nel profilo (campi <code>glidePathEnabled</code>, <code>glidePathStartEquity</code>, <code>glidePathEndEquity</code>). Il motore deterministico modula il rendimento atteso anno per anno in funzione dell'allocazione dinamica; il Monte Carlo lo applica al ribilanciamento. <strong>Attenzione</strong>: alcuni studi recenti (McClung, Pfau) suggeriscono che un glide path "rising" (parti basso e cresci di nuovo) post-pensione e' superiore al "decreasing" classico. Sperimenta entrambe le configurazioni nel tornado chart.</p>
 `
 	},
 
@@ -743,6 +756,14 @@ Questo significa che nella maggior parte dei casi il piano funziona, ma c'è un 
 <div class="warning">
 <strong>Attenzione:</strong> Un tasso di successo del 95% NON significa che hai il 95% di probabilità di successo nel mondo reale. Significa che il 95% degli scenari storici simulati ha funzionato. Il futuro potrebbe essere diverso dal passato. Mantieni sempre un margine di sicurezza e un piano B.
 </div>
+
+<h3>Serie storiche italiane vs USA</h3>
+<p>Il simulatore ora propone come <strong>default</strong> la serie storica IT-centric: <strong>MSCI World ex-USA</strong> (1970-2024) per l'equity, <strong>BTP 7-10y</strong> (1991-2024 stimati) per la parte obbligazionaria, <strong>inflazione ISTAT</strong> (1960-2024). Per un risparmiatore italiano e' piu' rappresentativo del classico set Bogleheads (S&P 500 + Aggregate US bonds + CPI USA), perche' incorpora il contesto storico europeo con eventi specifici come la crisi spread BTP/Bund 2011, lo shock Lira 1992, la stagflazione anni 70 italiana.</p>
+<p>Sopra al pannello di configurazione del Monte Carlo c'e' uno switch per cambiare preset: prova entrambi e confronta. Il preset US mostra storicamente un tasso di successo piu' alto, ma e' un bias dovuto al fatto che gli USA sono stati il vincitore del 20° secolo. Per stress test e' piu' onesto guardare il preset IT (che include il "drawdown perpetuo" del FTSE MIB rispetto a S&P 500).</p>
+
+<h3>Sensitivity analysis (tornado chart)</h3>
+<p>Nella tab "Simulazione" del calcolatore trovi un <strong>tornado chart</strong> che risponde alla domanda: "quale leva del mio piano sposta di piu' l'ago?". Per ogni variabile chiave (rendimento atteso, inflazione, spese annue, contributo, eta' di pensione, withdrawal rate, aliquota fiscale) il sistema applica uno shock di ±10% e misura l'impatto sul portafoglio finale. Le barre sono ordinate per ampiezza decrescente: la prima e' la variabile piu' influente.</p>
+<p>Filosofia: meglio capire <strong>quali ipotesi contano</strong> piuttosto che fidarsi di una probabilita' di successo a scatola chiusa. Se scopri che +1% di rendimento atteso aggiunge 8 anni di sostenibilita', sai dove concentrare il tuo controllo (asset allocation, costi gestione, fiscalita') invece di stressarti su variabili poco influenti.</p>
 `
 	},
 
@@ -1001,6 +1022,27 @@ Per compensare, dovresti vendere un'azione o un'obbligazione singola con 5.000�
 
 <h3>Compensazione minusvalenze modellata</h3>
 <p>Dalla versione corrente l'engine include le funzioni <code>applyCapitalLossOffset</code> e <code>addCapitalLoss</code> in <code>tax-italy.ts</code> che rispettano la regola dei 4 anni di scadenza e FIFO (si usa prima la minus piu' vecchia). E' possibile simulare scenari di realizzazione con un pacchetto di minus pregresse, per capire quale anno fiscale conviene chiudere posizioni in guadagno.</p>
+
+<h3>Pannello "Ipotesi attive": basta black box</h3>
+<p>Sopra al calcolatore trovi adesso un pannello "Ipotesi attive" che mostra <strong>tutti</strong> i parametri normativi/fiscali che il calcolatore sta applicando in questo momento: scaglioni IRPEF, capital gain, bollo titoli, IVAFE, cedolare secca, INPS, fondo pensione, addizionali. Ogni numero del calcolatore puo' essere ricondotto a una delle aliquote del pannello.</p>
+<p>Puoi scegliere tra preset:</p>
+<ul>
+<li><strong>Normativa 2026 (default)</strong>: la riforma vigente, IRPEF a 3 scaglioni, fondo pensione con deduzione 5.300€</li>
+<li><strong>Pre-riforma 2023</strong>: 4 scaglioni storici (utile per riconciliare CUD vecchi)</li>
+<li><strong>Ipotesi flat 23/33</strong>: scenario speculativo per stress test fiscale</li>
+</ul>
+<p>Cliccando "Modifica" puoi creare un set <em>Personalizzato</em> alterando le aliquote che ti interessano. Cosi' puoi rispondere a domande tipo: "se l'IRPEF salisse al 28% sul primo scaglione, il mio FIRE Number cambia di quanto?".</p>
+
+<h3>Bollo titoli e IVAFE: l'erosione silenziosa</h3>
+<p>Su ogni euro investito in deposito titoli paghi annualmente lo <strong>0,2% di bollo titoli</strong> (su broker italiani) o l'equivalente <strong>IVAFE 0,2%</strong> (su broker esteri tipo Interactive Brokers, Trade Republic, Degiro). Su un patrimonio FIRE da 500.000€ sono <strong>1.000€/anno</strong>; su 1M€ sono <strong>2.000€/anno</strong>: niente affatto un dettaglio. Il calcolatore ora applica queste imposte patrimoniali ogni anno della proiezione, e la quota "estera" e' configurabile via il campo <code>foreignBrokerShare</code> del profilo (per chi tiene il portafoglio su IBKR / TR / Degiro).</p>
+
+<h3>Cedolare secca vs IRPEF sugli affitti</h3>
+<p>Il modulo <code>compareRentalTax</code> in <code>tax-italy.ts</code> confronta per ogni canone di locazione due regimi:</p>
+<ul>
+<li><strong>Cedolare secca 21%</strong> (canone libero): aliquota piatta sostitutiva di IRPEF + addizionali + bollo registro. Niente deduzioni.</li>
+<li><strong>IRPEF ordinaria</strong>: il 95% del canone si somma agli altri redditi, segue lo scaglione marginale, paga regionale e comunale.</li>
+</ul>
+<p>Il "vincitore" dipende dal tuo reddito complessivo: con basso reddito (scaglione al 23%) la cedolare conviene quasi sempre; con redditi alti (43%) la convenienza e' netta. Il modulo restituisce anche il risparmio annuo della scelta migliore.</p>
 `
 	},
 
@@ -1743,6 +1785,16 @@ Ma il rendimento del 5% non è garantito. In scenari sfavorevoli, l'Opzione A po
 <div class="warning">
 <strong>Attenzione:</strong> Mai usare debiti per investire (leva finanziaria). La strategia "prendo un prestito al 5% e investo al 7%" sembra logica ma è estremamente rischiosa. Se il mercato scende del 30%, devi comunque ripagare il prestito. Il debito amplifica sia i guadagni che le perdite.
 </div>
+
+<h3>Ammortamento francese: come si comporta davvero il mutuo</h3>
+<p>Il calcolatore ora usa il <strong>piano di ammortamento francese</strong> esatto (rata costante, quota interessi decrescente, quota capitale crescente) per stimare il capitale residuo a una data futura. La vecchia approssimazione lineare sottostimava il debito residuo nei primi anni (quando paghi quasi solo interessi) e lo sovrastimava negli ultimi (quando paghi quasi solo capitale).</p>
+<p>Le funzioni in <code>family.ts</code>:</p>
+<ul>
+<li><code>mortgageRemainingBalanceAt</code>: capitale residuo a qualunque anno futuro, formula chiusa</li>
+<li><code>frenchAmortizationSchedule</code>: piano completo mese per mese (utile per "vedi rata per rata")</li>
+<li><code>mortgageAnnualInterest</code>: solo la quota interessi di un anno (utile per la detrazione IRPEF 19% fino a 4.000€ se prima casa)</li>
+</ul>
+<p>Per chi ha un mutuo prima casa: ricordati che gli interessi passivi (NON la quota capitale) sono detraibili al 19% fino a 4.000€/anno, valore che il calcolatore puo' separare dal flusso totale grazie a <code>mortgageAnnualInterest</code>. Su un mutuo medio nei primi anni gli interessi superano i 4.000€/anno, quindi la detrazione si "tappa" a 760€/anno e poi degrada.</p>
 `
 	},
 

@@ -9,7 +9,7 @@
 		BriefcaseOutline, CreditCardOutline
 	} from 'flowbite-svelte-icons';
 	import { onMount } from 'svelte';
-	import type { Profile, PortfolioAllocation, MonthlyContributions, Debt, PensionInfo, Child, Mortgage, LifeEvent } from '$lib/db/index';
+	import type { Profile, PortfolioAllocation, MonthlyContributions, Debt, PensionInfo, Child, Mortgage, LifeEvent, Spouse } from '$lib/db/index';
 	import { getAllProfiles, createProfile, updateProfile, deleteProfile, getProfileById } from '$lib/db/profiles';
 	import { calculateSavingsRate, calculateNetWorth } from '$lib/engine/fire-calculator';
 	import { formatCurrency, formatPercent } from '$lib/utils/format';
@@ -22,6 +22,7 @@
 	import TabDebiti from '$lib/components/profilo/TabDebiti.svelte';
 	import TabPensione from '$lib/components/profilo/TabPensione.svelte';
 	import TabFamiglia from '$lib/components/profilo/TabFamiglia.svelte';
+	import TabConiuge from '$lib/components/profilo/TabConiuge.svelte';
 	import TabEventiVita from '$lib/components/profilo/TabEventiVita.svelte';
 	import BankImport from '$lib/components/profilo/BankImport.svelte';
 
@@ -64,6 +65,7 @@
 	let children = $state<Child[]>([]);
 	let mortgage = $state<Mortgage | undefined>(undefined);
 	let lifeEvents = $state<LifeEvent[]>([]);
+	let spouse = $state<Spouse | undefined>(undefined);
 
 	// === Computed metrics ===
 	let totalIncome = $derived(annualIncome + otherIncome);
@@ -144,6 +146,7 @@
 		children = (p.children ?? []).map((c: Child) => ({ ...c }));
 		mortgage = p.mortgage ? { ...p.mortgage } : undefined;
 		lifeEvents = (p.lifeEvents ?? []).map((e: LifeEvent) => ({ ...e }));
+		spouse = p.spouse ? { ...p.spouse } : undefined;
 	}
 
 	function getStateAsProfileData() {
@@ -165,7 +168,8 @@
 			pension: { ...pension },
 			children: children.map((c: Child) => ({ ...c })),
 			mortgage: mortgage ? { ...mortgage } : undefined,
-			lifeEvents: lifeEvents.map((e: LifeEvent) => ({ ...e }))
+			lifeEvents: lifeEvents.map((e: LifeEvent) => ({ ...e })),
+			spouse: spouse ? { ...spouse } : undefined
 		};
 	}
 
@@ -210,6 +214,7 @@
 		void JSON.stringify(children);
 		void JSON.stringify(mortgage);
 		void JSON.stringify(lifeEvents);
+		void JSON.stringify(spouse);
 		if (!loading && currentProfileId) {
 			scheduleSave();
 		}
@@ -378,6 +383,11 @@
 					<TabItem title="Famiglia">
 						<div class="pt-4">
 							<TabFamiglia bind:children bind:mortgage />
+						</div>
+					</TabItem>
+					<TabItem title="Coniuge">
+						<div class="pt-4">
+							<TabConiuge bind:spouse />
 						</div>
 					</TabItem>
 					<TabItem title="Eventi di vita">

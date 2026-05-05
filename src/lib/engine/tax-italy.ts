@@ -2,7 +2,12 @@
  * Sistema fiscale italiano per la pianificazione FIRE.
  * Include calcolo IRPEF, tassazione capital gain, fondi pensione, TFR
  * e ottimizzazione dell'ordine di prelievo.
+ *
+ * Le funzioni accettano (in modalita' opzionale, retrocompatibile) un
+ * AssumptionSet che rende esplicite le aliquote applicate. Se non passato
+ * usano i default 2026.
  */
+import { DEFAULT_2026, type AssumptionSet, type IRPEFBracketDef } from './assumptions';
 
 /** Risultato del calcolo IRPEF con dettaglio per scaglione */
 export interface IRPEFResult {
@@ -61,38 +66,41 @@ export interface WithdrawalComposition {
 }
 
 /**
- * Scaglioni IRPEF 2026.
- * Aggiornati con la riforma fiscale:
+ * Scaglioni IRPEF di default (2026, riforma confermata):
  * - 23% fino a 28.000€
  * - 33% da 28.001€ a 50.000€
  * - 43% oltre 50.000€
+ *
+ * Costante esportata solo per retrocompatibilita': il vero "ground truth"
+ * sono gli scaglioni dentro AssumptionSet.
  */
-const IRPEF_BRACKETS: { from: number; to: number; rate: number }[] = [
-	{ from: 0, to: 28000, rate: 0.23 },
-	{ from: 28000, to: 50000, rate: 0.33 },
-	{ from: 50000, to: Infinity, rate: 0.43 }
-];
+export const IRPEF_BRACKETS: IRPEFBracketDef[] = DEFAULT_2026.irpefBrackets;
 
 /**
- * Calcola l'IRPEF su un reddito annuale lordo.
- * Applica gli scaglioni progressivi del 2026.
+ * Calcola l'IRPEF su un reddito annuale lordo applicando gli scaglioni
+ * dell'AssumptionSet passato (o quelli di default 2026 se omesso).
  *
  * @param annualIncome - Reddito annuale lordo imponibile
+ * @param assumptions - Set di aliquote da usare. Se omesso usa DEFAULT_2026.
  * @returns Oggetto con imposta totale, aliquota effettiva e dettaglio scaglioni
  */
-export function calculateIRPEF(annualIncome: number): IRPEFResult {
+export function calculateIRPEF(
+	annualIncome: number,
+	assumptions: AssumptionSet = DEFAULT_2026
+): IRPEFResult {
 	if (annualIncome <= 0) {
 		return { tax: 0, effectiveRate: 0, brackets: [] };
 	}
 
+	const brackets_def = assumptions.irpefBrackets;
 	let remainingIncome = annualIncome;
 	let totalTax = 0;
 	const brackets: IRPEFBracket[] = [];
 
-	for (const bracket of IRPEF_BRACKETS) {
+	for (const bracket of brackets_def) {
 		if (remainingIncome <= 0) break;
 
-		const bracketWidth = bracket.to === Infinity
+		const bracketWidth = bracket.to === Number.POSITIVE_INFINITY
 			? remainingIncome
 			: Math.min(bracket.to - bracket.from, remainingIncome);
 
@@ -101,7 +109,9 @@ export function calculateIRPEF(annualIncome: number): IRPEFResult {
 
 		brackets.push({
 			from: bracket.from,
-			to: bracket.to === Infinity ? annualIncome : Math.min(bracket.to, annualIncome),
+			to: bracket.to === Number.POSITIVE_INFINITY
+				? annualIncome
+				: Math.min(bracket.to, annualIncome),
 			rate: bracket.rate,
 			tax: bracketTax
 		});
@@ -118,24 +128,212 @@ export function calculateIRPEF(annualIncome: number): IRPEFResult {
 }
 
 /**
+ * Inversa esatta dell'IRPEF: dato un reddito NETTO target (post-IRPEF +
+ * addizionali), restituisce il LORDO esatto che lo produce. Usa il fatto
+ * che la funzione gross→net e' lineare a tratti (un segmento per scaglione)
+ * ed e' quindi invertibile in chiusa, scaglione per scaglione, in O(N).
+ *
+ * Nota: non considera le addizionali regionale/comunale ne' i contributi
+ * INPS. Per il netto in busta paga usa `invertNetSalary`.
+ *
+ * @param targetNetIRPEF - Netto target dopo la sola IRPEF
+ * @param assumptions - Set di aliquote (default 2026)
+ * @returns Reddito lordo esatto
+ */
+export function invertIRPEF(
+	targetNetIRPEF: number,
+	assumptions: AssumptionSet = DEFAULT_2026
+): number {
+	if (targetNetIRPEF <= 0) return 0;
+	let cumulativeTax = 0;
+	for (const b of assumptions.irpefBrackets) {
+		const bracketTop = b.to === Number.POSITIVE_INFINITY ? Number.POSITIVE_INFINITY : b.to;
+		const bracketWidth = bracketTop - b.from;
+		const bracketTax = bracketWidth === Number.POSITIVE_INFINITY ? Infinity : bracketWidth * b.rate;
+		const bracketNetTop =
+			bracketTop === Number.POSITIVE_INFINITY ? Infinity : bracketTop - (cumulativeTax + bracketTax);
+		// Se il netto target rientra in questo scaglione, risolvi: gross =
+		// b.from + (target - bracketNetFloor) / (1 - b.rate)
+		const bracketNetFloor = b.from - cumulativeTax;
+		if (targetNetIRPEF <= bracketNetTop || bracketTop === Number.POSITIVE_INFINITY) {
+			const grossExtra = (targetNetIRPEF - bracketNetFloor) / (1 - b.rate);
+			return Math.round((b.from + grossExtra) * 100) / 100;
+		}
+		cumulativeTax += bracketTax;
+	}
+	// Non dovrebbe mai arrivarci: l'ultimo scaglione e' aperto a destra
+	return targetNetIRPEF;
+}
+
+/**
  * Calcola la tassa sulle plusvalenze (capital gains tax) in Italia.
  *
- * Aliquote:
+ * Aliquote di default (DEFAULT_2026):
  * - 26% per azioni, ETF, obbligazioni corporate, fondi
  * - 12.5% per titoli di stato (BTP, BOT, CCT) e equiparati
  *
  * @param gains - Plusvalenze realizzate
- * @param assetType - Tipo di asset ('stocks' | 'etf' | 'corporate_bonds' | 'government_bonds')
+ * @param assetType - Tipo di asset
+ * @param assumptions - Set di aliquote (default 2026)
  * @returns Imposta dovuta sulle plusvalenze
  */
 export function calculateCapitalGainsTax(
 	gains: number,
-	assetType: 'stocks' | 'etf' | 'corporate_bonds' | 'government_bonds'
+	assetType: 'stocks' | 'etf' | 'corporate_bonds' | 'government_bonds',
+	assumptions: AssumptionSet = DEFAULT_2026
 ): number {
 	if (gains <= 0) return 0;
 
-	const rate = assetType === 'government_bonds' ? 0.125 : 0.26;
+	const rate =
+		assetType === 'government_bonds'
+			? assumptions.capital.governmentBonds
+			: assumptions.capital.stocksAndEtf;
 	return Math.round(gains * rate * 100) / 100;
+}
+
+/**
+ * Bollo titoli (imposta di bollo su deposito titoli/strumenti finanziari).
+ * Aliquota standard: 0.2% annuo sul controvalore al 31/12. Si applica anche
+ * a fondi pensione "individuali" e a investimenti in OICR. NON si applica a
+ * fondi pensione contrattuali/negoziali (esenti). NON si applica al conto
+ * corrente con giacenza media <= 5.000€ (per il quale c'e' il bollo cc fisso).
+ *
+ * Per FIRE: su un patrimonio liquido investito di 500.000€ il bollo titoli
+ * pesa 1.000€/anno, su 1M€ pesa 2.000€/anno: NON un dettaglio.
+ *
+ * @param portfolioValue - Controvalore del deposito titoli (al 31/12)
+ * @param assumptions - Aliquote (default 2026 = 0.2%)
+ */
+export function calculateStampDuty(
+	portfolioValue: number,
+	assumptions: AssumptionSet = DEFAULT_2026
+): number {
+	if (portfolioValue <= 0) return 0;
+	return Math.round(portfolioValue * assumptions.capital.stampDuty * 100) / 100;
+}
+
+/**
+ * IVAFE: Imposta sulle Attivita' Finanziarie all'Estero. Si applica a
+ * conti, depositi e strumenti finanziari detenuti su intermediari esteri
+ * (broker tipo Interactive Brokers, Trade Republic, Degiro, ecc.).
+ * Aliquota: 0.2% annuo. Per conti correnti e depositi a risparmio: forfait
+ * 34,20€ per anno per ogni conto se giacenza media > 5.000€ (qui si gestisce
+ * solo la quota proporzionale 0.2% su strumenti finanziari).
+ *
+ * @param foreignAssetsValue - Controvalore asset finanziari all'estero
+ * @param assumptions - Aliquote (default 2026 = 0.2%)
+ */
+export function calculateIVAFE(
+	foreignAssetsValue: number,
+	assumptions: AssumptionSet = DEFAULT_2026
+): number {
+	if (foreignAssetsValue <= 0) return 0;
+	return Math.round(foreignAssetsValue * assumptions.capital.ivafe * 100) / 100;
+}
+
+/**
+ * Imposte patrimoniali totali sul portafoglio (bollo titoli + IVAFE).
+ * Riceve la quota italiana e la quota estera separate (se l'utente non sa,
+ * di default tutto e' considerato in deposito italiano).
+ */
+export interface PortfolioStampDutiesResult {
+	stampDuty: number;
+	ivafe: number;
+	total: number;
+}
+
+export function calculatePortfolioStampDuties(
+	italianValue: number,
+	foreignValue: number,
+	assumptions: AssumptionSet = DEFAULT_2026
+): PortfolioStampDutiesResult {
+	const stampDuty = calculateStampDuty(italianValue, assumptions);
+	const ivafe = calculateIVAFE(foreignValue, assumptions);
+	return {
+		stampDuty,
+		ivafe,
+		total: Math.round((stampDuty + ivafe) * 100) / 100
+	};
+}
+
+/** Tassazione del reddito da locazione: confronto IRPEF vs cedolare secca */
+export interface RentalTaxComparison {
+	/** Canone lordo annuo dichiarato */
+	grossRent: number;
+	/** Tassazione con cedolare secca (21% canone libero) */
+	cedolare: { rate: number; tax: number; net: number };
+	/** Tassazione con IRPEF ordinaria (95% imponibile + addizionali, no INPS) */
+	irpef: { taxable: number; tax: number; net: number };
+	/** Quale dei due conviene */
+	recommended: 'cedolare' | 'irpef';
+	/** Risparmio annuo della scelta migliore rispetto alla peggiore */
+	savings: number;
+}
+
+/**
+ * Confronta la tassazione di un canone di locazione tra:
+ * - Cedolare secca: aliquota fissa (21% canone libero) sostitutiva di IRPEF +
+ *   addizionali + imposta di registro + bollo. Niente deduzioni.
+ * - IRPEF ordinaria: 95% del canone (riduzione forfettaria 5%) si somma agli
+ *   altri redditi e segue lo scaglione marginale; si aggiungono regionale e
+ *   comunale.
+ *
+ * NB: il calcolo IRPEF richiede di conoscere il reddito da lavoro per
+ * determinare lo scaglione marginale corretto.
+ *
+ * @param grossRent - Canone annuo lordo
+ * @param otherIncome - Reddito imponibile gia' soggetto a IRPEF (lavoro, ecc.)
+ * @param assumptions - Aliquote (default 2026)
+ */
+export function compareRentalTax(
+	grossRent: number,
+	otherIncome: number,
+	assumptions: AssumptionSet = DEFAULT_2026
+): RentalTaxComparison {
+	if (grossRent <= 0) {
+		const empty = { rate: 0, tax: 0, net: 0 };
+		return {
+			grossRent: 0,
+			cedolare: empty,
+			irpef: { taxable: 0, tax: 0, net: 0 },
+			recommended: 'cedolare',
+			savings: 0
+		};
+	}
+	// Cedolare secca: aliquota piatta sul canone pieno
+	const cedolareRate = assumptions.capital.cedolareSecca;
+	const cedolareTax = grossRent * cedolareRate;
+	const cedolareNet = grossRent - cedolareTax;
+
+	// IRPEF ordinaria: imponibile 95% del canone, marginal rate sopra il
+	// reddito base. Calcoliamo l'IRPEF su (otherIncome + 95%*rent) - IRPEF
+	// solo su otherIncome = imposta marginale sul canone.
+	const taxableRent = grossRent * 0.95;
+	const baseIrpef = calculateIRPEF(otherIncome, assumptions).tax;
+	const totalIrpef = calculateIRPEF(otherIncome + taxableRent, assumptions).tax;
+	const marginalIrpef = totalIrpef - baseIrpef;
+	const surtax = taxableRent * (assumptions.surtaxes.regional + assumptions.surtaxes.municipal);
+	const irpefTax = marginalIrpef + surtax;
+	const irpefNet = grossRent - irpefTax;
+
+	const recommended = cedolareTax <= irpefTax ? 'cedolare' : 'irpef';
+	const savings = Math.abs(cedolareTax - irpefTax);
+
+	return {
+		grossRent: Math.round(grossRent * 100) / 100,
+		cedolare: {
+			rate: cedolareRate,
+			tax: Math.round(cedolareTax * 100) / 100,
+			net: Math.round(cedolareNet * 100) / 100
+		},
+		irpef: {
+			taxable: Math.round(taxableRent * 100) / 100,
+			tax: Math.round(irpefTax * 100) / 100,
+			net: Math.round(irpefNet * 100) / 100
+		},
+		recommended,
+		savings: Math.round(savings * 100) / 100
+	};
 }
 
 /** Stock di minusvalenze compensabili con scadenze */
@@ -542,13 +740,14 @@ export interface TotalIncomeTaxResult {
  */
 export function calculateTotalIncomeTax(
 	grossIncome: number,
-	regionalRate: number = 0.0173,
-	municipalRate: number = 0.007
+	regionalRate: number = DEFAULT_2026.surtaxes.regional,
+	municipalRate: number = DEFAULT_2026.surtaxes.municipal,
+	assumptions: AssumptionSet = DEFAULT_2026
 ): TotalIncomeTaxResult {
 	if (grossIncome <= 0) {
 		return { irpef: 0, regional: 0, municipal: 0, total: 0, effectiveRate: 0 };
 	}
-	const irpef = calculateIRPEF(grossIncome).tax;
+	const irpef = calculateIRPEF(grossIncome, assumptions).tax;
 	const regional = grossIncome * regionalRate;
 	const municipal = grossIncome * municipalRate;
 	const total = irpef + regional + municipal;
@@ -575,27 +774,25 @@ export function calculateTotalIncomeTax(
  */
 export function calculateInpsWorkerContribution(
 	grossIncome: number,
-	contractType: 'dipendente' | 'autonomo' | 'parasubordinato' = 'dipendente'
+	contractType: 'dipendente' | 'autonomo' | 'parasubordinato' = 'dipendente',
+	assumptions: AssumptionSet = DEFAULT_2026
 ): number {
 	if (grossIncome <= 0) return 0;
 
-	// Massimale contributivo 2026 (approssimato)
-	const MASSIMALE = 105014;
+	const MASSIMALE = assumptions.inps.massimale;
 
 	let rate: number;
-	let additionalRate = 0; // quota eccedente il massimale
+	let additionalRate = 0;
 	switch (contractType) {
 		case 'dipendente':
-			rate = 0.0919;
-			additionalRate = 0.0101; // oltre il massimale paga 10.19%
+			rate = assumptions.inps.employeeBase;
+			additionalRate = assumptions.inps.employeeAdditional;
 			break;
 		case 'parasubordinato':
-			rate = 0.1124; // 1/3 a carico del collaboratore
+			rate = assumptions.inps.parasubordinato;
 			break;
 		case 'autonomo':
-			// L'autonomo paga tutto ma per il breakdown da lavoratore mostriamo
-			// la quota "comparabile": usiamo comunque 0.2623 come indicativo
-			rate = 0.2623;
+			rate = assumptions.inps.autonomo;
 			break;
 	}
 
@@ -629,8 +826,9 @@ export interface NetSalaryBreakdown {
 export function calculateNetSalary(
 	grossIncome: number,
 	contractType: 'dipendente' | 'autonomo' | 'parasubordinato' = 'dipendente',
-	regionalRate: number = 0.0173,
-	municipalRate: number = 0.007
+	regionalRate: number = DEFAULT_2026.surtaxes.regional,
+	municipalRate: number = DEFAULT_2026.surtaxes.municipal,
+	assumptions: AssumptionSet = DEFAULT_2026
 ): NetSalaryBreakdown {
 	if (grossIncome <= 0) {
 		return {
@@ -638,9 +836,9 @@ export function calculateNetSalary(
 			municipalTax: 0, totalTax: 0, net: 0, effectiveRate: 0
 		};
 	}
-	const inps = calculateInpsWorkerContribution(grossIncome, contractType);
+	const inps = calculateInpsWorkerContribution(grossIncome, contractType, assumptions);
 	const taxable = Math.max(0, grossIncome - inps);
-	const tax = calculateTotalIncomeTax(taxable, regionalRate, municipalRate);
+	const tax = calculateTotalIncomeTax(taxable, regionalRate, municipalRate, assumptions);
 	const totalTax = tax.total;
 	const net = Math.max(0, grossIncome - inps - totalTax);
 	return {
@@ -653,4 +851,126 @@ export function calculateNetSalary(
 		net: Math.round(net * 100) / 100,
 		effectiveRate: (inps + totalTax) / grossIncome
 	};
+}
+
+/**
+ * Inverte la busta paga: dato un netto target restituisce il lordo annuo
+ * esatto. La funzione gross→net e' lineare a tratti (rispetto al gross)
+ * perche':
+ *   net = gross - INPS(gross) - IRPEF(gross-INPS) - addizionali*(gross-INPS)
+ * dove sia INPS che IRPEF sono piecewise lineari. Si risolve scaglione per
+ * scaglione: prima si determina lo scaglione INPS in cui cade il gross,
+ * poi quello IRPEF. La complessita' e' O(n_inps_segments * n_irpef_segments)
+ * = costante (al massimo 6 segmenti).
+ *
+ * Risolutore esatto, non iterativo. Sostituisce il "guess + ratio" precedente.
+ *
+ * @param targetNet - Netto annuale desiderato
+ * @param contractType - Tipo contratto
+ * @param regionalRate - Aliquota regionale
+ * @param municipalRate - Aliquota comunale
+ * @param assumptions - Set fiscale
+ * @returns Reddito lordo annuo che produce esattamente targetNet
+ */
+export function invertNetSalary(
+	targetNet: number,
+	contractType: 'dipendente' | 'autonomo' | 'parasubordinato' = 'dipendente',
+	regionalRate: number = DEFAULT_2026.surtaxes.regional,
+	municipalRate: number = DEFAULT_2026.surtaxes.municipal,
+	assumptions: AssumptionSet = DEFAULT_2026
+): number {
+	if (targetNet <= 0) return 0;
+
+	// Segmenti INPS: per dipendente abbiamo due tratti (entro/oltre massimale).
+	// Per parasubordinato e autonomo l'aliquota e' costante: un solo tratto.
+	const massimale = assumptions.inps.massimale;
+	type InpsSegment = { from: number; to: number; rate: number };
+	let inpsSegments: InpsSegment[];
+	switch (contractType) {
+		case 'dipendente':
+			inpsSegments = [
+				{ from: 0, to: massimale, rate: assumptions.inps.employeeBase },
+				{
+					from: massimale,
+					to: Number.POSITIVE_INFINITY,
+					rate: assumptions.inps.employeeBase + assumptions.inps.employeeAdditional
+				}
+			];
+			break;
+		case 'parasubordinato':
+			inpsSegments = [
+				{ from: 0, to: Number.POSITIVE_INFINITY, rate: assumptions.inps.parasubordinato }
+			];
+			break;
+		case 'autonomo':
+			inpsSegments = [{ from: 0, to: Number.POSITIVE_INFINITY, rate: assumptions.inps.autonomo }];
+			break;
+	}
+
+	const surtaxRate = regionalRate + municipalRate;
+
+	// Per ogni combinazione (segmento INPS, scaglione IRPEF) la funzione
+	// gross→net e' affine: net = a*gross + b. Si risolve per gross e si
+	// verifica che il risultato cada effettivamente nei due segmenti.
+	const irpefBrackets = assumptions.irpefBrackets;
+
+	let cumulativeInpsAtSegStart = 0;
+	for (const inpsSeg of inpsSegments) {
+		// In questo segmento INPS:
+		//   inps(g) = inpsAtSegStart + (g - inpsSeg.from) * inpsSeg.rate
+		// Imponibile = g - inps(g) = g*(1-rate) + (rate*inpsSeg.from - inpsAtSegStart)
+		const taxableAtFrom = inpsSeg.from - cumulativeInpsAtSegStart;
+		const taxableSlope = 1 - inpsSeg.rate;
+
+		let cumulativeIrpefAtBracketStart = 0;
+		for (const b of irpefBrackets) {
+			// IRPEF nello scaglione b: irpef(taxable) = cumIrpefAtBracketStart +
+			//   (taxable - b.from)*b.rate. La taxable corrispondente al gross g
+			//   e' taxable(g) = taxableAtFrom + (g - inpsSeg.from)*taxableSlope.
+			// Quindi:
+			//   irpef(g) = cumIrpefAtBracketStart + (taxableAtFrom + (g-inpsSeg.from)*taxableSlope - b.from)*b.rate
+			//           = b.rate*taxableSlope*g + [cumIrpefAtBracketStart + (taxableAtFrom - b.rate*inpsSeg.from*taxableSlope/b.rate ... )]
+			// Semplifichiamo numericamente: net(g) = g - inps(g) - irpef(taxable(g)) - surtaxRate*taxable(g)
+			//   = g - [inpsAtSegStart + (g-inpsSeg.from)*inpsSeg.rate]
+			//     - [cumIrpefAtBracketStart + (taxable(g)-b.from)*b.rate]
+			//     - surtaxRate*taxable(g)
+			// dove taxable(g) = taxableAtFrom + (g-inpsSeg.from)*taxableSlope
+			//
+			// Slope di net rispetto a g:
+			const slope = 1 - inpsSeg.rate - (b.rate + surtaxRate) * taxableSlope;
+			// net all'estremo inferiore del segmento (g = inpsSeg.from):
+			//   inps = inpsAtSegStart, taxable = taxableAtFrom
+			//   irpef = cumIrpefAtBracketStart + (taxableAtFrom - b.from)*b.rate
+			const netAtInpsFrom =
+				inpsSeg.from -
+				cumulativeInpsAtSegStart -
+				(cumulativeIrpefAtBracketStart + (taxableAtFrom - b.from) * b.rate) -
+				surtaxRate * taxableAtFrom;
+			// gross che produce targetNet: g = inpsSeg.from + (targetNet - netAtInpsFrom)/slope
+			if (Math.abs(slope) < 1e-12) {
+				// Aliquota effettiva 100%: impossibile, salto
+				cumulativeIrpefAtBracketStart += (b.to - b.from) * b.rate;
+				continue;
+			}
+			const candidate = inpsSeg.from + (targetNet - netAtInpsFrom) / slope;
+			// Validazione: candidate deve cadere in entrambi i segmenti
+			const taxableAtCandidate = taxableAtFrom + (candidate - inpsSeg.from) * taxableSlope;
+			if (
+				candidate >= inpsSeg.from - 1e-6 &&
+				candidate <= inpsSeg.to + 1e-6 &&
+				taxableAtCandidate >= b.from - 1e-6 &&
+				(b.to === Number.POSITIVE_INFINITY || taxableAtCandidate <= b.to + 1e-6)
+			) {
+				return Math.max(0, Math.round(candidate * 100) / 100);
+			}
+			cumulativeIrpefAtBracketStart +=
+				(b.to === Number.POSITIVE_INFINITY ? 0 : (b.to - b.from) * b.rate);
+		}
+		cumulativeInpsAtSegStart +=
+			(inpsSeg.to === Number.POSITIVE_INFINITY ? 0 : (inpsSeg.to - inpsSeg.from) * inpsSeg.rate);
+	}
+
+	// Fallback: se nessuno scaglione ha matchato (non dovrebbe accadere) torna
+	// una stima conservativa con un'aliquota effettiva del 30%
+	return Math.round((targetNet / 0.7) * 100) / 100;
 }

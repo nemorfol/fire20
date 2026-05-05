@@ -32,8 +32,11 @@
 		type YearlyProjection
 	} from '$lib/engine/fire-calculator';
 	import { optimizeWithdrawalOrder, type WithdrawalPlan } from '$lib/engine/tax-italy';
+	import { DEFAULT_2026, getPreset, type AssumptionSet } from '$lib/engine/assumptions';
 
 	import FireHero from '$lib/components/calcolatore/FireHero.svelte';
+	import AssumptionsPanel from '$lib/components/shared/AssumptionsPanel.svelte';
+	import SensitivityTornado from '$lib/components/calcolatore/SensitivityTornado.svelte';
 	import MetricsGrid from '$lib/components/calcolatore/MetricsGrid.svelte';
 	import WithdrawalStrategySelector from '$lib/components/calcolatore/WithdrawalStrategySelector.svelte';
 	import ParameterControls from '$lib/components/calcolatore/ParameterControls.svelte';
@@ -64,6 +67,9 @@
 	let wiLifeExpectancy = $state(90);
 	let wiOtherIncome = $state(0);
 	let wiOtherIncomeEndAge = $state(90);
+
+	// Set ipotesi fiscali attivo (default 2026, il profilo puo' suggerire altro via assumptionsId)
+	let assumptions = $state<AssumptionSet>(DEFAULT_2026);
 
 	// Profile defaults for reset & change detection
 	let wiDefaults = $state({
@@ -184,9 +190,46 @@
 					startYear: new Date().getFullYear(),
 					children: profile.children,
 					mortgage: profile.mortgage,
-					lifeEvents: profile.lifeEvents
+					lifeEvents: profile.lifeEvents,
+					spouse: profile.spouse,
+					assumptions: assumptions,
+					foreignBrokerShare: profile.foreignBrokerShare ?? 0,
+					glidePathEnabled: profile.glidePathEnabled ?? false,
+					glidePathStartEquity: profile.glidePathStartEquity,
+					glidePathEndEquity: profile.glidePathEndEquity
 				})
 			: []
+	);
+
+	// Parametri baseline per il sensitivity tornado
+	let sensitivityParams = $derived(
+		profile
+			? {
+					initialPortfolio: wiInitialPortfolio,
+					annualContribution: annualSavings,
+					annualExpenses: annualExpenses,
+					expectedReturn: expectedReturn / 100,
+					inflationRate: inflationRate / 100,
+					taxRate: taxRate,
+					withdrawalRate: withdrawalRate,
+					withdrawalStrategy: withdrawalStrategy,
+					annualPension: annualPensionIncome,
+					pensionAge: wiPensionAge,
+					otherIncome: wiOtherIncome,
+					otherIncomeEndAge: wiOtherIncomeEndAge,
+					currentAge: currentAge,
+					retirementAge: retirementAge,
+					lifeExpectancy: wiLifeExpectancy,
+					startYear: new Date().getFullYear(),
+					children: profile.children,
+					mortgage: profile.mortgage,
+					lifeEvents: profile.lifeEvents,
+					spouse: profile.spouse,
+					assumptions: assumptions,
+					foreignBrokerShare: profile.foreignBrokerShare ?? 0,
+					glidePathEnabled: profile.glidePathEnabled ?? false
+				}
+			: null
 	);
 
 	let withdrawalPlans = $derived<WithdrawalPlan[]>(
@@ -299,6 +342,9 @@
 		</a>
 	</Alert>
 {:else}
+	<!-- Pannello "Ipotesi attive" sempre visibile sopra ai tab: rende il calcolo verificabile -->
+	<AssumptionsPanel bind:assumptions />
+
 	<Tabs tabStyle="underline" contentClass="p-0 mt-6">
 		<TabItem open>
 			{#snippet titleSlot()}
@@ -373,6 +419,13 @@
 					onreset={resetWhatIf}
 				/>
 			</div>
+
+			<!-- Sensitivity Analysis: tornado chart sulle leve principali -->
+			{#if sensitivityParams}
+				<div class="mb-6">
+					<SensitivityTornado baseParams={sensitivityParams} shock={0.1} metric="finalPortfolio" />
+				</div>
+			{/if}
 
 			<!-- Projection Chart -->
 			<ProjectionChart

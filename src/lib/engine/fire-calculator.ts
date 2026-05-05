@@ -5,10 +5,16 @@
  */
 
 import { calculateWithdrawal } from './withdrawal';
-import { calculateNetSalary } from './tax-italy';
+import {
+	calculateNetSalary,
+	invertNetSalary,
+	calculatePortfolioStampDuties
+} from './tax-italy';
+import { DEFAULT_2026, type AssumptionSet } from './assumptions';
 import { totalFamilyExpenses } from './family';
 import { computeYearlyImpact, type LifeEvent } from './life-events';
-import type { Child, Mortgage } from '$lib/db/index';
+import { spouseYearlyCashFlow } from './couple';
+import type { Child, Mortgage, Spouse } from '$lib/db/index';
 
 /** Proiezione anno per anno del portafoglio */
 export interface YearlyProjection {
@@ -57,6 +63,14 @@ export interface YearlyProjection {
 	lifeEventExpense?: number;
 	/** Etichette descrittive degli eventi di vita attivi (per tooltip UI) */
 	lifeEventLabels?: string[];
+	/** Bollo titoli pagato nell'anno (parte italiana del portafoglio) */
+	stampDuty?: number;
+	/** IVAFE pagata nell'anno (parte estera del portafoglio) */
+	ivafe?: number;
+	/** Allocazione equity effettiva applicata in questo anno (post glide path) */
+	equityShare?: number;
+	/** Netto del coniuge nell'anno (lavoro + pensione, post-IRPEF separata) */
+	spouseNetIncome?: number;
 }
 
 /** Parametri per la proiezione deterministica del portafoglio */
@@ -105,6 +119,39 @@ export interface ProjectionParams {
 	municipalTaxRate?: number;
 	/** Eventi di vita parametrici (bonus, disoccupazione, spese una-tantum, part-time) */
 	lifeEvents?: LifeEvent[];
+	/**
+	 * Set di ipotesi fiscali/normative (aliquote IRPEF, INPS, capital gain,
+	 * bollo titoli, IVAFE, fondo pensione). Se omesso usa DEFAULT_2026.
+	 */
+	assumptions?: AssumptionSet;
+	/**
+	 * Quota del portafoglio detenuta su intermediari ESTERI (es. IBKR, Trade
+	 * Republic). 0 = tutto in deposito italiano, 1 = tutto estero. Influenza
+	 * il calcolo di IVAFE vs bollo titoli (stessa aliquota di default ma
+	 * concettualmente diversi). Default 0.
+	 */
+	foreignBrokerShare?: number;
+	/**
+	 * Glide path: se true, l'allocazione equity decresce linearmente da
+	 * `glidePathStartEquity` (oggi) a `glidePathEndEquity` (a `lifeExpectancy`).
+	 * Influenza il rendimento atteso applicato ogni anno (mix equity/bond).
+	 */
+	glidePathEnabled?: boolean;
+	glidePathStartEquity?: number;
+	glidePathEndEquity?: number;
+	/**
+	 * Rendimento atteso lordo dell'asset class equity (decimale, es. 0.07).
+	 * Usato dal glide path per modulare il rendimento.
+	 */
+	expectedEquityReturn?: number;
+	/** Rendimento atteso lordo dell'asset class bond/cash (decimale) */
+	expectedBondReturn?: number;
+	/**
+	 * Coniuge / partner. Quando presente il proiettore aggiunge il netto
+	 * del coniuge ai contributi/redditi di nucleo. IRPEF e INPS sono
+	 * calcolati separatamente sul reddito del coniuge (no joint filing).
+	 */
+	spouse?: Spouse;
 }
 
 /**
@@ -378,8 +425,24 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 		contractType = 'dipendente',
 		regionalTaxRate,
 		municipalTaxRate,
-		lifeEvents
+		lifeEvents,
+		assumptions = DEFAULT_2026,
+		foreignBrokerShare = 0,
+		glidePathEnabled = false,
+		glidePathStartEquity = 0.7,
+		glidePathEndEquity = 0.3,
+		expectedEquityReturn,
+		expectedBondReturn,
+		spouse
 	} = params;
+	// Se non passati esplicitamente, derivo i rendimenti per asset class dal
+	// rendimento medio: equity = expectedReturn + 2 punti, bond = expectedReturn - 2.
+	const equityReturn = expectedEquityReturn ?? Math.max(0, expectedReturn + 0.02);
+	const bondReturn = expectedBondReturn ?? Math.max(0, expectedReturn - 0.02);
+	const useSurtaxes = {
+		regional: regionalTaxRate ?? assumptions.surtaxes.regional,
+		municipal: municipalTaxRate ?? assumptions.surtaxes.municipal
+	};
 
 	const totalYears = lifeExpectancy - currentAge;
 	if (totalYears <= 0) return [];
@@ -417,6 +480,21 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 		// inflazionate per i figli; mutuo nominale perche' la rata e' fissa).
 		const family = totalFamilyExpenses(children, mortgage, year, startYear, inflationRate);
 
+		// Cash flow del coniuge in questo anno (se presente). IRPEF e INPS
+		// sono calcolati separatamente sul reddito del coniuge.
+		const spouseCF = spouse
+			? spouseYearlyCashFlow(
+					spouse,
+					year,
+					startYear,
+					inflationRate,
+					useSurtaxes.regional,
+					useSurtaxes.municipal,
+					assumptions
+			  )
+			: null;
+		const spouseTotalNet = spouseCF ? spouseCF.netSalary + spouseCF.pensionNet : 0;
+
 		// Life events (bonus, disoccupazione, part-time, spese una-tantum)
 		const lifeImpact = computeYearlyImpact(lifeEvents, year);
 		const lifeBonusNominal = lifeImpact.bonusIncome * inflationCumulative;
@@ -440,8 +518,10 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 
 		if (!isRetired) {
 			// PRE-FIRE: il "risparmio netto" disponibile da reddito e' il
-			// contributo base, modulato dagli eventi di vita.
-			const savingsBase = incomeAdjusted - family.total - lifeExpenseNominal + lifeBonusNominal;
+			// contributo base, modulato dagli eventi di vita. Il netto del
+			// coniuge si somma al risparmio del nucleo.
+			const savingsBase =
+				incomeAdjusted - family.total - lifeExpenseNominal + lifeBonusNominal + spouseTotalNet;
 			if (savingsBase >= 0) {
 				contributions = savingsBase + accumPensionIncome;
 			} else {
@@ -488,9 +568,10 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 			}
 
 			// Bilancio di cassa dell'anno:
-			// entrate passive = pensione + altri redditi + bonus una-tantum
+			// entrate passive = pensione + altri redditi + bonus una-tantum + netto coniuge
 			// uscite = prelievo base + spese famiglia + spese una-tantum
-			const totalPassiveIncome = pensionIncome + otherIncomeActive + lifeBonusNominal;
+			const totalPassiveIncome =
+				pensionIncome + otherIncomeActive + lifeBonusNominal + spouseTotalNet;
 			const totalCashNeeds = baseWithdrawal + family.total + lifeExpenseNominal;
 			const netNeed = totalCashNeeds - totalPassiveIncome;
 
@@ -506,17 +587,43 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 			previousWithdrawal = actualWithdrawals;
 		}
 
+		// Rendimento atteso dell'anno: se glide path attivo modula tra equity
+		// e bond linearmente in funzione dell'eta'.
+		let yearReturn = expectedReturn;
+		if (glidePathEnabled) {
+			const ageProgress = Math.min(
+				1,
+				Math.max(0, (age - currentAge) / Math.max(1, lifeExpectancy - currentAge))
+			);
+			const equityShare =
+				glidePathStartEquity + (glidePathEndEquity - glidePathStartEquity) * ageProgress;
+			yearReturn = equityShare * equityReturn + (1 - equityShare) * bondReturn;
+		}
+
 		// Rendimenti lordi
-		const grossReturns = (portfolio + contributions) * expectedReturn;
+		const grossReturns = (portfolio + contributions) * yearReturn;
 
 		// Tasse sui rendimenti (solo se positivi)
 		const taxes = grossReturns > 0 ? grossReturns * taxRate : 0;
 
-		// Rendimenti netti
-		const netReturns = grossReturns - taxes;
+		// Bollo titoli + IVAFE: si calcolano sul controvalore di FINE anno
+		// (cioe' sul portafoglio risultante dopo contributi/prelievi/rendimenti
+		// netti). Per semplicita' di calcolo applichiamo le aliquote sul
+		// portafoglio "lavorato" (portfolio + contributions + netReturns).
+		const portfolioPreStamp = portfolio + contributions + (grossReturns - taxes) - actualWithdrawals;
+		const stampBase = Math.max(0, portfolioPreStamp);
+		const italianShare = Math.max(0, Math.min(1, 1 - foreignBrokerShare));
+		const stampDuties = calculatePortfolioStampDuties(
+			stampBase * italianShare,
+			stampBase * (1 - italianShare),
+			assumptions
+		);
+
+		// Rendimenti netti (al netto di capital gain tax e imposte patrimoniali)
+		const netReturns = grossReturns - taxes - stampDuties.total;
 
 		// Aggiorna portafoglio
-		portfolio = portfolio + contributions + netReturns - actualWithdrawals;
+		portfolio = portfolio + contributions + (grossReturns - taxes) - actualWithdrawals - stampDuties.total;
 
 		// Il portafoglio non può essere negativo (si è esaurito)
 		if (portfolio < 0) portfolio = 0;
@@ -532,18 +639,23 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 		let irpef = 0;
 		let inpsContributions = 0;
 		if (!isRetired && workingNetEstimate > 0) {
-			// Iterazione inversa: parto da gross stimato = netto / 0.72 (aliquota
-			// combinata tipica ~28%) e inflaziono. Per un calcolo piu' accurato
-			// iterativo in 1-2 step si converge.
+			// Lordo→netto in chiusa: invertNetSalary risolve esattamente la
+			// piecewise lineare gross→net (vedi tax-italy.ts).
 			const netTargetNominal = (annualContribution + annualExpenses) * inflationCumulative;
-			let grossGuess = netTargetNominal / 0.72;
-			for (let step = 0; step < 3; step++) {
-				const breakdown = calculateNetSalary(grossGuess, contractType, regionalTaxRate, municipalTaxRate);
-				if (breakdown.net === 0) break;
-				const ratio = netTargetNominal / breakdown.net;
-				grossGuess = grossGuess * ratio;
-			}
-			const finalBreakdown = calculateNetSalary(grossGuess, contractType, regionalTaxRate, municipalTaxRate);
+			const grossExact = invertNetSalary(
+				netTargetNominal,
+				contractType,
+				useSurtaxes.regional,
+				useSurtaxes.municipal,
+				assumptions
+			);
+			const finalBreakdown = calculateNetSalary(
+				grossExact,
+				contractType,
+				useSurtaxes.regional,
+				useSurtaxes.municipal,
+				assumptions
+			);
 			grossSalary = finalBreakdown.gross;
 			netSalary = finalBreakdown.net;
 			irpef = finalBreakdown.totalTax;
@@ -577,7 +689,24 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 			totalExpenses: Math.round(totalExpensesYear),
 			lifeEventBonus: Math.round(lifeBonusNominal),
 			lifeEventExpense: Math.round(lifeExpenseNominal),
-			lifeEventLabels: lifeImpact.activeLabels.length > 0 ? lifeImpact.activeLabels : undefined
+			lifeEventLabels: lifeImpact.activeLabels.length > 0 ? lifeImpact.activeLabels : undefined,
+			stampDuty: Math.round(stampDuties.stampDuty),
+			ivafe: Math.round(stampDuties.ivafe),
+			equityShare: glidePathEnabled
+				? Math.max(
+						0,
+						Math.min(
+							1,
+							glidePathStartEquity +
+								(glidePathEndEquity - glidePathStartEquity) *
+									Math.min(
+										1,
+										Math.max(0, (age - currentAge) / Math.max(1, lifeExpectancy - currentAge))
+									)
+						)
+				  )
+				: undefined,
+			spouseNetIncome: spouseCF ? Math.round(spouseTotalNet) : undefined
 		});
 	}
 

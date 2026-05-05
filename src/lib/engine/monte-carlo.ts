@@ -90,6 +90,23 @@ export interface MonteCarloParams {
 	correlationMatrix?: number[][];
 	/** Callback per aggiornamenti di progresso */
 	onProgress?: (percent: number) => void;
+	/**
+	 * Glide path: riduzione progressiva dell'allocazione equity nel tempo.
+	 * Se enabled, override `stockAllocation`/`bondAllocation` in funzione
+	 * di (currentAge + year) tra `glidePathStartEquity` (anno 0) e
+	 * `glidePathEndEquity` (anno finale).
+	 */
+	glidePathEnabled?: boolean;
+	glidePathStartEquity?: number;
+	glidePathEndEquity?: number;
+	/**
+	 * Bollo titoli annuo applicato al controvalore di portafoglio (0.002 default).
+	 * IVAFE applicata alla quota foreignBrokerShare (0..1) del portafoglio.
+	 * Default 0/0/0 = retrocompatibile, MC non applica imposte patrimoniali.
+	 */
+	stampDutyRate?: number;
+	ivafeRate?: number;
+	foreignBrokerShare?: number;
 }
 
 /** Risultato completo della simulazione Monte Carlo */
@@ -337,9 +354,21 @@ function runSingleSimulation(params: MonteCarloParams): number[] {
 				inflation = returns.inflation;
 			}
 
+			// Glide path: se abilitato, modulo l'allocazione equity tra
+			// startEquity (anno 0) e endEquity (anno finale) in modo lineare
+			// rispetto al tempo totale di simulazione.
+			let stockAlloc = params.stockAllocation;
+			let bondAlloc = params.bondAllocation;
+			if (params.glidePathEnabled) {
+				const totalLen = Math.max(1, totalYears - 1);
+				const t = Math.min(1, year / totalLen);
+				const startEq = params.glidePathStartEquity ?? params.stockAllocation;
+				const endEq = params.glidePathEndEquity ?? Math.max(0.2, params.stockAllocation - 0.4);
+				stockAlloc = startEq + (endEq - startEq) * t;
+				bondAlloc = Math.max(0, 1 - stockAlloc);
+			}
 			// Rendimento ponderato del portafoglio
-			portfolioReturn =
-				stockReturn * params.stockAllocation + bondReturn * params.bondAllocation;
+			portfolioReturn = stockReturn * stockAlloc + bondReturn * bondAlloc;
 		}
 
 		// Fase di accumulazione: aggiungi contributi
@@ -350,6 +379,19 @@ function runSingleSimulation(params: MonteCarloParams): number[] {
 		// Applica rendimenti
 		const returns = portfolio * portfolioReturn;
 		portfolio += returns;
+
+		// Imposte patrimoniali (bollo titoli + IVAFE) sul controvalore di
+		// fine anno. Default 0 = retrocompatibile con simulazioni storiche.
+		const stampRate = params.stampDutyRate ?? 0;
+		const ivafeRate = params.ivafeRate ?? 0;
+		const foreignShare = Math.max(0, Math.min(1, params.foreignBrokerShare ?? 0));
+		if ((stampRate > 0 || ivafeRate > 0) && portfolio > 0) {
+			const italianValue = portfolio * (1 - foreignShare);
+			const foreignValue = portfolio * foreignShare;
+			const stamp = italianValue * stampRate;
+			const ivafe = foreignValue * ivafeRate;
+			portfolio = Math.max(0, portfolio - stamp - ivafe);
+		}
 
 		// Fase di decumulo: preleva
 		if (isRetired && portfolio > 0) {

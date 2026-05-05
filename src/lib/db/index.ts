@@ -73,6 +73,40 @@ export interface PensionInfo {
 	pensionAge: number;
 }
 
+/**
+ * Profilo del coniuge / partner convivente. Modella un secondo soggetto del
+ * nucleo familiare con redditi, INPS e pensione propri. La logica fiscale
+ * italiana e' "individuale" (no joint filing): IRPEF si calcola separatamente
+ * per ciascuno, ma i flussi si sommano nel cash flow del nucleo.
+ *
+ * Nota: i contributi al fondo pensione del coniuge vanno dichiarati a parte
+ * (campo `pensionFundContribution`) perche' la deducibilita' e' personale.
+ */
+export interface Spouse {
+	/** Nome del partner (per UI) */
+	name: string;
+	/** Anno di nascita */
+	birthYear: number;
+	/** Eta' di pensionamento attesa (puo' essere diversa dall'utente principale) */
+	retirementAge: number;
+	/** Reddito annuale lordo (busta paga / autonomo) */
+	annualIncome: number;
+	/** Tipo contratto (per il calcolo INPS e netto) */
+	contractType: 'dipendente' | 'autonomo' | 'parasubordinato';
+	/** Crescita reale annua del reddito (es. 0.01 = +1% sopra l'inflazione) */
+	incomeGrowthRate: number;
+	/** Pensione INPS attesa (mensile lorda) */
+	pensionMonthly: number;
+	/** Eta' di accesso alla pensione INPS */
+	pensionAge: number;
+	/** Anni di contribuzione attuali */
+	contributionYears: number;
+	/** Contributo annuo al fondo pensione complementare (deducibile per il partner) */
+	pensionFundContribution: number;
+	/** Eta' di reversibilita' della pensione del primo (60% standard) — solo informativa */
+	includeReversibility?: boolean;
+}
+
 /** Configurazione di una asset class salvata nel DB */
 export interface SavedAssetClassConfig {
 	name: string;
@@ -131,6 +165,31 @@ export interface Profile {
 	lifeEvents?: LifeEvent[];
 	/** Stock minusvalenze pregresse (compensabili per 4 anni). Additivo. */
 	capitalLossStock?: { year: number; remaining: number }[];
+	/**
+	 * Coniuge / partner convivente. Quando presente, il calcolatore modella
+	 * il nucleo a due redditi: due IRPEF separate, due INPS, eventualmente
+	 * due fondi pensione. Le spese sono di nucleo (annualExpenses copre
+	 * entrambi). Additivo: assente sui profili legacy. (db v5)
+	 */
+	spouse?: Spouse;
+	/**
+	 * Quota del portafoglio detenuta su intermediari ESTERI (0..1). Influenza
+	 * IVAFE vs bollo titoli nel calcolo annuale. Default 0 (tutto IT). (db v5)
+	 */
+	foreignBrokerShare?: number;
+	/**
+	 * ID del set di assunzioni fiscali da usare per le proiezioni di questo
+	 * profilo. Default 'default-2026'. (db v5)
+	 */
+	assumptionsId?: string;
+	/**
+	 * Glide path equity→bond: se true, l'allocazione equity decresce nel tempo
+	 * tra `glidePathStartEquity` (oggi) e `glidePathEndEquity` (a lifeExpectancy).
+	 * (db v5)
+	 */
+	glidePathEnabled?: boolean;
+	glidePathStartEquity?: number;
+	glidePathEndEquity?: number;
 }
 
 export interface Scenario {
@@ -253,6 +312,17 @@ db.version(3).stores({
 
 // v4: aggiunti lifeEvents[] e capitalLossStock[] al Profile (additivi).
 db.version(4).stores({
+	profiles: '++id, name, createdAt, updatedAt',
+	scenarios: '++id, profileId, name, type, createdAt',
+	simulation_results: '++id, scenarioId, profileId, runAt',
+	risk_events: '++id, name, type',
+	portfolio_snapshots: '++id, profileId, date',
+	cash_flows: '++id, profileId, date, type'
+});
+
+// v5: aggiunti spouse, foreignBrokerShare, assumptionsId, glide path al Profile.
+// Tutti additivi: profili esistenti continuano a funzionare senza migrazione.
+db.version(5).stores({
 	profiles: '++id, name, createdAt, updatedAt',
 	scenarios: '++id, profileId, name, type, createdAt',
 	simulation_results: '++id, scenarioId, profileId, runAt',

@@ -123,9 +123,21 @@ export function childTotalRemainingCost(child: Child, baseYear: number): number 
 }
 
 /**
- * Capitale residuo del mutuo a una data futura. Approssimazione lineare
- * in base ai mesi pagati. Per un calcolo esatto servirebbe l'ammortamento
- * francese, ma per la UI informativa va bene.
+ * Capitale residuo del mutuo a una data futura, calcolato con AMMORTAMENTO
+ * FRANCESE (rata costante, quota interessi decrescente, quota capitale
+ * crescente). Sostituisce la vecchia approssimazione lineare.
+ *
+ * Formula: B_k = balance * [(1+i)^n - (1+i)^k] / [(1+i)^n - 1]
+ * dove i = tasso mensile, n = mesi totali iniziali, k = mesi pagati.
+ *
+ * Per i = 0 (mutuo a tasso zero, edge case) si torna alla lineare. Per
+ * mutui in cui la rata indicata non e' coerente con balance/rate/months
+ * (utente l'ha messa a mano) si tollera lo scarto: la formula chiusa usa
+ * solo balance/rate/n_initial e da' il residuo del piano teorico.
+ *
+ * @param mortgage - Profilo del mutuo (balance = capitale residuo OGGI a baseYear)
+ * @param calendarYear - Anno di interesse
+ * @param baseYear - Anno di riferimento (oggi)
  */
 export function mortgageRemainingBalanceAt(
 	mortgage: Mortgage,
@@ -134,9 +146,100 @@ export function mortgageRemainingBalanceAt(
 ): number {
 	if (!mortgage || mortgage.remainingMonths <= 0) return 0;
 	const monthsElapsed = Math.max(0, (calendarYear - baseYear) * 12);
-	const monthsLeft = Math.max(0, mortgage.remainingMonths - monthsElapsed);
-	const fraction = monthsLeft / mortgage.remainingMonths;
-	return mortgage.balance * fraction;
+	if (monthsElapsed >= mortgage.remainingMonths) return 0;
+
+	const i = (mortgage.interestRate || 0) / 12;
+	const n = mortgage.remainingMonths;
+	const k = monthsElapsed;
+
+	if (i <= 0) {
+		const monthsLeft = n - k;
+		return Math.round(((mortgage.balance * monthsLeft) / n) * 100) / 100;
+	}
+
+	const factorN = Math.pow(1 + i, n);
+	const factorK = Math.pow(1 + i, k);
+	const remaining = (mortgage.balance * (factorN - factorK)) / (factorN - 1);
+	return Math.round(Math.max(0, remaining) * 100) / 100;
+}
+
+/** Riga del piano di ammortamento mensile francese */
+export interface AmortizationRow {
+	month: number; // 1-based
+	payment: number; // rata mensile (costante)
+	interest: number; // quota interessi
+	principal: number; // quota capitale
+	remainingBalance: number; // capitale residuo a fine mese
+}
+
+/**
+ * Genera il piano di ammortamento francese mese per mese (rata costante).
+ * Utile per la UI dettagliata "vedi rata per rata" e per separare quota
+ * interessi (deducibile fino a 4.000€ * 19% se prima casa) da quota capitale.
+ *
+ * @param balance - Capitale iniziale
+ * @param annualRate - Tasso annuo (es. 0.035)
+ * @param totalMonths - Durata in mesi
+ */
+export function frenchAmortizationSchedule(
+	balance: number,
+	annualRate: number,
+	totalMonths: number
+): AmortizationRow[] {
+	if (balance <= 0 || totalMonths <= 0) return [];
+	const i = annualRate / 12;
+	const payment =
+		i === 0
+			? balance / totalMonths
+			: (balance * i * Math.pow(1 + i, totalMonths)) / (Math.pow(1 + i, totalMonths) - 1);
+
+	const rows: AmortizationRow[] = [];
+	let remaining = balance;
+	for (let m = 1; m <= totalMonths; m++) {
+		const interest = remaining * i;
+		const principal = payment - interest;
+		remaining = Math.max(0, remaining - principal);
+		rows.push({
+			month: m,
+			payment: Math.round(payment * 100) / 100,
+			interest: Math.round(interest * 100) / 100,
+			principal: Math.round(principal * 100) / 100,
+			remainingBalance: Math.round(remaining * 100) / 100
+		});
+	}
+	return rows;
+}
+
+/**
+ * Quota interessi totale pagata in un dato anno di calendario su un mutuo
+ * a piano francese. Utile per calcolare la detrazione IRPEF sugli interessi
+ * passivi della prima casa (19% fino a 4.000€).
+ */
+export function mortgageAnnualInterest(
+	mortgage: Mortgage,
+	calendarYear: number,
+	baseYear: number
+): number {
+	if (!mortgage || mortgage.remainingMonths <= 0) return 0;
+	const yearsElapsed = calendarYear - baseYear;
+	if (yearsElapsed < 0) return 0;
+	const monthsBefore = yearsElapsed * 12;
+	if (monthsBefore >= mortgage.remainingMonths) return 0;
+
+	const monthsLeft = Math.min(12, mortgage.remainingMonths - monthsBefore);
+	const i = (mortgage.interestRate || 0) / 12;
+	if (i <= 0) return 0;
+
+	let total = 0;
+	let remaining = mortgageRemainingBalanceAt(mortgage, calendarYear, baseYear);
+	const payment = mortgage.monthlyPayment;
+	for (let m = 0; m < monthsLeft; m++) {
+		const interest = remaining * i;
+		const principal = Math.max(0, payment - interest);
+		remaining = Math.max(0, remaining - principal);
+		total += interest;
+	}
+	return Math.round(total * 100) / 100;
 }
 
 /**
