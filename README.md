@@ -138,9 +138,18 @@ src/
 
 > Avvia l'app con `npm run dev` per esplorare tutte le funzionalita'.
 
+## Contributi
+
+I contributi sono benvenuti: il progetto **accetta Pull Request su GitHub**.
+
+- Per modifiche rilevanti, apri prima una issue per discuterne (cosi' evitiamo lavoro duplicato).
+- Per orientarti nel codice parti da [CLAUDE.md](CLAUDE.md) (architettura, comandi, convenzioni).
+- Prima di aprire una PR esegui `npm run check` (non deve segnalare errori) e mantieni lo stile esistente (italiano, Svelte 5 in runes mode).
+- Ogni nuova funzionalita' va documentata nella guida interattiva (`src/lib/guida/steps.ts`).
+
 ## Licenza
 
-MIT
+Distribuito con licenza [MIT](LICENSE): sei libero di usare, modificare e distribuire il codice, mantenendo l'avviso di copyright.
 
 ---
 
