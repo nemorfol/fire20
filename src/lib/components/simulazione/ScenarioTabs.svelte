@@ -1,7 +1,5 @@
 <script lang="ts">
 	import {
-		Tabs,
-		TabItem,
 		Table,
 		TableBody,
 		TableBodyCell,
@@ -10,7 +8,7 @@
 		TableHeadCell
 	} from 'flowbite-svelte';
 	import type { MonteCarloResult } from '$lib/engine/monte-carlo';
-	import { formatCurrency, formatCompact } from '$lib/utils/format';
+	import { formatCurrency } from '$lib/utils/format';
 
 	let {
 		result
@@ -20,21 +18,27 @@
 
 	let activeTab = $state(0);
 
+	// NB: queste sono BANDE DI PERCENTILE (sezione trasversale su tutte le
+	// simulazioni, anno per anno), NON singole traiettorie di un portafoglio.
+	// Il valore di un anno e quello dell'anno dopo appartengono a simulazioni
+	// diverse, quindi NON mostriamo una "variazione %" anno-su-anno: non sarebbe
+	// un rendimento reale e quando la banda tocca lo zero darebbe un fuorviante
+	// "-100%".
 	let scenarios = $derived([
 		{
-			label: 'Scenario Peggiore (P5)',
+			label: 'Banda pessimistica (P5)',
 			data: result.worstCase,
 			color: 'text-red-600 dark:text-red-400',
 			icon: '&#9660;'
 		},
 		{
-			label: 'Scenario Mediano (P50)',
+			label: 'Banda mediana (P50)',
 			data: result.percentiles.p50,
 			color: 'text-blue-600 dark:text-blue-400',
 			icon: '&#9679;'
 		},
 		{
-			label: 'Scenario Migliore (P95)',
+			label: 'Banda ottimistica (P95)',
 			data: result.bestCase,
 			color: 'text-green-600 dark:text-green-400',
 			icon: '&#9650;'
@@ -45,11 +49,17 @@
 </script>
 
 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
-	<h4 class="text-base font-semibold text-gray-900 dark:text-white mb-4">
-		Dettaglio Scenari
+	<h4 class="text-base font-semibold text-gray-900 dark:text-white mb-1">
+		Dettaglio bande di percentile
 	</h4>
+	<p class="text-xs text-gray-500 dark:text-gray-400 mb-4">
+		Ogni riga è il valore di quel percentile in quell'anno, calcolato su tutte le simulazioni:
+		è un <strong>inviluppo statistico</strong>, non l'andamento di un singolo portafoglio. Anni
+		consecutivi appartengono a simulazioni diverse, perciò la loro differenza non rappresenta un
+		rendimento (per questo non mostriamo una variazione percentuale anno&#8209;su&#8209;anno).
+	</p>
 
-	<div class="flex gap-2 mb-4">
+	<div class="flex gap-2 mb-4 flex-wrap">
 		{#each scenarios as scenario, idx}
 			<button
 				class="px-4 py-2 text-sm font-medium rounded-lg transition-colors {activeTab === idx
@@ -68,28 +78,14 @@
 			<Table striped hoverable>
 				<TableHead class="sticky top-0">
 					<TableHeadCell class="text-xs">Anno</TableHeadCell>
-					<TableHeadCell class="text-xs text-right">Valore Portafoglio</TableHeadCell>
-					<TableHeadCell class="text-xs text-right">Variazione</TableHeadCell>
+					<TableHeadCell class="text-xs text-right">Valore portafoglio (percentile)</TableHeadCell>
 				</TableHead>
 				<TableBody>
 					{#each activeScenario.data as value, idx}
-						{@const prevValue = idx > 0 ? activeScenario.data[idx - 1] : value}
-						{@const change = idx > 0 ? ((value - prevValue) / (prevValue || 1)) * 100 : 0}
-						{@const changeColor =
-							change >= 0
-								? 'text-green-600 dark:text-green-400'
-								: 'text-red-600 dark:text-red-400'}
 						<TableBodyRow>
 							<TableBodyCell class="font-medium">Anno {idx + 1}</TableBodyCell>
 							<TableBodyCell class="text-right {activeScenario.color}">
 								{formatCurrency(value)}
-							</TableBodyCell>
-							<TableBodyCell class="text-right text-xs {changeColor}">
-								{#if idx > 0}
-									{change >= 0 ? '+' : ''}{change.toFixed(1)}%
-								{:else}
-									&mdash;
-								{/if}
 							</TableBodyCell>
 						</TableBodyRow>
 					{/each}

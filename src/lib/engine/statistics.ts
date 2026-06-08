@@ -188,7 +188,10 @@ export function correlatedReturns(
 		for (let j = 0; j <= i; j++) {
 			correlatedZ += L[i][j] * Z[j];
 		}
-		returns.push(means[i] + stdDevs[i] * correlatedZ);
+		// Floor a -99%: un rendimento annuo non puo' essere peggiore di -100% (non si
+		// puo' perdere piu' del capitale). La normale e' illimitata a sinistra, quindi
+		// con volatilita' alta genererebbe r <= -100% che azzerano il portafoglio.
+		returns.push(Math.max(-0.99, means[i] + stdDevs[i] * correlatedZ));
 	}
 
 	return returns;

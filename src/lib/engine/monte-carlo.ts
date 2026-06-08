@@ -217,9 +217,11 @@ function generateReturn(
 			params.expectedStockReturn ?? 0.07,
 			params.stockStdDev ?? 0.16
 		);
-		const bondReturn = gaussianRandom(
-			params.expectedBondReturn ?? 0.03,
-			params.bondStdDev ?? 0.06
+		// Floor a -99%: una normale puo' generare rendimenti <= -100% (impossibili,
+		// non si perde piu' del capitale); senza limite azzererebbero il portafoglio.
+		const bondReturn = Math.max(
+			-0.99,
+			gaussianRandom(params.expectedBondReturn ?? 0.03, params.bondStdDev ?? 0.06)
 		);
 		return { stockReturn, bondReturn, inflation: Math.max(0, inflation) };
 	}
@@ -260,6 +262,12 @@ function runSingleSimulation(params: MonteCarloParams): number[] {
 	let portfolio = params.initialPortfolio;
 	let initialRetirementPortfolio = 0;
 	let previousWithdrawal = 0;
+	// Fattore di inflazione cumulata realizzata lungo il percorso (1 al primo
+	// anno): indicizza il prelievo 'fixed' a importo reale fisso.
+	let cumulativeInflation = 1;
+	// Inflazione cumulata catturata all'inizio della pensione: indicizza il
+	// prelievo del ramo di fallback a partire da quel momento (fattore 1 al 1o anno).
+	let inflationAtRetirementStart = 1;
 
 	// Modalità multi-asset: usa assetClasses e correlationMatrix
 	const useMultiAsset = params.assetClasses && params.assetClasses.length > 0;
@@ -315,6 +323,7 @@ function runSingleSimulation(params: MonteCarloParams): number[] {
 		// Salva il portafoglio all'inizio della pensione
 		if (year === params.yearsToFire) {
 			initialRetirementPortfolio = portfolio;
+			inflationAtRetirementStart = cumulativeInflation;
 			previousWithdrawal = portfolio * params.withdrawalRate;
 		}
 
@@ -399,13 +408,16 @@ function runSingleSimulation(params: MonteCarloParams): number[] {
 
 			switch (params.withdrawalStrategy) {
 				case 'fixed':
-					withdrawal = calculateWithdrawal('fixed', {
-						initialPortfolio: initialRetirementPortfolio,
-						portfolio,
-						rate: params.withdrawalRate,
-						inflationRate: inflation,
-						year: retirementYear
-					});
+					// Prelievo ancorato alle SPESE REALI dell'utente, indicizzate
+					// all'inflazione CUMULATA realizzata su questo percorso. Ancorarlo a
+					// initialPortfolio*rate (prima) rendeva l'esito scale-invariante e
+					// ignorava annualExpenses. Coerente col proiettore deterministico.
+					withdrawal =
+						params.annualExpenses > 0
+							? params.annualExpenses * cumulativeInflation
+							: initialRetirementPortfolio *
+								params.withdrawalRate *
+								(cumulativeInflation / inflationAtRetirementStart);
 					break;
 
 				case 'vpw':
@@ -451,6 +463,10 @@ function runSingleSimulation(params: MonteCarloParams): number[] {
 		// Il portafoglio non può essere negativo
 		portfolio = Math.max(0, portfolio);
 		portfolioValues.push(portfolio);
+
+		// Accumula l'inflazione realizzata di quest'anno: indicizza i prelievi
+		// futuri all'inflazione cumulata (dopo aver usato cumulativeInflation).
+		cumulativeInflation *= 1 + inflation;
 	}
 
 	return portfolioValues;

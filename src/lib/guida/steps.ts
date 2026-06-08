@@ -312,6 +312,10 @@ Se il numero ti sembra troppo basso o troppo alto, verifica <em>Profilo → Pens
 <strong>Patrimonio liquido vs illiquido:</strong> nel tab <em>Profilo → Patrimonio</em> gli asset sono divisi in due gruppi. Solo i <strong>liquidi</strong> (ETF, azioni, obbligazioni, cash, oro, cripto, fondo pensione) entrano nel calcolo del FIRE Number perché sono prelevabili al 4%. Gli <strong>illiquidi</strong> (immobili, TFR) non vengono inclusi: producono reddito (che va in "Altri redditi") o hanno vincoli di prelievo. Questo evita il doppio conteggio classico: se conti il valore di un immobile come "patrimonio da prelevare" E il suo affitto come reddito, stai sommando due benefici dello stesso asset.
 </div>
 
+<div class="warning">
+<strong>Avviso "FIRE molto vicino: controlla le ipotesi":</strong> quando il calcolatore stima che manca <strong>1 anno o meno</strong> al FIRE, mostra un riquadro giallo che invita a verificare le ipotesi più ottimistiche. Un FIRE "troppo presto" spesso dipende da: il <strong>fondo pensione</strong> conteggiato tra i liquidi (vedi sopra) ma in realtà prelevabile solo via <strong>RITA</strong> in prossimità della pensione, quindi <em>oggi</em> non ancora disponibile per vivere di rendita; il <strong>valore attuale della pensione INPS</strong> e di <strong>altri redditi</strong> (affitti, dividendi) che abbassano il FIRE Number. Il riquadro confronta anche il FIRE Number "classico" (spese / SWR, senza questi aiuti) con quello ridotto effettivamente usato, così vedi di quanto le rendite future stanno abbassando il target. Se l'avviso compare, apri la <strong>Simulazione Monte Carlo</strong> per testare la robustezza del piano contro i ribassi di mercato.
+</div>
+
 <div class="tip">
 <strong>Consiglio:</strong> Calcola il FIRE Number con diversi scenari: ottimistico (spese basse, rendimenti buoni), realistico (spese medie, rendimenti storici), pessimistico (spese alte, rendimenti bassi). Il tuo piano dovrebbe funzionare anche nello scenario pessimistico.
 </div>
@@ -724,6 +728,12 @@ Simulazione con 600.000€, prelievo 24.000€/anno, 60/40, 40 anni:<br>
 — 90° percentile a 40 anni: <strong>2.400.000€</strong> (nel 10% migliore, diventi ricco)<br><br>
 Questo significa che nella maggior parte dei casi il piano funziona, ma c'è un rischio non trascurabile di fallimento.
 </div>
+
+<h3>Bande di percentile, non singole traiettorie</h3>
+<p>Il pannello <strong>"Dettaglio bande di percentile"</strong> mostra, per ogni anno, il valore di un percentile (P5 pessimistica, P50 mediana, P95 ottimistica) calcolato <strong>su tutte le simulazioni</strong>: è un <strong>inviluppo statistico</strong>, non l'andamento di un singolo portafoglio. Il valore di un anno e quello dell'anno successivo possono appartenere a simulazioni diverse, perciò la loro <strong>differenza percentuale non è un rendimento</strong>. Quando in un certo anno abbastanza simulazioni si azzerano, la banda P5 (o P50) scende di colpo a 0: non vuol dire che un portafoglio ha perso il 100% in un anno, ma solo che da quell'anno almeno il 5% (o il 50%) degli scenari risulta esaurito.</p>
+
+<h3>Il prelievo segue le tue spese reali</h3>
+<p>La simulazione preleva ogni anno le <strong>spese annue che hai indicato</strong> (indicizzate all'inflazione realizzata), non una percentuale del capitale. La conseguenza, corretta, è che <strong>il tasso di successo dipende dalla cifra investita</strong>: a parità di spese, un capitale maggiore dura di più, mentre un capitale troppo basso rispetto alle spese porta al fallimento già nei primi anni qualunque strategia tu scelga. Se vedi un tasso di successo basso, confronta le spese annue con il patrimonio: stai probabilmente prelevando una percentuale troppo alta.</p>
 
 <h3>Quale Tasso di Successo Puntare?</h3>
 <p>La risposta dipende dalla tua flessibilità:</p>

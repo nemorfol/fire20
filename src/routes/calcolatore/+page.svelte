@@ -16,6 +16,7 @@
 		TableColumnSolid,
 		CashSolid
 	} from 'flowbite-svelte-icons';
+	import { formatCurrency } from '$lib/utils/format';
 
 	import type { Profile } from '$lib/db/index';
 	import { getAllProfiles } from '$lib/db/profiles';
@@ -166,6 +167,13 @@
 	);
 
 	let gap = $derived(fireNumber - wiInitialPortfolio);
+
+	// Trasparenza: il FIRE puo' risultare "troppo presto" per ipotesi ottimistiche
+	// (fondo pensione contato come liquido, pensione/altri redditi che abbattono
+	// il target). Mostriamo un avviso che spiega i driver quando capita.
+	let pensionFundAmount = $derived(profile?.portfolio?.pensionFund ?? 0);
+	let fireReductionVsClassic = $derived(Math.max(0, fireNumberClassic - fireNumber));
+	let fireLooksEarly = $derived(yearsToFire >= 0 && yearsToFire <= 1);
 
 	let retirementAge = $derived(wiRetirementAge);
 
@@ -382,6 +390,52 @@
 				{coastFireNumber}
 				{gap}
 			/>
+
+			{#if fireLooksEarly}
+				<Alert color="yellow" class="mt-6">
+					{#snippet icon()}
+						<InfoCircleSolid class="w-5 h-5" />
+					{/snippet}
+					<span class="font-medium">FIRE molto vicino: controlla le ipotesi.</span>
+					<p class="mt-2 text-sm">
+						Il risultato indica che sei (quasi) gia' FIRE. Spesso dipende da ipotesi
+						ottimistiche che vale la pena verificare:
+					</p>
+					<ul class="mt-2 ml-4 list-disc text-sm space-y-1">
+						{#if pensionFundAmount > 0}
+							<li>
+								Il patrimonio di partenza usato per il calcolo ({formatCurrency(wiInitialPortfolio)})
+								comprende, nel dato di profilo, il <strong>fondo pensione</strong>
+								({formatCurrency(pensionFundAmount)}), prelevabile
+								pero' solo via <strong>RITA</strong> in prossimita' della pensione: oggi non e'
+								davvero disponibile per vivere di rendita.
+							</li>
+						{/if}
+						{#if annualPensionIncome > 0}
+							<li>
+								Il FIRE number e' ridotto dal valore attuale della <strong>pensione INPS</strong>
+								(~{formatCurrency(annualPensionIncome)}/anno dai {wiPensionAge} anni).
+							</li>
+						{/if}
+						{#if wiOtherIncome > 0}
+							<li>
+								Sono conteggiati <strong>altri redditi</strong> ({formatCurrency(wiOtherIncome)}/anno)
+								come rendita che abbassa il capitale necessario.
+							</li>
+						{/if}
+						{#if fireReductionVsClassic > 0}
+							<li>
+								Senza questi aiuti il FIRE number "classico" (spese / SWR) sarebbe
+								<strong>{formatCurrency(fireNumberClassic)}</strong>, non {formatCurrency(fireNumber)}.
+							</li>
+						{/if}
+					</ul>
+					<p class="mt-2 text-sm">
+						Apri la <strong>Simulazione Monte Carlo</strong> per testare la robustezza del piano
+						contro i ribassi di mercato.
+					</p>
+				</Alert>
+			{/if}
 		</TabItem>
 
 		<TabItem>
