@@ -584,7 +584,11 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 				actualWithdrawals = 0;
 				contributions = -netNeed;
 			}
-			previousWithdrawal = actualWithdrawals;
+			// Guyton-Klinger (e strategie path-dependent) tracciano il LIVELLO di
+			// prelievo generato dalla strategia, NON il prelievo netto dal portafoglio
+			// dopo i redditi passivi: usare actualWithdrawals faceva collassare a 0 la
+			// baseline GK negli anni di surplus. Coerente con monte-carlo.ts.
+			previousWithdrawal = baseWithdrawal;
 		}
 
 		// Rendimento atteso dell'anno: se glide path attivo modula tra equity

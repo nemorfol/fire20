@@ -735,6 +735,8 @@ Questo significa che nella maggior parte dei casi il piano funziona, ma c'è un 
 <h3>Il prelievo segue le tue spese reali</h3>
 <p>La simulazione preleva ogni anno le <strong>spese annue che hai indicato</strong> (indicizzate all'inflazione realizzata), non una percentuale del capitale. La conseguenza, corretta, è che <strong>il tasso di successo dipende dalla cifra investita</strong>: a parità di spese, un capitale maggiore dura di più, mentre un capitale troppo basso rispetto alle spese porta al fallimento già nei primi anni qualunque strategia tu scelga. Se vedi un tasso di successo basso, confronta le spese annue con il patrimonio: stai probabilmente prelevando una percentuale troppo alta.</p>
 
+<p>Nel pannello di configurazione la sezione <strong>"Redditi in pensione (opzionale)"</strong> ti permette di indicare la <strong>pensione INPS</strong> (con l'età di decorrenza) e gli <strong>altri redditi</strong> (affitti, dividendi, con l'età fino a cui durano): questi flussi <strong>riducono il prelievo netto</strong> dal portafoglio e l'eventuale surplus viene reinvestito, esattamente come fa il calcolatore deterministico. Per un risparmiatore italiano che prenderà la pensione INPS, lasciare questi campi a 0 rende la simulazione troppo pessimista, perché obbliga il portafoglio a coprire da solo tutte le spese a vita.</p>
+
 <h3>Quale Tasso di Successo Puntare?</h3>
 <p>La risposta dipende dalla tua flessibilità:</p>
 

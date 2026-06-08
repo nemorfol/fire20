@@ -191,7 +191,12 @@
 					glidePathEndEquity: params.glidePathEndEquity,
 					stampDutyRate: params.stampDutyRate ?? DEFAULT_2026.capital.stampDuty,
 					ivafeRate: params.ivafeRate ?? DEFAULT_2026.capital.ivafe,
-					foreignBrokerShare: params.foreignBrokerShare ?? 0
+					foreignBrokerShare: params.foreignBrokerShare ?? 0,
+					currentAge: params.currentAge,
+					annualPension: params.annualPension ?? 0,
+					pensionAge: params.pensionAge,
+					otherIncome: params.otherIncome ?? 0,
+					otherIncomeEndAge: params.otherIncomeEndAge
 				} satisfies MonteCarloParams
 			});
 		} catch (err) {

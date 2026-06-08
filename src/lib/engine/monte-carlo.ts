@@ -78,6 +78,14 @@ export interface MonteCarloParams {
 	currentAge?: number;
 	/** Aspettativa di vita (per VPW) */
 	lifeExpectancy?: number;
+	/** Pensione INPS annua lorda (euro di oggi), attiva da pensionAge. Default 0 = assente. */
+	annualPension?: number;
+	/** Eta' di accesso alla pensione INPS. Senza una pensionAge valida non ha effetto. */
+	pensionAge?: number;
+	/** Altri redditi annui post-FIRE (affitti, dividendi; euro di oggi). Default 0. */
+	otherIncome?: number;
+	/** Eta' fino a cui otherIncome continua (incluso). Default: nessun limite. */
+	otherIncomeEndAge?: number;
 	/** Rapporto CAPE (per CAPE-based) */
 	capeRatio?: number;
 	/** Usa rendimenti correlati (Cholesky) per modalita' parametrica */
@@ -383,6 +391,16 @@ function runSingleSimulation(params: MonteCarloParams): number[] {
 		// Fase di accumulazione: aggiungi contributi
 		if (!isRetired) {
 			portfolio += params.annualContribution;
+			// Se la pensione INPS decorre DURANTE l'accumulazione (eta' attuale +
+			// anno >= pensionAge ma siamo ancora pre-FIRE), va accreditata anche
+			// qui: il deterministico (fire-calculator.ts) la aggiunge ai contributi
+			// con accumPensionIncome. Senza questo, MC e proiezione divergono per
+			// chi ha yearsToFire alto. otherIncome resta escluso in accumulo, anche
+			// nel deterministico viene consumato solo nel ramo di decumulo.
+			const ageAccum = (params.currentAge ?? 40) + year;
+			if (ageAccum >= (params.pensionAge ?? Infinity)) {
+				portfolio += (params.annualPension ?? 0) * cumulativeInflation;
+			}
 		}
 
 		// Applica rendimenti
@@ -456,8 +474,23 @@ function runSingleSimulation(params: MonteCarloParams): number[] {
 					withdrawal = portfolio * params.withdrawalRate;
 			}
 
+			// Redditi passivi (pensione INPS + altri redditi) riducono il prelievo
+			// netto dal portafoglio; l'eventuale surplus viene reinvestito. Importi in
+			// euro nominali via cumulativeInflation, allineato alla proiezione
+			// deterministica (fire-calculator.ts) salvo uno sfasamento convenzionale di
+			// ~1 anno sull'eta' (entro tolleranza). Default 0 = retrocompatibile.
+			const ageNow = (params.currentAge ?? 40) + year;
+			const pensionNow =
+				ageNow >= (params.pensionAge ?? Infinity)
+					? (params.annualPension ?? 0) * cumulativeInflation
+					: 0;
+			const otherIncomeNow =
+				ageNow <= (params.otherIncomeEndAge ?? Infinity)
+					? (params.otherIncome ?? 0) * cumulativeInflation
+					: 0;
+
 			previousWithdrawal = withdrawal;
-			portfolio -= withdrawal;
+			portfolio -= withdrawal - pensionNow - otherIncomeNow;
 		}
 
 		// Il portafoglio non può essere negativo

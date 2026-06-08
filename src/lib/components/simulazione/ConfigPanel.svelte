@@ -59,6 +59,14 @@
 	let withdrawalRate = $state(4.0);
 	let inflationRate = $state(2.0);
 
+	// Redditi in pensione (opzionali): pensione INPS + altri redditi riducono il
+	// prelievo netto dal portafoglio nella fase di decumulo. 0 = non considerati.
+	let currentAge = $state(40);
+	let pensionAnnual = $state(0);
+	let pensionStartAge = $state(67);
+	let otherIncomeAnnual = $state(0);
+	let otherIncomeEndAge = $state(90);
+
 	// Multi-asset advanced mode
 	let advancedMode = $state(false);
 	let goldEnabled = $state(false);
@@ -200,6 +208,11 @@
 				withdrawalRate: withdrawalRate / 100,
 				inflationRate: inflationRate / 100,
 				withdrawalStrategy: 'fixed',
+				currentAge,
+				annualPension: pensionAnnual,
+				pensionAge: pensionStartAge,
+				otherIncome: otherIncomeAnnual,
+				otherIncomeEndAge,
 				// Multi-asset fields
 				assetClasses,
 				correlationMatrix: corrMatrix,
@@ -228,7 +241,12 @@
 				annualExpenses,
 				withdrawalRate: withdrawalRate / 100,
 				inflationRate: inflationRate / 100,
-				withdrawalStrategy: 'fixed'
+				withdrawalStrategy: 'fixed',
+				currentAge,
+				annualPension: pensionAnnual,
+				pensionAge: pensionStartAge,
+				otherIncome: otherIncomeAnnual,
+				otherIncomeEndAge
 			};
 
 			if (simulationMode === 'parametric') {
@@ -335,6 +353,43 @@
 					max={10}
 					step={0.5}
 				/>
+			</div>
+		</div>
+
+		<!-- Redditi in pensione (opzionali): riducono il prelievo netto dal portafoglio -->
+		<div class="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800 space-y-3">
+			<div class="flex items-center gap-2">
+				<p class="text-sm font-medium text-emerald-800 dark:text-emerald-300">
+					Redditi in pensione (opzionale)
+				</p>
+				<span id="tip-redditi-pensione">
+					<InfoCircleSolid class="w-4 h-4 text-gray-400 cursor-help" />
+				</span>
+				<Tooltip triggeredBy="#tip-redditi-pensione" class="max-w-xs">
+					Pensione INPS e altri redditi (affitti, dividendi) riducono il prelievo dal portafoglio durante la pensione. Lascia a 0 per ignorarli (il portafoglio coprir&agrave; da solo tutte le spese).
+				</Tooltip>
+			</div>
+			<div class="grid grid-cols-2 lg:grid-cols-3 gap-3">
+				<div>
+					<Label for="current-age" class="mb-1 text-xs">Et&agrave; attuale</Label>
+					<Input id="current-age" type="number" bind:value={currentAge} min={18} max={90} size="sm" />
+				</div>
+				<div>
+					<Label for="pension-annual" class="mb-1 text-xs">Pensione INPS annua (&euro;)</Label>
+					<Input id="pension-annual" type="number" bind:value={pensionAnnual} min={0} step={1000} size="sm" />
+				</div>
+				<div>
+					<Label for="pension-age" class="mb-1 text-xs">Et&agrave; pensione INPS</Label>
+					<Input id="pension-age" type="number" bind:value={pensionStartAge} min={50} max={90} size="sm" />
+				</div>
+				<div>
+					<Label for="other-income" class="mb-1 text-xs">Altri redditi annui (&euro;)</Label>
+					<Input id="other-income" type="number" bind:value={otherIncomeAnnual} min={0} step={1000} size="sm" />
+				</div>
+				<div>
+					<Label for="other-income-end" class="mb-1 text-xs">Fino a et&agrave;</Label>
+					<Input id="other-income-end" type="number" bind:value={otherIncomeEndAge} min={18} max={110} size="sm" />
+				</div>
 			</div>
 		</div>
 
