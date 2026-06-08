@@ -200,7 +200,10 @@
 			label: {
 				show: true,
 				formatter: (p: any) => p.data[2].toFixed(2),
-				fontSize: 11
+				fontSize: 11,
+				// Le etichette sono SOPRA le celle colorate (chiare): restano scure a
+				// prescindere dal tema, altrimenti spariscono in dark mode.
+				color: '#1f2937'
 			},
 			emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.5)' } }
 		}]
@@ -338,5 +341,12 @@
 	<p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
 		Correlazioni di Pearson sui rendimenti annuali reali (1970-2024). Fonte: Morningstar / Vanguard.
 	</p>
-	<EChart options={heatmapOptions} height="450px" />
+	<!-- Su schermi stretti la matrice 6x6 verrebbe schiacciata dai margini fissi
+	     della griglia: la rendiamo a larghezza minima leggibile e scrollabile in
+	     orizzontale invece di comprimerla. -->
+	<div class="overflow-x-auto">
+		<div class="min-w-[520px]">
+			<EChart options={heatmapOptions} height="450px" />
+		</div>
+	</div>
 </Card>

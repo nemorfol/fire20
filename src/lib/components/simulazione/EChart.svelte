@@ -40,25 +40,44 @@
 	let container: HTMLDivElement;
 	let chart: echarts.ECharts | undefined;
 
+	function isDarkMode(): boolean {
+		return typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+	}
+
+	// Applica le opzioni iniettando un colore di testo di DEFAULT in base al tema.
+	// Senza questo, assi/legende/titoli ECharts usano un grigio scuro illeggibile
+	// sul tema scuro. I componenti che impostano un colore esplicito (es. le
+	// etichette dentro le celle della heatmap) vincono comunque su questo default.
+	function render() {
+		if (!chart) return;
+		const textColor = isDarkMode() ? '#cbd5e1' : '#374151';
+		chart.setOption({ textStyle: { color: textColor }, ...options }, { notMerge: true });
+	}
+
 	onMount(() => {
 		chart = echarts.init(container, undefined, { renderer: 'canvas' });
-		chart.setOption(options);
+		render();
 
-		const resizeObserver = new ResizeObserver(() => {
-			chart?.resize();
-		});
+		const resizeObserver = new ResizeObserver(() => chart?.resize());
 		resizeObserver.observe(container);
+
+		// Ridisegna i testi al cambio di tema (il toggle dark mode commuta la
+		// classe 'dark' su <html>).
+		const themeObserver = new MutationObserver(() => render());
+		themeObserver.observe(document.documentElement, {
+			attributes: true,
+			attributeFilter: ['class']
+		});
 
 		return () => {
 			resizeObserver.disconnect();
+			themeObserver.disconnect();
 			chart?.dispose();
 		};
 	});
 
 	$effect(() => {
-		if (chart && options) {
-			chart.setOption(options, { notMerge: true });
-		}
+		if (chart && options) render();
 	});
 </script>
 

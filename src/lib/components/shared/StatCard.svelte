@@ -36,11 +36,11 @@
 </script>
 
 <Card class="max-w-none">
-	<div class="flex items-start justify-between">
-		<div class="flex-1">
+	<div class="flex items-start justify-between gap-3">
+		<div class="flex-1 min-w-0">
 			<p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{title}</p>
 			<div class="flex items-center gap-2">
-				<p class="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
+				<p class="text-2xl font-bold text-gray-900 dark:text-white break-words">{value}</p>
 				{#if trend === 'up'}
 					<ArrowUpOutline class="w-4 h-4 {trendColors.up}" />
 				{:else if trend === 'down'}
@@ -52,7 +52,7 @@
 			{/if}
 		</div>
 		{#if icon}
-			<div class="p-3 rounded-lg {colorClasses[color] ?? colorClasses.primary}">
+			<div class="p-3 rounded-lg flex-shrink-0 {colorClasses[color] ?? colorClasses.primary}">
 				{@render iconRender()}
 			</div>
 		{/if}
