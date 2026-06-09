@@ -5,12 +5,16 @@
 		swr = $bindable(4),
 		expectedReturn = $bindable(7),
 		inflationRate = $bindable(2),
-		taxMode = $bindable('blended' as 'stocks' | 'btp' | 'blended')
+		taxMode = $bindable('blended' as 'stocks' | 'btp' | 'blended'),
+		returnOverridden = false
 	}: {
 		swr?: number;
 		expectedReturn?: number;
 		inflationRate?: number;
 		taxMode?: 'stocks' | 'btp' | 'blended';
+		/** Se true, il rendimento atteso e' calcolato altrove (es. dall'allocazione):
+		 *  lo slider viene disabilitato e attenuato per evitare un controllo "morto". */
+		returnOverridden?: boolean;
 	} = $props();
 
 	let effectiveTaxRate = $derived(
@@ -41,19 +45,24 @@
 		</div>
 
 		<!-- Expected Return -->
-		<div>
+		<div class:opacity-50={returnOverridden}>
 			<div class="flex justify-between items-center mb-2">
 				<Label>Rendimento Annuo Atteso</Label>
 				<span class="text-lg font-bold text-green-600 dark:text-green-400 tabular-nums">
 					{expectedReturn.toFixed(1)}%
 				</span>
 			</div>
-			<Range min={1} max={15} step={0.1} bind:value={expectedReturn} />
+			<Range min={1} max={15} step={0.1} bind:value={expectedReturn} disabled={returnOverridden} />
 			<div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
 				<span>1%</span>
 				<span>7% (media storica)</span>
 				<span>15%</span>
 			</div>
+			{#if returnOverridden}
+				<p class="text-xs text-blue-600 dark:text-blue-400 mt-2">
+					Sovrascritto da &laquo;Stima il rendimento dall'allocazione&raquo; (attivo nel pannello sotto).
+				</p>
+			{/if}
 		</div>
 
 		<!-- Inflation -->

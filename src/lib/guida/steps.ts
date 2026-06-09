@@ -317,6 +317,14 @@ Se il numero ti sembra troppo basso o troppo alto, verifica <em>Profilo → Pens
 </div>
 
 <div class="tip">
+<strong>Personalizzare il calcolo (solo patrimonio / rendimento da allocazione):</strong> il calcolatore ha due interruttori per adattare il calcolo alle tue preferenze:
+<ul>
+<li><strong>"Considera pensione INPS e altri redditi nel FIRE Number"</strong> (tab Panoramica): se lo disattivi, il FIRE Number e la proiezione si basano <strong>solo sul patrimonio</strong>, ignorando pensione INPS e altri redditi futuri. Utile per un calcolo conservativo "assets-only" che non conta rendite ancora incerte.</li>
+<li><strong>"Stima il rendimento atteso dall'allocazione"</strong> (tab Simulazione): invece di un rendimento unico, ricava il rendimento atteso combinando rendimento di azioni e obbligazioni con la quota di ciascuna (es. 70% azioni all'8% + 30% obbligazioni al 3,5% = 6,65%). Cambiando allocazione o rendimenti per asset class, il rendimento usato nella proiezione si aggiorna di conseguenza.</li>
+</ul>
+</div>
+
+<div class="tip">
 <strong>Consiglio:</strong> Calcola il FIRE Number con diversi scenari: ottimistico (spese basse, rendimenti buoni), realistico (spese medie, rendimenti storici), pessimistico (spese alte, rendimenti bassi). Il tuo piano dovrebbe funzionare anche nello scenario pessimistico.
 </div>
 

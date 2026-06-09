@@ -7,7 +7,11 @@
 		Alert,
 		Spinner,
 		Tabs,
-		TabItem
+		TabItem,
+		Toggle,
+		Helper,
+		Label,
+		Input
 	} from 'flowbite-svelte';
 	import {
 		InfoCircleSolid,
@@ -105,21 +109,44 @@
 	let annualExpenses = $derived(wiAnnualExpenses);
 	let withdrawalRate = $derived(swr / 100);
 
+	// Issue #2: opzione per STIMARE il rendimento atteso dall'allocazione
+	// (rend. azioni% x quota azioni + rend. obbligazioni% x quota obbligazioni),
+	// come i calcolatori FIRE che separano Stock/Bond returns. Default OFF =
+	// usa il rendimento atteso singolo impostato a mano (expectedReturn).
+	let deriveReturn = $state(false);
+	let stockReturnPct = $state(8.0);
+	let bondReturnPct = $state(3.5);
+	let equityAllocPct = $state(70);
+	// La quota azioni (input number) puo' arrivare come stringa o vuota: coerciamo
+	// con Number(x)||0 e clampiamo a [0,100] per evitare rendimenti derivati assurdi.
+	let eqAllocClamped = $derived(Math.min(100, Math.max(0, Number(equityAllocPct) || 0)));
+	let effectiveReturn = $derived.by(() => {
+		if (!deriveReturn) return expectedReturn;
+		const st = Number(stockReturnPct) || 0;
+		const bo = Number(bondReturnPct) || 0;
+		return (eqAllocClamped / 100) * st + (1 - eqAllocClamped / 100) * bo;
+	});
+
 	// FIRE number tiene conto della pensione INPS, del "ponte" prima di riceverla
 	// e di eventuali altri redditi perpetui (affitti, dividendi, rendite)
 	let annualPensionIncome = $derived(wiPensionAmount * 13);
-	let realReturn = $derived((1 + expectedReturn / 100) / (1 + inflationRate / 100) - 1);
+	// Issue #2: opzione per ESCLUDERE pensione INPS e altri redditi dal calcolo
+	// FIRE (modalita' "solo patrimonio"). Default ON = comportamento attuale.
+	let includeFutureIncome = $state(true);
+	let effPension = $derived(includeFutureIncome ? annualPensionIncome : 0);
+	let effOtherIncome = $derived(includeFutureIncome ? wiOtherIncome : 0);
+	let realReturn = $derived((1 + effectiveReturn / 100) / (1 + inflationRate / 100) - 1);
 	let fireNumberClassic = $derived(calculateFireNumber(annualExpenses, withdrawalRate));
 	let fireNumber = $derived(
 		calculateFireNumberWithPension({
 			annualExpenses,
 			withdrawalRate,
-			annualPension: annualPensionIncome,
+			annualPension: effPension,
 			retirementAge: wiRetirementAge,
 			pensionAge: wiPensionAge,
 			lifeExpectancy: wiLifeExpectancy,
 			realReturn,
-			otherIncome: wiOtherIncome,
+			otherIncome: effOtherIncome,
 			otherIncomeEndAge: wiOtherIncomeEndAge,
 			children: profile?.children,
 			mortgage: profile?.mortgage,
@@ -128,7 +155,7 @@
 		})
 	);
 	let bridgeYears = $derived(Math.max(0, wiPensionAge - wiRetirementAge));
-	let hasPensionBridge = $derived(annualPensionIncome > 0 && bridgeYears > 0);
+	let hasPensionBridge = $derived(effPension > 0 && bridgeYears > 0);
 
 	// Patrimonio totale (info), liquido (usato per FIRE) e illiquido (immobili/TFR)
 	let netWorth = $derived(profile ? calculateNetWorth(profile.portfolio as unknown as Record<string, number>) : 0);
@@ -138,7 +165,7 @@
 	let annualSavings = $derived(wiAnnualContribution);
 
 	let yearsToFire = $derived(
-		calculateYearsToFire(wiInitialPortfolio, annualSavings, expectedReturn / 100, fireNumber, inflationRate / 100)
+		calculateYearsToFire(wiInitialPortfolio, annualSavings, effectiveReturn / 100, fireNumber, inflationRate / 100)
 	);
 
 	let savingsRate = $derived(
@@ -160,7 +187,7 @@
 					currentAge,
 					wiRetirementAge,
 					fireNumber,
-					expectedReturn / 100,
+					effectiveReturn / 100,
 					inflationRate / 100
 				)
 			: 0
@@ -183,14 +210,14 @@
 					initialPortfolio: wiInitialPortfolio,
 					annualContribution: annualSavings,
 					annualExpenses: annualExpenses,
-					expectedReturn: expectedReturn / 100,
+					expectedReturn: effectiveReturn / 100,
 					inflationRate: inflationRate / 100,
 					taxRate: taxRate,
 					withdrawalRate: withdrawalRate,
 					withdrawalStrategy: withdrawalStrategy,
-					annualPension: annualPensionIncome,
+					annualPension: effPension,
 					pensionAge: wiPensionAge,
-					otherIncome: wiOtherIncome,
+					otherIncome: effOtherIncome,
 					otherIncomeEndAge: wiOtherIncomeEndAge,
 					currentAge: currentAge,
 					retirementAge: retirementAge,
@@ -216,14 +243,14 @@
 					initialPortfolio: wiInitialPortfolio,
 					annualContribution: annualSavings,
 					annualExpenses: annualExpenses,
-					expectedReturn: expectedReturn / 100,
+					expectedReturn: effectiveReturn / 100,
 					inflationRate: inflationRate / 100,
 					taxRate: taxRate,
 					withdrawalRate: withdrawalRate,
 					withdrawalStrategy: withdrawalStrategy,
-					annualPension: annualPensionIncome,
+					annualPension: effPension,
 					pensionAge: wiPensionAge,
-					otherIncome: wiOtherIncome,
+					otherIncome: effOtherIncome,
 					otherIncomeEndAge: wiOtherIncomeEndAge,
 					currentAge: currentAge,
 					retirementAge: retirementAge,
@@ -368,15 +395,26 @@
 					{fireNumber}
 					{annualExpenses}
 					{withdrawalRate}
-					annualPension={annualPensionIncome}
+					annualPension={effPension}
 					{fireNumberClassic}
 					{hasPensionBridge}
 					{bridgeYears}
 					pensionAge={wiPensionAge}
 					retirementAge={wiRetirementAge}
-					otherIncome={wiOtherIncome}
+					otherIncome={effOtherIncome}
 					otherIncomeEndAge={wiOtherIncomeEndAge}
 				/>
+			</div>
+
+			<!-- Issue #2: opzione "solo patrimonio" (escludi pensione/altri redditi dal FIRE) -->
+			<div class="mb-6 rounded-lg bg-gray-50 dark:bg-gray-800/60 p-4 border border-gray-200 dark:border-gray-700">
+				<Toggle bind:checked={includeFutureIncome}>
+					Considera pensione INPS e altri redditi nel FIRE Number
+				</Toggle>
+				<Helper class="mt-1 text-xs">
+					Se disattivato, il FIRE Number e la proiezione si basano <strong>solo sul patrimonio</strong>
+					(modalita' conservativa): pensione INPS e altri redditi non riducono il capitale necessario.
+				</Helper>
 			</div>
 
 			<!-- Key Metrics -->
@@ -411,15 +449,15 @@
 								davvero disponibile per vivere di rendita.
 							</li>
 						{/if}
-						{#if annualPensionIncome > 0}
+						{#if effPension > 0}
 							<li>
 								Il FIRE number e' ridotto dal valore attuale della <strong>pensione INPS</strong>
-								(~{formatCurrency(annualPensionIncome)}/anno dai {wiPensionAge} anni).
+								(~{formatCurrency(effPension)}/anno dai {wiPensionAge} anni).
 							</li>
 						{/if}
-						{#if wiOtherIncome > 0}
+						{#if effOtherIncome > 0}
 							<li>
-								Sono conteggiati <strong>altri redditi</strong> ({formatCurrency(wiOtherIncome)}/anno)
+								Sono conteggiati <strong>altri redditi</strong> ({formatCurrency(effOtherIncome)}/anno)
 								come rendita che abbassa il capitale necessario.
 							</li>
 						{/if}
@@ -454,7 +492,39 @@
 			<!-- Controls Row: Strategy + Parameters -->
 			<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
 				<WithdrawalStrategySelector bind:selected={withdrawalStrategy} />
-				<ParameterControls bind:swr bind:expectedReturn bind:inflationRate bind:taxMode />
+				<ParameterControls bind:swr bind:expectedReturn bind:inflationRate bind:taxMode returnOverridden={deriveReturn} />
+			</div>
+
+			<!-- Issue #2: stima del rendimento atteso dall'allocazione azioni/obbligazioni -->
+			<div class="mb-6 rounded-lg bg-blue-50 dark:bg-blue-900/20 p-4 border border-blue-200 dark:border-blue-800">
+				<Toggle bind:checked={deriveReturn}>
+					Stima il rendimento atteso dall'allocazione
+				</Toggle>
+				<Helper class="mt-1 mb-3 text-xs">
+					Invece di un rendimento unico, ricava il rendimento atteso da rendimento azioni/obbligazioni
+					e dalla quota di ciascuno (come i calcolatori che separano Stock/Bond returns). Quando attivo,
+					sostituisce il "Rendimento atteso" impostato sopra.
+				</Helper>
+				{#if deriveReturn}
+					<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+						<div>
+							<Label for="stock-ret-calc" class="mb-1 text-xs">Rendimento azioni (%)</Label>
+							<Input id="stock-ret-calc" type="number" bind:value={stockReturnPct} step={0.1} size="sm" />
+						</div>
+						<div>
+							<Label for="bond-ret-calc" class="mb-1 text-xs">Rendimento obbligazioni (%)</Label>
+							<Input id="bond-ret-calc" type="number" bind:value={bondReturnPct} step={0.1} size="sm" />
+						</div>
+						<div>
+							<Label for="equity-alloc-calc" class="mb-1 text-xs">Quota azioni (%)</Label>
+							<Input id="equity-alloc-calc" type="number" bind:value={equityAllocPct} min={0} max={100} step={5} size="sm" />
+						</div>
+					</div>
+					<p class="mt-3 text-sm text-blue-800 dark:text-blue-300">
+						Rendimento atteso derivato: <strong>{effectiveReturn.toFixed(2)}%</strong>
+						({eqAllocClamped}% azioni / {100 - eqAllocClamped}% obbligazioni)
+					</p>
+				{/if}
 			</div>
 
 			<!-- What-If Panel -->
