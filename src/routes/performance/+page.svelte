@@ -2,13 +2,24 @@
 	import { Heading, Breadcrumb, BreadcrumbItem, Card, ButtonGroup, Button } from 'flowbite-svelte';
 	import { db, type PortfolioSnapshotRecord, type CashFlowRecord } from '$lib/db/index';
 	import { liveQuery } from 'dexie';
+	import { onMount } from 'svelte';
+	import { getAllProfiles } from '$lib/db/profiles';
 	import type { PortfolioSnapshot, CashFlow } from '$lib/engine/twr-calculator';
 	import SnapshotForm from '$lib/components/performance/SnapshotForm.svelte';
 	import CashFlowForm from '$lib/components/performance/CashFlowForm.svelte';
 	import PerformanceChart from '$lib/components/performance/PerformanceChart.svelte';
 	import PerformanceMetrics from '$lib/components/performance/PerformanceMetrics.svelte';
 
-	const profileId = 1;
+	// Usa il profilo attivo (primo profilo) invece di un id fisso.
+	let profileId = $state(1);
+	onMount(async () => {
+		try {
+			const profiles = await getAllProfiles();
+			if (profiles.length > 0 && profiles[0].id != null) profileId = profiles[0].id;
+		} catch {
+			/* IndexedDB non disponibile: resta il default */
+		}
+	});
 
 	// Periodo selezionato
 	let selectedPeriod = $state<'YTD' | '1A' | '3A' | '5A' | 'Max'>('Max');
@@ -20,7 +31,7 @@
 
 	$effect(() => {
 		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
-		refreshKey;
+		[refreshKey, profileId];
 		const subSnap = liveQuery(() =>
 			db.portfolio_snapshots.where('profileId').equals(profileId).sortBy('date')
 		).subscribe((result) => {

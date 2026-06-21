@@ -321,10 +321,10 @@
 		<Heading tag="h3">Rendimenti Rolling &mdash; {selected.label}</Heading>
 	</div>
 	<div class="flex flex-wrap gap-4 mb-4">
-		<Checkbox bind:checked={showRolling1}>1 anno</Checkbox>
-		<Checkbox bind:checked={showRolling5}>5 anni</Checkbox>
-		<Checkbox bind:checked={showRolling10}>10 anni</Checkbox>
-		<Checkbox bind:checked={showRolling20}>20 anni</Checkbox>
+		<Checkbox id="rolling-1" bind:checked={showRolling1}>1 anno</Checkbox>
+		<Checkbox id="rolling-5" bind:checked={showRolling5}>5 anni</Checkbox>
+		<Checkbox id="rolling-10" bind:checked={showRolling10}>10 anni</Checkbox>
+		<Checkbox id="rolling-20" bind:checked={showRolling20}>20 anni</Checkbox>
 	</div>
 	<EChart options={rollingChartOptions} height="400px" />
 </Card>

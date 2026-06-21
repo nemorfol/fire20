@@ -14,8 +14,6 @@
 	} from 'flowbite-svelte';
 	import { InfoCircleSolid, PlaySolid } from 'flowbite-svelte-icons';
 	import type { MonteCarloParams, AssetClassConfig } from '$lib/engine/monte-carlo';
-	import { sp500Stats } from '$lib/data/sp500';
-	import { bondStats } from '$lib/data/bonds';
 	import { goldStats } from '$lib/data/gold';
 	import {
 		correlationMatrix as fullCorrMatrix,
@@ -28,13 +26,17 @@
 		running = false,
 		progress = 0,
 		elapsedTime = 0,
-		profileLoaded = false
+		profileLoaded = false,
+		seriesLabel = 'Serie storica di riferimento',
+		seriesDescription = ''
 	}: {
 		onRun: (params: Partial<MonteCarloParams>) => void;
 		running?: boolean;
 		progress?: number;
 		elapsedTime?: number;
 		profileLoaded?: boolean;
+		seriesLabel?: string;
+		seriesDescription?: string;
 	} = $props();
 
 	// Configuration state
@@ -661,12 +663,12 @@
 				</p>
 				<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-emerald-700 dark:text-emerald-400">
 					<div>
-						<span class="font-medium">S&P 500 (1928-2024):</span>
-						media {sp500Stats.mean}%, dev.std {sp500Stats.stdDev}%
+						<span class="font-medium">{seriesLabel}</span>
+						{seriesDescription}
 					</div>
 					<div>
-						<span class="font-medium">Treasury Bond (1928-2024):</span>
-						media {bondStats.mean}%, dev.std {bondStats.stdDev}%
+						<span class="font-medium">Modalita':</span>
+						{simulationMode === 'historical' ? 'bootstrap storico' : 'block bootstrap'}
 					</div>
 					{#if advancedMode && goldEnabled}
 						<div>
@@ -685,13 +687,19 @@
 
 		<hr class="border-gray-200 dark:border-gray-700" />
 
+		{#if !allocationValid}
+			<Helper class="text-red-600 dark:text-red-400 mb-2">
+				Totale allocazione: {totalAllocation}% — deve essere 100% per avviare la simulazione.
+			</Helper>
+		{/if}
+
 		<!-- Run Button + Progress -->
 		<div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
 			<Button
 				color="primary"
 				size="lg"
 				class="px-8"
-				disabled={running || (advancedMode && !allocationValid)}
+				disabled={running || !allocationValid}
 				onclick={handleRun}
 			>
 				{#if running}

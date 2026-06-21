@@ -113,15 +113,15 @@ function getTransformationCoefficient(age: number): number {
 function calculateNetFromGross(grossAnnual: number): number {
   if (grossAnnual <= 0) return 0;
 
+  // Scaglioni IRPEF 2026: 23% fino a 28k, 33% 28-50k (taglio L. Bilancio 2026,
+  // 2o scaglione 35%->33%), 43% oltre 50k. Allineato a pension-fund.ts/assumptions.
   let tax = 0;
-  if (grossAnnual <= 15000) {
+  if (grossAnnual <= 28000) {
     tax = grossAnnual * 0.23;
-  } else if (grossAnnual <= 28000) {
-    tax = 15000 * 0.23 + (grossAnnual - 15000) * 0.25;
   } else if (grossAnnual <= 50000) {
-    tax = 15000 * 0.23 + 13000 * 0.25 + (grossAnnual - 28000) * 0.35;
+    tax = 28000 * 0.23 + (grossAnnual - 28000) * 0.33;
   } else {
-    tax = 15000 * 0.23 + 13000 * 0.25 + 22000 * 0.35 + (grossAnnual - 50000) * 0.43;
+    tax = 28000 * 0.23 + 22000 * 0.33 + (grossAnnual - 50000) * 0.43;
   }
   // Addizionali regionali/comunali ~2%
   tax += grossAnnual * 0.02;
@@ -133,9 +133,8 @@ function calculateNetFromGross(grossAnnual: number): number {
  * Aliquota marginale IRPEF per il reddito dato.
  */
 function getMarginalTaxRate(grossAnnual: number): number {
-  if (grossAnnual <= 15000) return 0.23;
-  if (grossAnnual <= 28000) return 0.25;
-  if (grossAnnual <= 50000) return 0.35;
+  if (grossAnnual <= 28000) return 0.23;
+  if (grossAnnual <= 50000) return 0.33;
   return 0.43;
 }
 

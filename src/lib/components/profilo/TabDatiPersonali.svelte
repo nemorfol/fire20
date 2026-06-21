@@ -12,7 +12,8 @@
 		lifeExpectancy?: number;
 	} = $props();
 
-	let currentAge = $derived(new Date().getFullYear() - birthYear);
+	// Guard: anno di nascita fuori range non deve produrre eta' negativa/assurda.
+	let currentAge = $derived(Math.max(0, Math.min(120, new Date().getFullYear() - birthYear)));
 	let yearsToFire = $derived(Math.max(0, retirementAge - currentAge));
 </script>
 

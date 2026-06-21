@@ -371,6 +371,8 @@
 		{progress}
 		{elapsedTime}
 		{profileLoaded}
+		seriesLabel={getSeriesPreset(seriesPresetId).label}
+		seriesDescription={getSeriesPreset(seriesPresetId).description}
 	/>
 </div>
 

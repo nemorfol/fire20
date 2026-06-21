@@ -154,7 +154,10 @@ export function calculateContributivePension(
 	let montante = 0;
 
 	// Montante per gli anni già lavorati
-	for (let i = currentContributionYears; i > 0; i--) {
+	// Clamp difensivo: anni di contribuzione fuori range (input senza guard JS)
+	// falserebbero il montante (issue #10).
+	const safeContribYears = Math.max(0, Math.min(50, currentContributionYears || 0));
+	for (let i = safeContribYears; i > 0; i--) {
 		const yearsAgo = i;
 		const pastSalary = currentSalary / Math.pow(1 + salaryGrowthRate, yearsAgo);
 		const contribution = pastSalary * CONTRIBUTION_RATE;

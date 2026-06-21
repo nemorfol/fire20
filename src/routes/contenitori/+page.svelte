@@ -35,6 +35,12 @@
 	// --- Parametri (Svelte 5 runes) ---
 	let monthlyContribution = $state(400);
 	let years = $state(20);
+	// Clamp "anni di accumulo" a [1,60]: senza limite, (1+r)^anni va in overflow
+	// esponenziale -> Rendimenti Lordi=Infinity, Netto Finale=NaN (issue #9).
+	$effect(() => {
+		if (!Number.isFinite(years) || years < 1) years = 1;
+		else if (years > 60) years = 60;
+	});
 	let expectedReturnPct = $state(5); // gestito come percentuale per il PercentInput
 	let marginalIrpefPct = $state(35);
 	let retirementAge = $state(67);

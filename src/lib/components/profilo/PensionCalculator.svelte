@@ -70,15 +70,14 @@
 	// Net pension estimate (rough: apply IRPEF-like brackets)
 	let netMonthlyPension = $derived.by(() => {
 		const grossAnnual = adjustedResult.annualPension;
+		// Scaglioni IRPEF 2026: 23% <=28k, 33% 28-50k (taglio L. Bilancio 2026), 43% >50k
 		let tax = 0;
-		if (grossAnnual <= 15000) {
+		if (grossAnnual <= 28000) {
 			tax = grossAnnual * 0.23;
-		} else if (grossAnnual <= 28000) {
-			tax = 15000 * 0.23 + (grossAnnual - 15000) * 0.25;
 		} else if (grossAnnual <= 50000) {
-			tax = 15000 * 0.23 + 13000 * 0.25 + (grossAnnual - 28000) * 0.35;
+			tax = 28000 * 0.23 + (grossAnnual - 28000) * 0.33;
 		} else {
-			tax = 15000 * 0.23 + 13000 * 0.25 + 22000 * 0.35 + (grossAnnual - 50000) * 0.43;
+			tax = 28000 * 0.23 + 22000 * 0.33 + (grossAnnual - 50000) * 0.43;
 		}
 		// Regional/municipal addizionali ~2%
 		tax += grossAnnual * 0.02;
