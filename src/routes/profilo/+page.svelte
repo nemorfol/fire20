@@ -349,7 +349,7 @@
 		<!-- Main form area -->
 		<div class="lg:col-span-2">
 			<Card class="max-w-none">
-				<Tabs tabStyle="underline" class="mb-2">
+				<Tabs tabStyle="underline" class="mb-2 overflow-x-auto">
 					<TabItem open title="Dati Personali">
 						<div class="pt-4">
 							<TabDatiPersonali

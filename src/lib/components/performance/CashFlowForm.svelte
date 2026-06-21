@@ -132,7 +132,7 @@
 	<div class="space-y-4">
 		<div>
 			<Label for="cf-date">Data</Label>
-			<Input id="cf-date" type="date" bind:value={dateValue} />
+			<Input id="cf-date" type="date" bind:value={dateValue} onblur={() => {}} />
 		</div>
 		<div>
 			<Label for="cf-type">Tipo</Label>
@@ -140,11 +140,11 @@
 		</div>
 		<div>
 			<Label for="cf-amount">Importo</Label>
-			<Input id="cf-amount" type="number" bind:value={amount} placeholder="es. 5000" step="100" />
+			<Input id="cf-amount" type="number" bind:value={amount} placeholder="es. 5000" step="100" onblur={() => {}} />
 		</div>
 		<div>
 			<Label for="cf-desc">Descrizione (opzionale)</Label>
-			<Input id="cf-desc" type="text" bind:value={description} placeholder="es. PAC mensile" />
+			<Input id="cf-desc" type="text" bind:value={description} placeholder="es. PAC mensile" onblur={() => {}} />
 		</div>
 	</div>
 	{#snippet footer()}

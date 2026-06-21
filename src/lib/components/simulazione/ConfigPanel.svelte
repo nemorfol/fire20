@@ -13,6 +13,7 @@
 		Toggle
 	} from 'flowbite-svelte';
 	import { InfoCircleSolid, PlaySolid } from 'flowbite-svelte-icons';
+	import { untrack } from 'svelte';
 	import type { MonteCarloParams, AssetClassConfig } from '$lib/engine/monte-carlo';
 	import { goldStats } from '$lib/data/gold';
 	import {
@@ -28,7 +29,8 @@
 		elapsedTime = 0,
 		profileLoaded = false,
 		seriesLabel = 'Serie storica di riferimento',
-		seriesDescription = ''
+		seriesDescription = '',
+		defaults = {}
 	}: {
 		onRun: (params: Partial<MonteCarloParams>) => void;
 		running?: boolean;
@@ -37,13 +39,30 @@
 		profileLoaded?: boolean;
 		seriesLabel?: string;
 		seriesDescription?: string;
+		/** Valori iniziali ereditati dal profilo (issue #5). */
+		defaults?: {
+			initialPortfolio?: number;
+			annualContribution?: number;
+			annualExpenses?: number;
+			yearsToFire?: number;
+			yearsInRetirement?: number;
+			currentAge?: number;
+			pensionAnnual?: number;
+			pensionStartAge?: number;
+			otherIncomeAnnual?: number;
+			otherIncomeEndAge?: number;
+		};
 	} = $props();
+
+	// Snapshot non-reattivo dei default: il render e' gated finche' il profilo non
+	// e' caricato, quindi inizializziamo lo stato una sola volta da qui (issue #5).
+	const d = untrack(() => defaults);
 
 	// Configuration state
 	let iterations = $state(10000);
 	let simulationMode = $state<'parametric' | 'historical' | 'block-bootstrap'>('historical');
-	let yearsToSimulate = $state(30);
-	let yearsToFire = $state(10);
+	let yearsToSimulate = $state(d.yearsInRetirement ?? 30);
+	let yearsToFire = $state(d.yearsToFire ?? 10);
 
 	// Parametric params
 	let stockReturn = $state(7.0);
@@ -55,19 +74,19 @@
 	// Portfolio params
 	let stockAllocation = $state(70);
 	let bondAllocation = $state(30);
-	let initialPortfolio = $state(200000);
-	let annualContribution = $state(20000);
-	let annualExpenses = $state(30000);
+	let initialPortfolio = $state(d.initialPortfolio ?? 200000);
+	let annualContribution = $state(d.annualContribution ?? 20000);
+	let annualExpenses = $state(d.annualExpenses ?? 30000);
 	let withdrawalRate = $state(4.0);
 	let inflationRate = $state(2.0);
 
 	// Redditi in pensione (opzionali): pensione INPS + altri redditi riducono il
 	// prelievo netto dal portafoglio nella fase di decumulo. 0 = non considerati.
-	let currentAge = $state(40);
-	let pensionAnnual = $state(0);
-	let pensionStartAge = $state(67);
-	let otherIncomeAnnual = $state(0);
-	let otherIncomeEndAge = $state(90);
+	let currentAge = $state(d.currentAge ?? 40);
+	let pensionAnnual = $state(d.pensionAnnual ?? 0);
+	let pensionStartAge = $state(d.pensionStartAge ?? 67);
+	let otherIncomeAnnual = $state(d.otherIncomeAnnual ?? 0);
+	let otherIncomeEndAge = $state(d.otherIncomeEndAge ?? 90);
 
 	// Multi-asset advanced mode
 	let advancedMode = $state(false);

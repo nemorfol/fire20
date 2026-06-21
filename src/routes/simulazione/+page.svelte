@@ -26,6 +26,8 @@
 		getAllResults,
 		deleteResult
 	} from '$lib/db/results';
+	import { getAllProfiles } from '$lib/db/profiles';
+	import { calculateLiquidNetWorth } from '$lib/engine/fire-calculator';
 
 	import ConfigPanel from '$lib/components/simulazione/ConfigPanel.svelte';
 	import SuccessGauge from '$lib/components/simulazione/SuccessGauge.svelte';
@@ -46,6 +48,13 @@
 	let toastType = $state<'success' | 'error'>('success');
 	let showToast = $state(false);
 	let profileLoaded = $state(false);
+	// #5: valori iniziali della simulazione ereditati dal profilo (come il calcolatore).
+	let simDefaults = $state<{
+		initialPortfolio?: number; annualContribution?: number; annualExpenses?: number;
+		yearsToFire?: number; yearsInRetirement?: number; currentAge?: number;
+		pensionAnnual?: number; pensionStartAge?: number; otherIncomeAnnual?: number; otherIncomeEndAge?: number;
+	}>({});
+	let paramsReady = $state(false);
 
 	// Worker reference
 	let worker: Worker | null = null;
@@ -61,6 +70,7 @@
 
 	onMount(() => {
 		loadPreviousResults();
+		loadProfileDefaults();
 		return () => {
 			worker?.terminate();
 			if (timerInterval) clearInterval(timerInterval);
@@ -72,6 +82,41 @@
 			previousResults = await getAllResults();
 		} catch {
 			// IndexedDB may not be available
+		}
+	}
+
+	async function loadProfileDefaults() {
+		try {
+			const profiles = await getAllProfiles();
+			if (profiles.length > 0) {
+				const p = profiles[0];
+				const liquid = calculateLiquidNetWorth(p.portfolio as unknown as Record<string, number>);
+				const monthly =
+					Object.values(p.monthlyContributions).reduce((s, v) => s + (v || 0), 0) * 12;
+				const income = (p.annualIncome || 0) + (p.otherIncome || 0);
+				const contribution =
+					income > 0 ? Math.min(monthly, Math.max(0, income - (p.annualExpenses || 0))) : monthly;
+				const age = new Date().getFullYear() - p.birthYear;
+				const retAge = p.retirementAge || 65;
+				const lifeExp = p.lifeExpectancy || 90;
+				simDefaults = {
+					initialPortfolio: Math.round(liquid),
+					annualContribution: Math.round(contribution),
+					annualExpenses: Math.round(p.fireExpenses || p.annualExpenses || 30000),
+					yearsToFire: Math.max(0, retAge - age),
+					yearsInRetirement: Math.max(1, lifeExp - retAge),
+					currentAge: age,
+					pensionAnnual: Math.round((p.pension?.estimatedMonthly || 0) * 13),
+					pensionStartAge: p.pension?.pensionAge || 67,
+					otherIncomeAnnual: Math.round(p.otherIncome || 0),
+					otherIncomeEndAge: p.otherIncomeEndAge ?? lifeExp
+				};
+				profileLoaded = true;
+			}
+		} catch {
+			/* nessun profilo: si usano i default */
+		} finally {
+			paramsReady = true;
 		}
 	}
 
@@ -365,15 +410,20 @@
 
 <!-- Configuration Panel -->
 <div class="mb-8">
-	<ConfigPanel
-		onRun={handleRun}
-		{running}
-		{progress}
-		{elapsedTime}
-		{profileLoaded}
-		seriesLabel={getSeriesPreset(seriesPresetId).label}
-		seriesDescription={getSeriesPreset(seriesPresetId).description}
-	/>
+	{#if paramsReady}
+		<ConfigPanel
+			onRun={handleRun}
+			{running}
+			{progress}
+			{elapsedTime}
+			{profileLoaded}
+			seriesLabel={getSeriesPreset(seriesPresetId).label}
+			seriesDescription={getSeriesPreset(seriesPresetId).description}
+			defaults={simDefaults}
+		/>
+	{:else}
+		<div class="py-10 text-center text-gray-400 dark:text-gray-500">Caricamento dati dal profilo…</div>
+	{/if}
 </div>
 
 <!-- Results Section -->

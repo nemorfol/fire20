@@ -51,6 +51,15 @@
 	// Rebalance reminder state
 	let reminder = $state<RebalanceReminder>(getReminder());
 
+	// #8: ticker di mercato disattivabile (default attivo). Persistito in localStorage.
+	let tickerEnabled = $state(true);
+	onMount(() => {
+		tickerEnabled = localStorage.getItem('fire20-market-ticker') !== 'off';
+	});
+	function updateTicker() {
+		localStorage.setItem('fire20-market-ticker', tickerEnabled ? 'on' : 'off');
+	}
+
 	// Notification state
 	let notificationSupported = $state(false);
 	let notificationPermission = $state<NotificationPermission | 'unsupported'>('unsupported');
@@ -463,6 +472,19 @@
 			</button>
 		{/each}
 	</div>
+</Card>
+
+<!-- Dashboard: ticker di mercato -->
+<Card class="max-w-none mb-6">
+	<Heading tag="h3" class="mb-2">Ticker di mercato</Heading>
+	<p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
+		Mostra le quotazioni in tempo reale nella dashboard. Richiede una chiamata a Yahoo Finance
+		(servizio esterno): se lo disattivi, l'app non effettua alcuna chiamata di rete e sparisce
+		l'eventuale rumore di errori CORS in console. Default: attivo.
+	</p>
+	<Toggle bind:checked={tickerEnabled} onchange={updateTicker}>
+		{tickerEnabled ? 'Ticker attivo' : 'Ticker disattivato'}
+	</Toggle>
 </Card>
 
 <!-- Promemoria Ribilanciamento -->

@@ -745,6 +745,9 @@ Questo significa che nella maggior parte dei casi il piano funziona, ma c'è un 
 
 <p>Nel pannello di configurazione la sezione <strong>"Redditi in pensione (opzionale)"</strong> ti permette di indicare la <strong>pensione INPS</strong> (con l'età di decorrenza) e gli <strong>altri redditi</strong> (affitti, dividendi, con l'età fino a cui durano): questi flussi <strong>riducono il prelievo netto</strong> dal portafoglio e l'eventuale surplus viene reinvestito, esattamente come fa il calcolatore deterministico. Per un risparmiatore italiano che prenderà la pensione INPS, lasciare questi campi a 0 rende la simulazione troppo pessimista, perché obbliga il portafoglio a coprire da solo tutte le spese a vita.</p>
 
+<h3>La simulazione parte dai dati del tuo profilo</h3>
+<p>Quando apri la simulazione, i campi (patrimonio iniziale, contributi, spese, età, anni all'accumulo/decumulo, pensione INPS e altri redditi) vengono <strong>pre-compilati dal tuo profilo</strong>, esattamente come nel calcolatore: i due strumenti partono così dalle stesse ipotesi e i risultati sono confrontabili. Puoi comunque modificare ogni valore prima di avviare, per esplorare scenari diversi.</p>
+
 <h3>Quale Tasso di Successo Puntare?</h3>
 <p>La risposta dipende dalla tua flessibilità:</p>
 
@@ -1829,6 +1832,10 @@ Ma il rendimento del 5% non è garantito. In scenari sfavorevoli, l'Opzione A po
 		content: `
 <h3>Il Pilota Automatico Non Basta</h3>
 <p>Anche il miglior piano FIRE richiede manutenzione periodica. Il ribilanciamento è il processo di riportare l'asset allocation al target originale quando i movimenti di mercato l'hanno spostata. È una delle poche strategie di investimento che è allo stesso tempo prudente e potenzialmente redditizia.</p>
+
+<div class="tip">
+<strong>Ticker di mercato (dashboard):</strong> la dashboard può mostrare un <strong>ticker</strong> con le quotazioni in tempo reale (indici, ETF, oro, cambio EUR/USD). Per ottenerle serve una chiamata a un servizio esterno (Yahoo Finance) — l'unica eccezione al principio "tutto gira nel browser". Se preferisci che l'app non contatti alcun server esterno, puoi <strong>disattivare il ticker</strong> da <em>Impostazioni → Ticker di mercato</em> (di default è attivo).
+</div>
 
 <h3>Cos'è il Ribilanciamento</h3>
 <p>Se il tuo target è 80% azioni / 20% obbligazioni e dopo un anno di mercato positivo sei a 85/15, il ribilanciamento consiste nel vendere il 5% di azioni e comprare obbligazioni per tornare a 80/20.</p>

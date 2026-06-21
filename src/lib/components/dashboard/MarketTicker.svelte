@@ -12,6 +12,7 @@
 	let loading = $state(true);
 	let error = $state('');
 	let lastRefresh = $state('');
+	let enabled = $state(true);
 
 	const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minuti
 
@@ -52,12 +53,20 @@
 	}
 
 	onMount(() => {
+		// #8: ticker disattivabile da Impostazioni. Se spento, nessuna chiamata a
+		// Yahoo Finance (quindi nessun errore CORS in console). Default: attivo.
+		enabled = localStorage.getItem('fire20-market-ticker') !== 'off';
+		if (!enabled) {
+			loading = false;
+			return;
+		}
 		loadQuotes();
 		const interval = setInterval(loadQuotes, REFRESH_INTERVAL);
 		return () => clearInterval(interval);
 	});
 </script>
 
+{#if enabled}
 <div class="w-full overflow-hidden bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 mb-6">
 	{#if loading}
 		<div class="flex items-center justify-center py-3 px-4">
@@ -110,6 +119,7 @@
 		{/if}
 	{/if}
 </div>
+{/if}
 
 <style>
 	.animate-ticker {

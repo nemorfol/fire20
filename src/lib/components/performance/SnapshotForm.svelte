@@ -105,15 +105,15 @@
 	<div class="space-y-4">
 		<div>
 			<Label for="snap-date">Data</Label>
-			<Input id="snap-date" type="date" bind:value={dateValue} />
+			<Input id="snap-date" type="date" bind:value={dateValue} onblur={() => {}} />
 		</div>
 		<div>
 			<Label for="snap-value">Valore Totale del Portafoglio</Label>
-			<Input id="snap-value" type="number" bind:value={totalValue} placeholder="es. 100000" step="100" />
+			<Input id="snap-value" type="number" bind:value={totalValue} placeholder="es. 100000" step="100" onblur={() => {}} />
 		</div>
 		<div>
 			<Label for="snap-notes">Note (opzionale)</Label>
-			<Input id="snap-notes" type="text" bind:value={notes} placeholder="es. Dopo ribilanciamento" />
+			<Input id="snap-notes" type="text" bind:value={notes} placeholder="es. Dopo ribilanciamento" onblur={() => {}} />
 		</div>
 	</div>
 	{#snippet footer()}
