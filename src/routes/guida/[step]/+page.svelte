@@ -174,7 +174,7 @@
 				{#if adjacent.prev}
 					<a
 						href="/guida/{adjacent.prev.id}/"
-						class="flex items-center gap-2 text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 transition-colors"
+						class="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
 					>
 						<ArrowLeftOutline class="w-4 h-4" />
 						<div class="text-left">
@@ -188,7 +188,7 @@
 				{#if adjacent.next}
 					<a
 						href="/guida/{adjacent.next.id}/"
-						class="flex items-center gap-2 text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 transition-colors text-right"
+						class="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-right"
 					>
 						<div>
 							<div class="text-xs text-gray-500 dark:text-gray-400">Successivo</div>
@@ -199,7 +199,7 @@
 				{:else}
 					<a
 						href="/guida/"
-						class="flex items-center gap-2 text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 transition-colors"
+						class="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
 					>
 						<div class="text-sm font-medium">Torna all'indice</div>
 						<ArrowRightOutline class="w-4 h-4" />

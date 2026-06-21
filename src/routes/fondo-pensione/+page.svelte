@@ -34,7 +34,7 @@
 	</p>
 
 	<!-- Tutto gestito a Tabs -->
-	<Tabs tabStyle="pill" contentClass="mt-4">
+	<Tabs tabStyle="pill" classes={{ content: 'mt-4' }}>
 
 		<!-- TAB 1: Panoramica Riforma -->
 		<TabItem open title="Panoramica 2026">

@@ -206,7 +206,7 @@
 				notify('Nessun profilo da esportare.', 'warning');
 				return;
 			}
-			downloadJSON(profiles, `fire-profili-${new Date().toISOString().slice(0, 10)}.json`);
+			downloadJSON({ version: '1.0', exportedAt: new Date().toISOString(), type: 'profiles', profiles }, `fire-profili-${new Date().toISOString().slice(0, 10)}.json`);
 			notify(`${profiles.length} profilo/i esportato/i con successo.`);
 		} catch (e) {
 			notify('Errore durante l\'esportazione dei profili.', 'error');
@@ -304,8 +304,10 @@
 					const rCount = d.results?.length ?? 0;
 					importPreview = `Il backup contiene:\n- ${pCount} profilo/i\n- ${sCount} scenario/i\n- ${rCount} risultato/i di simulazione\n\nI dati esistenti verranno sovrascritti.`;
 				} else {
-					if (Array.isArray(data)) {
-						importPreview = `File contiene ${data.length} profilo/i da importare.`;
+					const list = Array.isArray(data) ? data : Array.isArray(data.profiles) ? data.profiles : null;
+						if (list) {
+						pendingImportData = list;
+							importPreview = `File contiene ${list.length} profilo/i da importare.`;
 					} else if (data.name) {
 						importPreview = `Profilo: "${data.name}"\nVerr\u00e0 aggiunto ai profili esistenti.`;
 					} else {

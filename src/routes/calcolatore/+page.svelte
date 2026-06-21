@@ -380,7 +380,7 @@
 	<!-- Pannello "Ipotesi attive" sempre visibile sopra ai tab: rende il calcolo verificabile -->
 	<AssumptionsPanel bind:assumptions />
 
-	<Tabs tabStyle="underline" contentClass="p-0 mt-6">
+	<Tabs tabStyle="underline" classes={{ content: 'p-0 mt-6' }}>
 		<TabItem open>
 			{#snippet titleSlot()}
 				<div class="flex items-center gap-2">

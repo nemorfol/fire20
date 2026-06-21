@@ -72,7 +72,7 @@
 	</p>
 
 	<!-- Sotto-tab per gli strumenti avanzati -->
-	<Tabs tabStyle="underline" contentClass="mt-3">
+	<Tabs tabStyle="underline" classes={{ content: 'mt-3' }}>
 		<TabItem open title="Calcolatore INPS">
 			<PensionCalculator {birthYear} {retirementAge} {annualExpenses} />
 		</TabItem>

@@ -11,9 +11,9 @@
 		<script>
 			// Tema iniziale: preferenza salvata, altrimenti prefers-color-scheme del
 			// sistema. Eseguito prima del CSS per evitare flash. Il toggle in-app
-			// continua a gestire la classe 'dark' e localStorage 'color-theme'.
+			// continua a gestire la classe 'dark' e localStorage (THEME_PREFERENCE_KEY).
 			try {
-				const t = localStorage.getItem('color-theme');
+				const t = localStorage.getItem('THEME_PREFERENCE_KEY');
 				if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
 					document.documentElement.classList.add('dark');
 				}
