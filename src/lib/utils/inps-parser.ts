@@ -345,10 +345,9 @@ export function parseINPSXml(xmlString: string): INPSExtract | null {
 
     contributions.sort((a, b) => a.year - b.year);
 
-    // Estrai dati anagrafici
-    const cognome = doc.querySelector('DatiAnagrafici > Cognome')?.textContent || '';
-    const nome = doc.querySelector('DatiAnagrafici > Nome')?.textContent || '';
-
+    // Nota privacy (privacy-by-design): NON estraiamo ne' logghiamo nome,
+    // cognome o montante. Sono PII e i dati devono restare sul dispositivo,
+    // mai scritti in console (resterebbero nei log del browser/crash tool).
     const extract = buildExtract(contributions);
 
     // Se il montante parasubordinati precalcolato dall'INPS e' disponibile,
@@ -358,10 +357,6 @@ export function parseINPSXml(xmlString: string): INPSExtract | null {
       const dipContribs = contributions.filter(c => !c.employer.includes('[Parasubordinato]') && !c.employer.includes('[Attivita'));
       const montanteDipendente = calculateMontanteFromContributions(dipContribs);
       extract.estimatedMontante = Math.round((montanteDipendente + montanteParasubINPS) * 100) / 100;
-
-      console.log(`[INPS XML] ${nome} ${cognome}: Montante dipendente (calcolato): ${montanteDipendente.toFixed(0)}€, Montante parasubordinati (INPS): ${montanteParasubINPS.toFixed(0)}€, TOTALE: ${extract.estimatedMontante.toFixed(0)}€`);
-    } else if (cognome || nome) {
-      console.log(`[INPS XML] Estratto conto di: ${nome} ${cognome}, montante stimato: ${extract.estimatedMontante.toFixed(0)}€`);
     }
 
     return extract;

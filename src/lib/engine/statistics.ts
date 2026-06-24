@@ -4,6 +4,48 @@
  * distribuzioni log-normali e decomposizione di Cholesky.
  */
 
+// ---------------------------------------------------------------------------
+// PRNG seedabile (mulberry32)
+// ---------------------------------------------------------------------------
+// Di default il motore usa Math.random() (comportamento storico). Chiamando
+// seedRandom(seed) tutta la generazione casuale di QUESTO modulo diventa
+// deterministica e riproducibile: stesso seed -> stessa sequenza. Serve per:
+//   - test di regressione deterministici sul Monte Carlo;
+//   - riprodurre esattamente una simulazione condivisa;
+//   - debugging.
+// resetRandom() ripristina il comportamento non deterministico.
+
+let rngState: number | null = null;
+
+/** Inizializza il PRNG con un seed intero: la generazione diventa deterministica. */
+export function seedRandom(seed: number): void {
+	// Normalizza a intero unsigned 32-bit; evita lo stato 0 (degenere).
+	rngState = (seed >>> 0) || 0x9e3779b9;
+}
+
+/** Disattiva il PRNG seedato e torna a Math.random() (non deterministico). */
+export function resetRandom(): void {
+	rngState = null;
+}
+
+/** True se il PRNG e' attualmente in modalita' deterministica (seedato). */
+export function isSeeded(): boolean {
+	return rngState !== null;
+}
+
+/**
+ * Numero pseudo-casuale in [0, 1). Usa il PRNG mulberry32 se seedato,
+ * altrimenti Math.random(). Sostituisce Math.random() in tutto il modulo.
+ */
+export function nextRandom(): number {
+	if (rngState === null) return Math.random();
+	// mulberry32
+	rngState = (rngState + 0x6d2b79f5) | 0;
+	let t = Math.imul(rngState ^ (rngState >>> 15), 1 | rngState);
+	t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+	return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
+
 /**
  * Calcola i percentili specificati da un array di dati.
  * Usa interpolazione lineare tra i valori più vicini.
@@ -74,10 +116,10 @@ export function gaussianRandom(mean: number, stdDev: number): number {
 	let u2: number;
 
 	do {
-		u1 = Math.random();
+		u1 = nextRandom();
 	} while (u1 === 0); // Evita log(0)
 
-	u2 = Math.random();
+	u2 = nextRandom();
 
 	const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
 	return mean + z0 * stdDev;
@@ -113,7 +155,7 @@ export function logNormalReturn(mean: number, stdDev: number): number {
  */
 export function bootstrapSample(historicalReturns: number[]): number {
 	if (historicalReturns.length === 0) return 0;
-	const index = Math.floor(Math.random() * historicalReturns.length);
+	const index = Math.floor(nextRandom() * historicalReturns.length);
 	return historicalReturns[index];
 }
 
@@ -136,7 +178,7 @@ export function blockBootstrapSample(
 	const effectiveBlockSize = Math.min(blockSize, n);
 
 	// Punto di inizio casuale (con wrap-around)
-	const startIndex = Math.floor(Math.random() * n);
+	const startIndex = Math.floor(nextRandom() * n);
 	const block: number[] = [];
 
 	for (let i = 0; i < effectiveBlockSize; i++) {

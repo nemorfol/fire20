@@ -13,19 +13,8 @@
  */
 
 import { runMonteCarloSimulation } from '../engine/monte-carlo.js';
-import type { MonteCarloParams, MonteCarloResult } from '../engine/monte-carlo.js';
-
-/** Tipo dei messaggi in ingresso al worker */
-interface WorkerInMessage {
-	type: 'run';
-	params: MonteCarloParams;
-}
-
-/** Tipo dei messaggi in uscita dal worker */
-type WorkerOutMessage =
-	| { type: 'progress'; percent: number }
-	| { type: 'result'; data: MonteCarloResult }
-	| { type: 'error'; message: string };
+import type { MonteCarloParams } from '../engine/monte-carlo.js';
+import type { WorkerInMessage, WorkerOutMessage } from './monte-carlo.contract.js';
 
 /**
  * Gestore dei messaggi in arrivo.

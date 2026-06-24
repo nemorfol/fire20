@@ -14,7 +14,9 @@ import {
 	blockBootstrapSample,
 	calculatePercentiles,
 	calculateMean,
-	correlatedReturns
+	correlatedReturns,
+	seedRandom,
+	resetRandom
 } from './statistics.js';
 import { calculateWithdrawal } from './withdrawal.js';
 
@@ -96,6 +98,12 @@ export interface MonteCarloParams {
 	assetClasses?: AssetClassConfig[];
 	/** Matrice di correlazione NxN per multi-asset (opzionale) */
 	correlationMatrix?: number[][];
+	/**
+	 * Seed per il PRNG: se valorizzato la simulazione e' deterministica
+	 * (stesso seed -> stesso risultato), utile per test di regressione e per
+	 * riprodurre una simulazione condivisa. Se omesso usa Math.random().
+	 */
+	seed?: number;
 	/** Callback per aggiornamenti di progresso */
 	onProgress?: (percent: number) => void;
 	/**
@@ -522,6 +530,13 @@ export function runMonteCarloSimulation(params: MonteCarloParams): MonteCarloRes
 	const totalYears = params.yearsToFire + params.yearsInRetirement;
 	const iterations = Math.max(1, params.iterations);
 
+	// Riproducibilita': con un seed la simulazione e' deterministica. Lo stato
+	// del PRNG viene ripristinato a fine run (resetRandom piu' sotto) per non
+	// condizionare simulazioni successive non seedate.
+	if (params.seed !== undefined) {
+		seedRandom(params.seed);
+	}
+
 	// Matrice di tutte le simulazioni: [iterazione][anno]
 	const allSimulations: number[][] = [];
 
@@ -566,6 +581,11 @@ export function runMonteCarloSimulation(params: MonteCarloParams): MonteCarloRes
 		if (params.onProgress && (i + 1) % progressStep === 0) {
 			params.onProgress(((i + 1) / iterations) * 100);
 		}
+	}
+
+	// Ripristina Math.random() se avevamo seedato: il seed non deve "perdurare".
+	if (params.seed !== undefined) {
+		resetRandom();
 	}
 
 	// === Calcolo statistiche ===
