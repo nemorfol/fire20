@@ -45,6 +45,13 @@ describe('stripMarkdown (per TTS)', () => {
 	it('rimuove i bullet a inizio riga', () => {
 		expect(stripMarkdown('- uno\n- due')).toBe('uno\ndue');
 	});
+	it('link -> solo testo', () => {
+		expect(stripMarkdown('vedi [la guida](/guida)')).toBe('vedi la guida');
+	});
+	it('non lascia asterischi residui (es. streaming parziale)', () => {
+		expect(stripMarkdown('**non chiuso')).not.toContain('*');
+		expect(stripMarkdown('a *** b')).not.toContain('*');
+	});
 });
 
 describe('escapeHtml', () => {

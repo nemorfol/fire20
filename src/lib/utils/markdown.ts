@@ -65,9 +65,11 @@ export function renderMarkdown(src: string): string {
 /** Rimuove la sintassi markdown per la lettura vocale (TTS non deve dire "asterisco"). */
 export function stripMarkdown(s: string): string {
 	return s
+		.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // link [testo](url) -> testo
 		.replace(/`([^`]+)`/g, '$1')
 		.replace(/\*\*([^*]+)\*\*/g, '$1')
 		.replace(/\*([^*]+)\*/g, '$1')
 		.replace(/^#{1,6}\s*/gm, '')
-		.replace(/^\s*[-*]\s+/gm, '');
+		.replace(/^\s*[-*]\s+/gm, '')
+		.replace(/[*`#]/g, ''); // residui (es. ** non chiusi durante lo streaming)
 }

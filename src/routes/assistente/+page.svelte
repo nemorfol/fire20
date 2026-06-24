@@ -153,7 +153,7 @@
 				full += chunk;
 				messages[idx] = { role: 'assistant', content: full };
 			}
-			if (ttsOn && full) speak(full);
+			if (ttsOn && full) speak(stripMarkdown(full));
 		} catch (e) {
 			errorMsg = e instanceof Error ? e.message : 'Errore durante la generazione.';
 			messages.splice(idx, 1);
