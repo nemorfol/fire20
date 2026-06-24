@@ -150,6 +150,15 @@ export interface MonteCarloResult {
 	bestCase: number[];
 	/** Anno mediano di fallimento, null se la maggior parte delle simulazioni hanno successo */
 	failureYear: number | null;
+	/**
+	 * Errore standard binomiale del successRate: sqrt(p*(1-p)/N). Con N piccolo
+	 * (es. 1000) il tasso di successo ha incertezza non trascurabile: serve a
+	 * distinguere segnale da rumore (es. "88% ± 1pp") invece di leggere un numero
+	 * puntuale come esatto.
+	 */
+	successRateStdError: number;
+	/** Intervallo di confidenza ~95% del successRate (p ± 1.96*SE, clampato in [0,1]) */
+	successRateCI95: { lower: number; upper: number };
 }
 
 /**
@@ -657,6 +666,12 @@ export function runMonteCarloSimulation(params: MonteCarloParams): MonteCarloRes
 	const medianFinalValue = sortedFinal[Math.floor(sortedFinal.length / 2)];
 	const meanFinalValue = calculateMean(finalValues);
 
+	// Errore standard binomiale del tasso di successo e IC ~95%. Il successRate
+	// e' una proporzione su N iterazioni: la sua incertezza statistica e'
+	// sqrt(p*(1-p)/N), non l'arrotondamento.
+	const seSuccess = Math.sqrt((successRate * (1 - successRate)) / iterations);
+	const ciHalf = 1.96 * seSuccess;
+
 	return {
 		successRate: Math.round(successRate * 10000) / 10000,
 		medianFinalValue: Math.round(medianFinalValue),
@@ -665,6 +680,11 @@ export function runMonteCarloSimulation(params: MonteCarloParams): MonteCarloRes
 		yearlyStats,
 		worstCase,
 		bestCase,
-		failureYear
+		failureYear,
+		successRateStdError: Math.round(seSuccess * 100000) / 100000,
+		successRateCI95: {
+			lower: Math.round(Math.max(0, successRate - ciHalf) * 10000) / 10000,
+			upper: Math.round(Math.min(1, successRate + ciHalf) * 10000) / 10000
+		}
 	};
 }

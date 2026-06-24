@@ -364,10 +364,12 @@ export interface CapitalLossOffsetResult {
  * Regole (TUIR art. 68):
  * - Le minusvalenze pregresse si possono portare in compensazione delle
  *   plusvalenze future per 4 anni (l'anno della minus + 4 successivi).
- * - La compensazione e' possibile solo tra redditi diversi dello STESSO tipo
- *   (equiparati: azioni, ETF azionari, obbligazioni corporate; esclusi i
- *   proventi da fondi comuni / ETF armonizzati che sono redditi di capitale
- *   e non compensabili con minus di redditi diversi — semplificazione qui).
+ * - La compensazione e' possibile solo tra "redditi diversi": le PLUSVALENZE
+ *   da azioni singole, obbligazioni e certificati sono redditi diversi e quindi
+ *   compensabili con minusvalenze pregresse. Le plusvalenze da fondi comuni /
+ *   ETF armonizzati sono invece "redditi di capitale" e NON sono compensabili
+ *   (le relative minus, al contrario, restano redditi diversi compensabili con
+ *   altri redditi diversi). Qui per assetType 'etf' la compensazione e' bloccata.
  * - Aliquota 26% su etf/azioni/corporate, 12.5% sui titoli di stato.
  * - FIFO: si usa prima la minusvalenza piu' vecchia (per non farla scadere).
  *
@@ -400,14 +402,21 @@ export function applyCapitalLossOffset(
 		};
 	}
 
+	// ETF/fondi armonizzati: la PLUSVALENZA e' reddito di capitale e non e'
+	// compensabile con lo stock di minusvalenze (redditi diversi). Le minus
+	// restano nello stock (non vengono consumate) per usi futuri ammessi.
+	const isRedditoDiCapitale = assetType === 'etf';
+
 	let remainingGain = grossGain;
 	let lossUsed = 0;
-	for (const l of valid) {
-		if (remainingGain <= 0) break;
-		const use = Math.min(l.remaining, remainingGain);
-		l.remaining -= use;
-		remainingGain -= use;
-		lossUsed += use;
+	if (!isRedditoDiCapitale) {
+		for (const l of valid) {
+			if (remainingGain <= 0) break;
+			const use = Math.min(l.remaining, remainingGain);
+			l.remaining -= use;
+			remainingGain -= use;
+			lossUsed += use;
+		}
 	}
 
 	const netTaxableGain = Math.max(0, grossGain - lossUsed);

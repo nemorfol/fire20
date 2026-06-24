@@ -328,7 +328,11 @@
 			})),
 			worstCase: p5,
 			bestCase: p95,
-			failureYear: null
+			failureYear: null,
+			// Un risultato salvato non porta con se' l'errore standard: lo lasciamo
+			// neutro (nessuna banda di incertezza ricostruibile a posteriori).
+			successRateStdError: 0,
+			successRateCI95: { lower: saved.successRate, upper: saved.successRate }
 		};
 
 		showNotification('Risultato caricato');

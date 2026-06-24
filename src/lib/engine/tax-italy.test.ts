@@ -3,7 +3,9 @@ import {
 	calculateIRPEF,
 	calculateCapitalGainsTax,
 	calculateStampDuty,
-	calculateIVAFE
+	calculateIVAFE,
+	applyCapitalLossOffset,
+	addCapitalLoss
 } from './tax-italy';
 import { customizeAssumptions, DEFAULT_2026 } from './assumptions';
 
@@ -80,5 +82,33 @@ describe('Imposte patrimoniali (bollo/IVAFE)', () => {
 	it('valore <= 0 -> nessuna imposta', () => {
 		expect(calculateStampDuty(0)).toBe(0);
 		expect(calculateIVAFE(-1)).toBe(0);
+	});
+});
+
+describe('Compensazione minusvalenze (TUIR art. 67/68)', () => {
+	it('azioni singole: la plusvalenza (reddito diverso) compensa le minus pregresse', () => {
+		const stock = addCapitalLoss([], 2022, 5000);
+		const r = applyCapitalLossOffset(8000, 2024, stock, 'stocks');
+		expect(r.lossUsed).toBeCloseTo(5000, 2);
+		expect(r.netTaxableGain).toBeCloseTo(3000, 2);
+		expect(r.taxDue).toBeCloseTo(3000 * 0.26, 2); // 780
+	});
+
+	it('ETF armonizzato: la plusvalenza e\' reddito di capitale, NON compensabile', () => {
+		const stock = addCapitalLoss([], 2022, 5000);
+		const r = applyCapitalLossOffset(8000, 2024, stock, 'etf');
+		expect(r.lossUsed).toBe(0);
+		expect(r.netTaxableGain).toBeCloseTo(8000, 2);
+		expect(r.taxDue).toBeCloseTo(8000 * 0.26, 2); // 2080, tassa piena
+		// La minus NON viene consumata: resta disponibile.
+		const residua = r.updatedLossStock.reduce((s, l) => s + l.remaining, 0);
+		expect(residua).toBeCloseTo(5000, 2);
+	});
+
+	it('minusvalenza scaduta (oltre 4 anni) non e\' utilizzabile', () => {
+		const stock = addCapitalLoss([], 2018, 5000);
+		const r = applyCapitalLossOffset(8000, 2024, stock, 'stocks');
+		expect(r.lossUsed).toBe(0);
+		expect(r.netTaxableGain).toBeCloseTo(8000, 2);
 	});
 });
