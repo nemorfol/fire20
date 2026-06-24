@@ -12,6 +12,38 @@
 	} from 'flowbite-svelte';
 	import { SearchOutline } from 'flowbite-svelte-icons';
 	import { guideSteps, categories, getStepsByCategory } from '$lib/guida/steps';
+	import Fuse from 'fuse.js';
+
+	// Normalizza per la ricerca: minuscolo, senza accenti/diacritici e apostrofi
+	// (nel progetto gli accenti sono spesso resi con apostrofo: "funzionalita'").
+	function normalizeText(s: string): string {
+		return s
+			.normalize('NFD')
+			.replace(/[̀-ͯ]/g, '')
+			.replace(/['’`]/g, '')
+			.toLowerCase();
+	}
+
+	// Indice Fuse precostruito (guideSteps e' statico): ricerca fuzzy su titolo,
+	// sommario, categoria e testo (HTML rimosso), con tolleranza ai refusi.
+	const fuseIndex = new Fuse(
+		guideSteps.map((s) => ({
+			step: s,
+			title: normalizeText(s.title),
+			summary: normalizeText(s.summary),
+			category: normalizeText(s.category)
+		})),
+		{
+			keys: [
+				{ name: 'title', weight: 0.6 },
+				{ name: 'summary', weight: 0.3 },
+				{ name: 'category', weight: 0.1 }
+			],
+			threshold: 0.34,
+			ignoreLocation: true,
+			minMatchCharLength: 2
+		}
+	);
 
 	const STORAGE_KEY = 'fire-guida-completed';
 
@@ -36,14 +68,10 @@
 
 	let filteredSteps = $derived.by(() => {
 		let steps = guideSteps;
-		if (searchQuery.trim()) {
-			const q = searchQuery.toLowerCase().trim();
-			steps = steps.filter(
-				(s) =>
-					s.title.toLowerCase().includes(q) ||
-					s.summary.toLowerCase().includes(q) ||
-					s.category.toLowerCase().includes(q)
-			);
+		const q = searchQuery.trim();
+		if (q) {
+			// Ricerca fuzzy: tollera refusi e accenti resi come apostrofo.
+			steps = fuseIndex.search(normalizeText(q)).map((r) => r.item.step);
 		}
 		if (selectedCategory) {
 			steps = steps.filter((s) => s.category === selectedCategory);
