@@ -3,6 +3,7 @@
  * Replica la logica di calcolo contributivo con proiezioni dettagliate,
  * analisi riscatto laurea, RITA e gap FIRE.
  */
+import { getTransformationCoefficient } from './assumptions.js';
 
 export interface INPSSimulatorParams {
   birthYear: number;
@@ -49,28 +50,6 @@ export interface INPSSimulatorResult {
   ritaMaxAmount: number;
 }
 
-/**
- * Coefficienti di trasformazione INPS (biennio 2025-2026).
- * Mappa eta -> coefficiente.
- */
-const TRANSFORMATION_COEFFICIENTS: [number, number][] = [
-  [57, 0.04186],
-  [58, 0.04289],
-  [59, 0.04399],
-  [60, 0.04615],
-  [61, 0.04763],
-  [62, 0.04915],
-  [63, 0.05083],
-  [64, 0.05245],
-  [65, 0.05428],
-  [66, 0.05575],
-  [67, 0.05723],
-  [68, 0.05885],
-  [69, 0.06053],
-  [70, 0.06254],
-  [71, 0.06466],
-];
-
 /** Aliquote contributive per tipo contratto */
 const CONTRIBUTION_RATES: Record<string, number> = {
   dipendente: 0.33,
@@ -83,28 +62,6 @@ const DEFAULT_GDP_REVALUATION = 0.015;
 
 /** Assegno sociale mensile 2026 */
 const SOCIAL_ALLOWANCE_MONTHLY = 534.41;
-
-/**
- * Interpola il coefficiente di trasformazione per un'eta specifica.
- */
-function getTransformationCoefficient(age: number): number {
-  if (age <= TRANSFORMATION_COEFFICIENTS[0][0]) {
-    return TRANSFORMATION_COEFFICIENTS[0][1];
-  }
-  const last = TRANSFORMATION_COEFFICIENTS[TRANSFORMATION_COEFFICIENTS.length - 1];
-  if (age >= last[0]) {
-    return last[1];
-  }
-  for (let i = 0; i < TRANSFORMATION_COEFFICIENTS.length - 1; i++) {
-    const [age1, coeff1] = TRANSFORMATION_COEFFICIENTS[i];
-    const [age2, coeff2] = TRANSFORMATION_COEFFICIENTS[i + 1];
-    if (age >= age1 && age < age2) {
-      const fraction = (age - age1) / (age2 - age1);
-      return coeff1 + fraction * (coeff2 - coeff1);
-    }
-  }
-  return last[1];
-}
 
 /**
  * Calcola IRPEF + addizionali su reddito da pensione.

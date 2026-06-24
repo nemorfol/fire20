@@ -763,7 +763,7 @@ export function calculateTotalIncomeTax(
 /**
  * Contributi previdenziali INPS a carico del lavoratore (trattenuti in busta
  * paga). Aliquote 2026:
- * - Dipendente: 9.19% fino al massimale (~105.000€), poi 10.19%
+ * - Dipendente: 9.19% fino al massimale (~122.295€ nel 2026), poi 10.19%
  * - Parasubordinato (co.co.co iscritti alla gestione separata): 1/3 del 33.72% a carico ~11.24%
  * - Autonomo iscritto alla gestione separata: per convenzione consideriamo il
  *   26.23% nominale (in realta' l'autonomo paga tutto ma qui si calcola la

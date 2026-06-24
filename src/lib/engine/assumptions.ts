@@ -118,7 +118,7 @@ export interface AssumptionSet {
  * - IRPEF a 3 scaglioni (riforma 2024, confermata 2026)
  * - Capital gain 26% / 12.5% titoli di stato
  * - Bollo titoli 0.2% annuo, IVAFE 0.2% (asset finanziari esteri)
- * - INPS dipendente 9.19% fino al massimale (~105.014€)
+ * - INPS dipendente 9.19% fino al massimale (~122.295€ per il 2026, INPS circ. 6/2026)
  * - Fondo pensione: deduzione 5.300€ (Legge di Bilancio 2026), extra 2.650€
  *   per nuovi lavoratori post-2007. Rendimenti 20%, prestazione 15%→9%
  * - Cedolare secca 21% (canone libero) / 10% (canone concordato — non gestito qui)
@@ -149,7 +149,9 @@ export const DEFAULT_2026: AssumptionSet = {
 		employeeAdditional: 0.0101,
 		parasubordinato: 0.1124,
 		autonomo: 0.2623,
-		massimale: 105014
+		// Massimale contributivo 2026: 122.295€ (INPS circolare n.6 del 30/01/2026,
+		// rivalutazione ISTAT; era 120.607€ nel 2025). Riguarda gli iscritti post-1995.
+		massimale: 122295
 	},
 	pensionFund: {
 		maxDeduction: 5300,
@@ -258,4 +260,61 @@ export function customizeAssumptions(
 		capitalLossCompensationYears:
 			overrides.capitalLossCompensationYears ?? base.capitalLossCompensationYears
 	};
+}
+
+// ---------------------------------------------------------------------------
+// Coefficienti di trasformazione (montante contributivo -> pensione annua)
+// ---------------------------------------------------------------------------
+// FONTE UNICA per tutto il motore (pension-italy.ts e inps-simulator.ts li
+// importano da qui per evitare copie divergenti).
+//
+// Biennio 2025-2026: Decreto Direttoriale Ministero del Lavoro/MEF del
+// 20 novembre 2024, in vigore per le decorrenze 1/1/2025 - 31/12/2026.
+// Mappa eta' intera -> coefficiente. Verificati col reciproco (il "divisore"
+// di speranza di vita): es. 1/17,831 = 5,608% a 67 anni, 1/15,360 = 6,510% a 71.
+
+/** Coefficienti di trasformazione 2025-2026 (DM 20/11/2024), eta' 57-71. */
+export const TRANSFORMATION_COEFFICIENTS_2025_2026: ReadonlyArray<[number, number]> = [
+	[57, 0.04204],
+	[58, 0.04308],
+	[59, 0.04419],
+	[60, 0.04536],
+	[61, 0.04661],
+	[62, 0.04795],
+	[63, 0.04936],
+	[64, 0.05088],
+	[65, 0.05250],
+	[66, 0.05423],
+	[67, 0.05608],
+	[68, 0.05808],
+	[69, 0.06024],
+	[70, 0.06258],
+	[71, 0.06510]
+];
+
+/**
+ * Interpola (lineare) il coefficiente di trasformazione per un'eta'.
+ * Sotto i 57 anni usa il valore a 57; sopra i 71 usa quello a 71 (la legge
+ * non prevede coefficienti oltre tali estremi).
+ *
+ * @param age - Eta' di pensionamento
+ * @param table - Tabella coefficienti (default: 2025-2026)
+ * @returns Coefficiente di trasformazione (frazione, es. 0.05608)
+ */
+export function getTransformationCoefficient(
+	age: number,
+	table: ReadonlyArray<[number, number]> = TRANSFORMATION_COEFFICIENTS_2025_2026
+): number {
+	if (age <= table[0][0]) return table[0][1];
+	const last = table[table.length - 1];
+	if (age >= last[0]) return last[1];
+	for (let i = 0; i < table.length - 1; i++) {
+		const [age1, coeff1] = table[i];
+		const [age2, coeff2] = table[i + 1];
+		if (age >= age1 && age < age2) {
+			const fraction = (age - age1) / (age2 - age1);
+			return coeff1 + fraction * (coeff2 - coeff1);
+		}
+	}
+	return last[1];
 }

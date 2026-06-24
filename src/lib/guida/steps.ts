@@ -1288,16 +1288,16 @@ Se muori dopo 10 anni con 120.000€ residui → <strong>eredi ricevono 120.000�
 <li>Al momento della pensione, il montante viene convertito in rendita annua usando i <strong>coefficienti di trasformazione</strong></li>
 </ol>
 
-<h3>I Coefficienti di Trasformazione (2024-2025)</h3>
+<h3>I Coefficienti di Trasformazione (2025-2026, DM 20/11/2024)</h3>
 <p>Questi coefficienti determinano quanto ricevi per ogni euro di montante accumulato:</p>
 <ul>
-<li><strong>57 anni</strong>: 4,270% → Per 100.000€ di montante: 4.270€/anno di pensione</li>
-<li><strong>60 anni</strong>: 4,615%</li>
-<li><strong>62 anni</strong>: 4,847%</li>
-<li><strong>65 anni</strong>: 5,352%</li>
-<li><strong>67 anni</strong>: 5,723% → Per 100.000€ di montante: 5.723€/anno</li>
-<li><strong>70 anni</strong>: 6,395%</li>
-<li><strong>71 anni</strong>: 6,655%</li>
+<li><strong>57 anni</strong>: 4,204% → Per 100.000€ di montante: 4.204€/anno di pensione</li>
+<li><strong>60 anni</strong>: 4,536%</li>
+<li><strong>62 anni</strong>: 4,795%</li>
+<li><strong>65 anni</strong>: 5,250%</li>
+<li><strong>67 anni</strong>: 5,608% → Per 100.000€ di montante: 5.608€/anno</li>
+<li><strong>70 anni</strong>: 6,258%</li>
+<li><strong>71 anni</strong>: 6,510%</li>
 </ul>
 
 <p>Più aspetti, più alto è il coefficiente (ma meno anni di pensione ricevi).</p>
@@ -1307,8 +1307,8 @@ Se muori dopo 10 anni con 120.000€ residui → <strong>eredi ricevono 120.000�
 RAL media carriera (35 anni di contributi): 32.000€<br>
 Contributi annui: 32.000€ × 33% = 10.560€<br>
 Montante dopo 35 anni (con rivalutazione media 2% annuo): circa <strong>520.000€</strong><br>
-Pensione lorda a 67 anni: 520.000€ × 5,723% = <strong>29.760€/anno</strong> (~2.290€/mese lordi)<br>
-Pensione netta (dopo IRPEF): circa <strong>1.750-1.850€/mese</strong><br><br>
+Pensione lorda a 67 anni: 520.000€ × 5,608% = <strong>29.160€/anno</strong> (~2.240€/mese lordi su 13 mensilità)<br>
+Pensione netta (dopo IRPEF): circa <strong>1.700-1.800€/mese</strong><br><br>
 Per una RAL più alta (45.000€ media), la pensione netta sale a circa <strong>2.300-2.500€/mese</strong>.
 </div>
 

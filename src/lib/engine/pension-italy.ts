@@ -2,6 +2,12 @@
  * Sistema pensionistico italiano (INPS) per la pianificazione FIRE.
  * Implementa il metodo contributivo e i requisiti di accesso alla pensione.
  */
+import { getTransformationCoefficient } from './assumptions.js';
+
+// Re-export per retrocompatibilita': altri moduli (es. pension-fund.ts)
+// importano getTransformationCoefficient da qui. La fonte unica e' ora
+// assumptions.ts (coefficienti 2025-2026, DM 20/11/2024).
+export { getTransformationCoefficient };
 
 /** Parametri per il calcolo della pensione contributiva */
 export interface ContributivePensionParams {
@@ -62,55 +68,10 @@ export interface PensionRequirements {
 }
 
 /**
- * Coefficienti di trasformazione del montante contributivo.
- * Tabella INPS: convertono il montante in pensione annuale.
- * Aggiornati al biennio 2025-2026.
- */
-const TRANSFORMATION_COEFFICIENTS: [number, number][] = [
-	[57, 0.04186],
-	[60, 0.04615],
-	[62, 0.04915],
-	[64, 0.05245],
-	[65, 0.05428],
-	[67, 0.05723],
-	[69, 0.06053],
-	[71, 0.06466]
-];
-
-/**
  * Aliquota contributiva IVS per lavoratori dipendenti.
  * 33% dello stipendio lordo (di cui ~9.19% a carico del lavoratore).
  */
 const CONTRIBUTION_RATE = 0.33;
-
-/**
- * Interpola il coefficiente di trasformazione per un'età specifica.
- * Usa interpolazione lineare tra i valori della tabella.
- *
- * @param age - Età di pensionamento
- * @returns Coefficiente di trasformazione
- */
-export function getTransformationCoefficient(age: number): number {
-	if (age <= TRANSFORMATION_COEFFICIENTS[0][0]) {
-		return TRANSFORMATION_COEFFICIENTS[0][1];
-	}
-
-	const last = TRANSFORMATION_COEFFICIENTS[TRANSFORMATION_COEFFICIENTS.length - 1];
-	if (age >= last[0]) {
-		return last[1];
-	}
-
-	for (let i = 0; i < TRANSFORMATION_COEFFICIENTS.length - 1; i++) {
-		const [age1, coeff1] = TRANSFORMATION_COEFFICIENTS[i];
-		const [age2, coeff2] = TRANSFORMATION_COEFFICIENTS[i + 1];
-		if (age >= age1 && age < age2) {
-			const fraction = (age - age1) / (age2 - age1);
-			return coeff1 + fraction * (coeff2 - coeff1);
-		}
-	}
-
-	return last[1];
-}
 
 /**
  * Calcola la pensione con il metodo contributivo INPS.
