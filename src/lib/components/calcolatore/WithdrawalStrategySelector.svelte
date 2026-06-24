@@ -54,7 +54,7 @@
 					<Radio
 						name="strategy"
 						value={strategy.id}
-						checked={selected === strategy.id}
+						bind:group={selected}
 						class="mt-0.5"
 					/>
 					<div>
