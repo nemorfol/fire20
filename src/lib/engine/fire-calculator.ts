@@ -747,3 +747,85 @@ export function calculateCoastFireNumber(
 	if (realReturn <= 0) return Infinity; // senza contributi non si recupera il potere d'acquisto
 	return fireNumber / Math.pow(1 + realReturn, years);
 }
+
+/** Una variante FIRE calcolata sui numeri dell'utente. */
+export interface FireVariant {
+	key: 'lean' | 'standard' | 'barista' | 'chubby' | 'fat';
+	label: string;
+	/** Tenore di vita annuo (spesa) assunto dalla variante. */
+	annualExpenses: number;
+	/** Capitale FIRE necessario per la variante. */
+	fireNumber: number;
+	/** Spiegazione sintetica in italiano. */
+	description: string;
+}
+
+/** Parametri per il calcolo delle varianti FIRE. */
+export interface FireVariantsParams {
+	/** Spesa annua "standard" di riferimento (tenore di vita attuale). */
+	annualExpenses: number;
+	/** Tasso di prelievo sicuro (SWR). */
+	withdrawalRate: number;
+	/** Moltiplicatore LeanFIRE sulle spese (default 0.7). */
+	leanMultiplier?: number;
+	/** Moltiplicatore ChubbyFIRE (default 1.5). */
+	chubbyMultiplier?: number;
+	/** Moltiplicatore FatFIRE (default 2.0). */
+	fatMultiplier?: number;
+	/** Reddito da lavoro leggero nel BaristaFIRE (default 12.000€/anno). */
+	baristaIncome?: number;
+}
+
+/**
+ * Calcola le principali varianti FIRE (Lean/Standard/Barista/Chubby/Fat) sui
+ * numeri dell'utente, con lo stesso SWR. Le soglie sono IPOTESI editabili
+ * (moltiplicatori delle spese), non regole fisse: servono a quantificare in
+ * euro i termini del vocabolario FIRE invece di lasciarli come sola teoria.
+ */
+export function calculateFireVariants(params: FireVariantsParams): FireVariant[] {
+	const swr = params.withdrawalRate;
+	const e = Math.max(0, params.annualExpenses);
+	const lean = params.leanMultiplier ?? 0.7;
+	const chubby = params.chubbyMultiplier ?? 1.5;
+	const fat = params.fatMultiplier ?? 2.0;
+	const barista = Math.max(0, params.baristaIncome ?? 12000);
+	const fn = (exp: number) => calculateFireNumber(Math.max(0, exp), swr);
+	const baristaPortfolioNeed = Math.max(0, e - barista);
+	return [
+		{
+			key: 'lean',
+			label: 'LeanFIRE',
+			annualExpenses: Math.round(e * lean),
+			fireNumber: Math.round(fn(e * lean)),
+			description: `Stile di vita essenziale (~${Math.round(lean * 100)}% delle spese attuali).`
+		},
+		{
+			key: 'standard',
+			label: 'FIRE',
+			annualExpenses: Math.round(e),
+			fireNumber: Math.round(fn(e)),
+			description: 'Mantieni il tenore di vita attuale.'
+		},
+		{
+			key: 'barista',
+			label: 'BaristaFIRE',
+			annualExpenses: Math.round(e),
+			fireNumber: Math.round(fn(baristaPortfolioNeed)),
+			description: 'FIRE parziale: un lavoro leggero copre parte delle spese, il portafoglio il resto.'
+		},
+		{
+			key: 'chubby',
+			label: 'ChubbyFIRE',
+			annualExpenses: Math.round(e * chubby),
+			fireNumber: Math.round(fn(e * chubby)),
+			description: `Tenore di vita piu' alto (${chubby}× le spese attuali).`
+		},
+		{
+			key: 'fat',
+			label: 'FatFIRE',
+			annualExpenses: Math.round(e * fat),
+			fireNumber: Math.round(fn(e * fat)),
+			description: `Stile di vita agiato (${fat}× le spese attuali).`
+		}
+	];
+}
