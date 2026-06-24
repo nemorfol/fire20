@@ -43,6 +43,7 @@
 	import AssumptionsPanel from '$lib/components/shared/AssumptionsPanel.svelte';
 	import SensitivityTornado from '$lib/components/calcolatore/SensitivityTornado.svelte';
 	import MetricsGrid from '$lib/components/calcolatore/MetricsGrid.svelte';
+	import FireVariants from '$lib/components/calcolatore/FireVariants.svelte';
 	import WithdrawalStrategySelector from '$lib/components/calcolatore/WithdrawalStrategySelector.svelte';
 	import ParameterControls from '$lib/components/calcolatore/ParameterControls.svelte';
 	import WhatIfPanel from '$lib/components/calcolatore/WhatIfPanel.svelte';
@@ -428,6 +429,9 @@
 				{coastFireNumber}
 				{gap}
 			/>
+
+			<!-- Varianti FIRE (Lean/Standard/Barista/Chubby/Fat) sui propri numeri -->
+			<FireVariants {annualExpenses} {withdrawalRate} {liquidNetWorth} />
 
 			{#if fireLooksEarly}
 				<Alert color="yellow" class="mt-6">
