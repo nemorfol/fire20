@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Card, Heading, Toggle, Select, Input, Label, Button, Badge, Alert } from 'flowbite-svelte';
 	import { getLLMSettings, updateLLMSettings, type LLMSettings } from '$lib/llm/store.svelte';
-	import { detectProviders } from '$lib/llm';
+	import { detectProviders, pickBestOllamaModel } from '$lib/llm';
 	import type { LLMProviderStatus } from '$lib/llm/types';
 
 	// Copia locale reattiva (stesso pattern delle altre impostazioni).
@@ -11,6 +11,7 @@
 	let statuses = $state<LLMProviderStatus[]>([]);
 	let detecting = $state(false);
 	let detected = $state(false);
+	let ollamaModels = $state<string[]>([]);
 
 	const providerItems = [
 		{ value: 'auto', name: 'Automatico (migliore disponibile)' },
@@ -37,6 +38,17 @@
 		try {
 			statuses = await detectProviders(getLLMSettings());
 			detected = true;
+			const ollama = statuses.find((s) => s.id === 'ollama');
+			ollamaModels = ollama?.models ?? [];
+			// Seleziona di default il modello locale "migliore" per l'app se l'utente
+			// non ne ha gia' scelto uno valido tra quelli installati.
+			if (
+				ollamaModels.length > 0 &&
+				(!settings.ollamaModel || !ollamaModels.includes(settings.ollamaModel))
+			) {
+				settings.ollamaModel = pickBestOllamaModel(ollamaModels);
+				persist();
+			}
 		} finally {
 			detecting = false;
 		}
@@ -69,7 +81,22 @@
 				</div>
 				<div>
 					<Label class="mb-1">Modello Ollama</Label>
-					<Input bind:value={settings.ollamaModel} onchange={persist} placeholder="es. llama3.2" />
+					{#if ollamaModels.length > 0}
+						<Select
+							items={ollamaModels.map((m) => ({ value: m, name: m }))}
+							bind:value={settings.ollamaModel}
+							onchange={persist}
+						/>
+						<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+							Consigliato per l'app: <strong>{pickBestOllamaModel(ollamaModels)}</strong> (selezionato
+							di default). Premi «Rileva provider» per aggiornare la lista.
+						</p>
+					{:else}
+						<Input bind:value={settings.ollamaModel} onchange={persist} placeholder="es. llama3.2" />
+						<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+							Premi «Rileva provider» per elencare i modelli installati e scegliere dal menu.
+						</p>
+					{/if}
 				</div>
 			</div>
 

@@ -12,8 +12,8 @@
 		Spinner,
 		Badge
 	} from 'flowbite-svelte';
-	import { getLLMSettings } from '$lib/llm/store.svelte';
-	import { detectProviders, streamChat, SYSTEM_PROMPT } from '$lib/llm';
+	import { getLLMSettings, updateLLMSettings } from '$lib/llm/store.svelte';
+	import { detectProviders, streamChat, SYSTEM_PROMPT, pickBestOllamaModel } from '$lib/llm';
 	import type { LLMMessage, LLMProviderStatus } from '$lib/llm/types';
 	import { getAllProfiles } from '$lib/db/profiles';
 	import { calculateFireNumber, calculateNetWorth } from '$lib/engine/fire-calculator';
@@ -63,6 +63,11 @@
 		if (enabled) {
 			try {
 				providerStatuses = await detectProviders(s);
+				// Se Ollama e' attivo ma manca un modello scelto, seleziona il migliore.
+				const ollama = providerStatuses.find((p) => p.id === 'ollama');
+				if (ollama?.available && ollama.models?.length && !getLLMSettings().ollamaModel) {
+					updateLLMSettings({ ollamaModel: pickBestOllamaModel(ollama.models) });
+				}
 			} catch {
 				// degrado con grazia
 			}

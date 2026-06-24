@@ -222,3 +222,54 @@ export async function* streamChat(
 		yield* streamOllama(withSystem, settings, opts);
 	}
 }
+
+/**
+ * Sceglie il modello Ollama "migliore" per l'app (spiegazioni finanziarie in
+ * italiano) tra quelli installati. Euristica: famiglie recenti multilingua/
+ * reasoning, dimensione nello sweet spot ~7-14B (oltre spesso troppo lento in
+ * locale), varianti instruct/chat; penalizza embedding/code/vision (non adatti
+ * a Q&A). Ritorna '' se la lista e' vuota.
+ */
+export function pickBestOllamaModel(models: string[]): string {
+	if (!models || models.length === 0) return '';
+	const score = (name: string): number => {
+		const n = name.toLowerCase();
+		let s = 0;
+		const families: [RegExp, number][] = [
+			[/qwen3/, 60],
+			[/qwen2\.5/, 56],
+			[/qwen2/, 46],
+			[/qwen/, 40],
+			[/llama3\.3/, 58],
+			[/llama3\.1/, 53],
+			[/llama3\.2/, 50],
+			[/llama3/, 45],
+			[/llama/, 35],
+			[/gemma3/, 50],
+			[/gemma2/, 45],
+			[/gemma/, 38],
+			[/mixtral/, 46],
+			[/mistral/, 42],
+			[/phi4/, 44],
+			[/phi3/, 38],
+			[/phi/, 30]
+		];
+		for (const [re, v] of families) {
+			if (re.test(n)) {
+				s += v;
+				break;
+			}
+		}
+		const m = n.match(/(\d+(?:\.\d+)?)\s*b\b/);
+		if (m) {
+			const b = parseFloat(m[1]);
+			s += b <= 14 ? b : 14 + (b - 14) * 0.2; // sweet spot ~7-14B
+		}
+		if (/instruct|chat/.test(n)) s += 3;
+		if (/embed/.test(n)) s -= 100;
+		if (/coder|code/.test(n)) s -= 20;
+		if (/vision|llava|moondream/.test(n)) s -= 15;
+		return s;
+	};
+	return [...models].sort((a, b) => score(b) - score(a))[0];
+}
