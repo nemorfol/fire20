@@ -1998,6 +1998,41 @@ Ma il rendimento del 5% non è garantito. In scenari sfavorevoli, l'Opzione A po
 
 <p><strong>Congratulazioni per il percorso fatto. Ora vai e vivi la vita che hai scelto.</strong></p>
 `
+	},
+	{
+		id: 'assistente-ai',
+		number: 21,
+		title: 'Assistente AI (privacy e costi zero)',
+		category: 'Strategie Avanzate',
+		icon: '🤖',
+		summary:
+			"Un assistente AI opzionale, disattivato di default, che gira sul tuo dispositivo: zero costi, nessun dato inviato a server esterni. Spiega i tuoi numeri, non li inventa.",
+		content: `
+<h3>Un assistente che rispetta la privacy (e non costa nulla)</h3>
+<p>FIRE Planner puo' affiancarti un <strong>assistente AI opzionale</strong> che spiega in parole semplici i risultati gia' calcolati dal motore (FIRE number, tasso di successo Monte Carlo, fisco). E' <strong>disattivato di default</strong>: lo abiliti tu, quando vuoi, da <em>Impostazioni</em>.</p>
+
+<p>Coerente con il principio cardine dell'app — <strong>tutto resta sul tuo dispositivo</strong> — l'assistente NON usa servizi a pagamento e <strong>non invia i tuoi dati a nessun server</strong>. Per questo non ha alcun costo, ne' per te ne' per chi mette a disposizione l'app.</p>
+
+<h3>Come funziona: due modi, entrambi locali</h3>
+<ul>
+<li><strong>AI integrata nel browser</strong> (Chrome/Edge recenti, "Gemini Nano"): il modello e' gia' nel browser. Non scarica nulla dall'app e funziona anche sulla versione pubblica online. Qualita' adatta a spiegazioni semplici.</li>
+<li><strong>Ollama in locale</strong>: se installi <a href="https://ollama.com" target="_blank" rel="noopener">Ollama</a> sul tuo PC, l'app vi si collega su <code>http://localhost</code>. Qualita' superiore (modelli piu' grandi), ma richiede di eseguire l'app in locale (scaricando il sorgente da GitHub) perche' i browser bloccano le chiamate a localhost da un sito https.</li>
+</ul>
+
+<div class="tip">
+<strong>Perche' non scarichiamo un modello noi?</strong> Scaricare un modello "pesante" (diversi GB) consumerebbe banda e spazio. Abbiamo scelto di NON farlo: l'app usa solo l'AI che e' gia' sul tuo dispositivo (browser o Ollama). Se non c'e' nessun provider, l'assistente semplicemente non compare e l'app funziona identica.</div>
+
+<h3>Regola d'oro: spiega, non calcola</h3>
+<p>L'assistente <strong>non calcola mai</strong> numeri fiscali o finanziari: quelli li produce il motore deterministico dell'app. L'AI riceve i numeri gia' pronti e li <strong>spiega/commenta</strong>. Non inventa aliquote o coefficienti e non da' consigli operativi di investimento.</p>
+
+<div class="warning">
+<strong>Attenzione:</strong> l'assistente e' uno strumento educativo, <strong>non e' consulenza finanziaria</strong>. Le risposte di un'AI possono contenere errori: verifica sempre i numeri nelle sezioni dedicate dell'app e, per decisioni importanti, rivolgiti a un professionista.</div>
+
+<h3>Come attivarlo</h3>
+<p>Vai in <em>Impostazioni → Assistente AI</em>, attiva l'interruttore e premi "Rileva provider". Vedrai quali opzioni sono disponibili sul tuo dispositivo. Se usi Ollama, indica l'indirizzo (di default <code>http://localhost:11434</code>) e il modello (es. <code>llama3.2</code>).</p>
+`,
+		appLink: '/impostazioni',
+		appLinkLabel: "Attiva l'assistente in Impostazioni"
 	}
 ];
 

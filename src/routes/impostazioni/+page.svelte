@@ -45,6 +45,7 @@
 		sendNotification,
 		startReminderChecks
 	} from '$lib/utils/notifications';
+	import AssistenteAICard from '$lib/components/impostazioni/AssistenteAICard.svelte';
 
 	let selectedLocale = $state<Locale>(getLocale());
 
@@ -490,6 +491,8 @@
 </Card>
 
 <!-- Promemoria Ribilanciamento -->
+<AssistenteAICard />
+
 <Card class="max-w-none mb-6">
 	<Heading tag="h3" class="mb-4">Promemoria Ribilanciamento</Heading>
 	<p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
