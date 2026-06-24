@@ -7,7 +7,7 @@
 	// Copia locale reattiva (stesso pattern delle altre impostazioni).
 	let settings = $state<LLMSettings>({ ...getLLMSettings() });
 	// Intermediario string per il Select (evita problemi di tipizzazione del bind).
-	let pref = $state<string>(settings.preferredProvider);
+	let prefStr = $state<string>(settings.preferredProvider);
 	let statuses = $state<LLMProviderStatus[]>([]);
 	let detecting = $state(false);
 	let detected = $state(false);
@@ -18,21 +18,21 @@
 		{ value: 'chrome-builtin', name: 'Chrome AI integrata' }
 	];
 
-	// Sincronizza la preferenza (string -> union) e persiste a ogni modifica.
-	$effect(() => {
+	// Persistenza ESPLICITA su ogni modifica (niente $effect: eviterebbe cicli
+	// read/write dello stesso stato -> effect_update_depth_exceeded).
+	function persist() {
 		settings.preferredProvider =
-			pref === 'ollama' || pref === 'chrome-builtin' ? pref : 'auto';
-	});
-	$effect(() => {
+			prefStr === 'ollama' || prefStr === 'chrome-builtin' ? prefStr : 'auto';
 		updateLLMSettings({
 			enabled: settings.enabled,
 			preferredProvider: settings.preferredProvider,
 			ollamaUrl: settings.ollamaUrl,
 			ollamaModel: settings.ollamaModel
 		});
-	});
+	}
 
 	async function detect() {
+		persist();
 		detecting = true;
 		try {
 			statuses = await detectProviders(getLLMSettings());
@@ -53,23 +53,23 @@
 		server esterni, nessun modello viene scaricato dall'app. Disattivato di default.
 	</p>
 
-	<Toggle bind:checked={settings.enabled}>Attiva l'assistente AI</Toggle>
+	<Toggle bind:checked={settings.enabled} onchange={persist}>Attiva l'assistente AI</Toggle>
 
 	{#if settings.enabled}
 		<div class="mt-4 space-y-4">
 			<div>
 				<Label class="mb-1">Provider preferito</Label>
-				<Select items={providerItems} bind:value={pref} />
+				<Select items={providerItems} bind:value={prefStr} onchange={persist} />
 			</div>
 
 			<div class="grid gap-3 sm:grid-cols-2">
 				<div>
 					<Label class="mb-1">URL Ollama (locale)</Label>
-					<Input bind:value={settings.ollamaUrl} placeholder="http://localhost:11434" />
+					<Input bind:value={settings.ollamaUrl} onchange={persist} placeholder="http://localhost:11434" />
 				</div>
 				<div>
 					<Label class="mb-1">Modello Ollama</Label>
-					<Input bind:value={settings.ollamaModel} placeholder="es. llama3.2" />
+					<Input bind:value={settings.ollamaModel} onchange={persist} placeholder="es. llama3.2" />
 				</div>
 			</div>
 
