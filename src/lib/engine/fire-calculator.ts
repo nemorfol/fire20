@@ -643,8 +643,8 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 		let irpef = 0;
 		let inpsContributions = 0;
 		if (!isRetired && workingNetEstimate > 0) {
-			// Lordo→netto in chiusa: invertNetSalary risolve esattamente la
-			// piecewise lineare gross→net (vedi tax-italy.ts).
+			// Lordo→netto: invertNetSalary inverte numericamente (bisezione) la
+			// funzione gross→net, ora comprensiva di detrazioni e cuneo (tax-italy.ts).
 			const netTargetNominal = (annualContribution + annualExpenses) * inflationCumulative;
 			const grossExact = invertNetSalary(
 				netTargetNominal,

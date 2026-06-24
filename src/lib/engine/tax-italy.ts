@@ -817,6 +817,7 @@ export function calculateInpsWorkerContribution(
 export interface NetSalaryBreakdown {
 	gross: number;
 	inpsContribution: number;
+	/** IRPEF NETTA, cioe' al netto delle detrazioni da lavoro dipendente. */
 	irpef: number;
 	regionalTax: number;
 	municipalTax: number;
@@ -824,13 +825,85 @@ export interface NetSalaryBreakdown {
 	net: number;
 	/** Aliquota effettiva totale (fiscale + previdenziale) su gross */
 	effectiveRate: number;
+	/** IRPEF lorda prima delle detrazioni (per trasparenza/breakdown). */
+	irpefLorda?: number;
+	/** Detrazioni da lavoro dipendente applicate (art.13 + ulteriore cuneo). */
+	detrazioni?: number;
+	/** Somma integrativa "cuneo" (bonus non tassato, aggiunto al netto). */
+	bonusCuneo?: number;
+}
+
+/** Detrazioni/bonus per lavoro dipendente (art.13 TUIR + cuneo fiscale 2026). */
+export interface EmployeeReliefResult {
+	/** Detrazione per lavoro dipendente, art.13 co.1 TUIR. */
+	detrazioneLavoroDipendente: number;
+	/** Ulteriore detrazione "cuneo" per redditi 20.000-40.000 (riduce l'IRPEF). */
+	ulterioreDetrazione: number;
+	/** Somma integrativa "cuneo" per redditi <=20.000 (bonus non tassato). */
+	sommaIntegrativa: number;
 }
 
 /**
- * Calcolo netto in busta paga approssimato: gross - INPS lavoratore - IRPEF
- * su imponibile (gross - INPS) - addizionali. Non considera detrazioni da
- * lavoro dipendente (dipendono da reddito e non vogliamo inventare valori).
- * Utile per il breakdown del cash flow annuale.
+ * Detrazioni e bonus per lavoro dipendente vigenti nel 2026.
+ *
+ * Fonti verificate:
+ * - Detrazione lavoro dipendente, art.13 co.1 TUIR (riforma 2024, confermata):
+ *     RC<=15.000        -> 1.955
+ *     15.000<RC<=28.000 -> 1.910 + 1.190*(28.000-RC)/13.000  (+65 se RC>25.000)
+ *     28.000<RC<=50.000 -> 1.910*(50.000-RC)/22.000          (+65 se RC<=35.000)
+ *     RC>50.000         -> 0
+ *   (la "discontinuita'" a 15.000, da 1.955 a ~3.100, e' prevista dalla legge).
+ * - Riduzione cuneo fiscale 2025/2026 (resa strutturale):
+ *     somma integrativa (bonus NON tassato) per RC<=20.000, % del reddito da
+ *       lavoro: 7,1% (RC<=8.500), 5,3% (8.500-15.000), 4,8% (15.000-20.000);
+ *     ulteriore detrazione per 20.000<RC<=40.000: 1.000 fino a 32.000, poi
+ *       1.000*(40.000-RC)/8.000 da 32.000 a 40.000.
+ *
+ * @param redditoComplessivo - Reddito complessivo IRPEF (per un dipendente ~ imponibile)
+ * @param redditoLavoro - Reddito da lavoro dipendente (base della somma integrativa)
+ */
+export function calculateEmployeeRelief(
+	redditoComplessivo: number,
+	redditoLavoro: number
+): EmployeeReliefResult {
+	const rc = Math.max(0, redditoComplessivo);
+	const rl = Math.max(0, redditoLavoro);
+
+	// Detrazione art.13 co.1 TUIR
+	let det = 0;
+	if (rc <= 15000) det = 1955;
+	else if (rc <= 28000) det = 1910 + (1190 * (28000 - rc)) / 13000 + (rc > 25000 ? 65 : 0);
+	else if (rc <= 50000) det = (1910 * (50000 - rc)) / 22000 + (rc <= 35000 ? 65 : 0);
+	else det = 0;
+
+	// Ulteriore detrazione "cuneo" (20.000-40.000)
+	let ult = 0;
+	if (rc > 20000 && rc <= 32000) ult = 1000;
+	else if (rc > 32000 && rc <= 40000) ult = (1000 * (40000 - rc)) / 8000;
+
+	// Somma integrativa "cuneo" (RC<=20.000), bonus non tassato sul reddito da lavoro
+	let somma = 0;
+	if (rc <= 20000) {
+		const pct = rc <= 8500 ? 0.071 : rc <= 15000 ? 0.053 : 0.048;
+		somma = rl * pct;
+	}
+
+	return {
+		detrazioneLavoroDipendente: Math.round(Math.max(0, det) * 100) / 100,
+		ulterioreDetrazione: Math.round(Math.max(0, ult) * 100) / 100,
+		sommaIntegrativa: Math.round(Math.max(0, somma) * 100) / 100
+	};
+}
+
+/**
+ * Calcolo netto in busta paga (annuo) per il 2026.
+ *
+ * net = gross - INPS lavoratore - IRPEF NETTA - addizionali + somma integrativa
+ * dove IRPEF netta = max(0, IRPEF lorda - detrazioni lavoro dipendente).
+ *
+ * Le detrazioni e il bonus "cuneo" si applicano SOLO al lavoro dipendente
+ * (calculateEmployeeRelief); per autonomo/parasubordinato si usa la sola IRPEF
+ * lorda (per l'autonomo il regime tipico e' il forfettario, gestito a parte).
  */
 export function calculateNetSalary(
 	grossIncome: number,
@@ -842,44 +915,57 @@ export function calculateNetSalary(
 	if (grossIncome <= 0) {
 		return {
 			gross: 0, inpsContribution: 0, irpef: 0, regionalTax: 0,
-			municipalTax: 0, totalTax: 0, net: 0, effectiveRate: 0
+			municipalTax: 0, totalTax: 0, net: 0, effectiveRate: 0,
+			irpefLorda: 0, detrazioni: 0, bonusCuneo: 0
 		};
 	}
+	const round2 = (x: number) => Math.round(x * 100) / 100;
 	const inps = calculateInpsWorkerContribution(grossIncome, contractType, assumptions);
 	const taxable = Math.max(0, grossIncome - inps);
-	const tax = calculateTotalIncomeTax(taxable, regionalRate, municipalRate, assumptions);
-	const totalTax = tax.total;
-	const net = Math.max(0, grossIncome - inps - totalTax);
+	const irpefLorda = calculateIRPEF(taxable, assumptions).tax;
+
+	let detrazioni = 0;
+	let bonus = 0;
+	if (contractType === 'dipendente') {
+		const relief = calculateEmployeeRelief(taxable, taxable);
+		detrazioni = relief.detrazioneLavoroDipendente + relief.ulterioreDetrazione;
+		bonus = relief.sommaIntegrativa;
+	}
+
+	const irpefNetta = Math.max(0, irpefLorda - detrazioni);
+	const regional = taxable * regionalRate;
+	const municipal = taxable * municipalRate;
+	const totalTax = irpefNetta + regional + municipal;
+	const net = Math.max(0, grossIncome - inps - totalTax + bonus);
+
 	return {
 		gross: grossIncome,
-		inpsContribution: Math.round(inps * 100) / 100,
-		irpef: tax.irpef,
-		regionalTax: tax.regional,
-		municipalTax: tax.municipal,
-		totalTax: Math.round(totalTax * 100) / 100,
-		net: Math.round(net * 100) / 100,
-		effectiveRate: (inps + totalTax) / grossIncome
+		inpsContribution: round2(inps),
+		irpef: round2(irpefNetta),
+		regionalTax: round2(regional),
+		municipalTax: round2(municipal),
+		totalTax: round2(totalTax),
+		net: round2(net),
+		// Carico effettivo = quota di lordo che NON arriva netta (al netto del bonus).
+		effectiveRate: (grossIncome - net) / grossIncome,
+		irpefLorda: round2(irpefLorda),
+		detrazioni: round2(detrazioni),
+		bonusCuneo: round2(bonus)
 	};
 }
 
 /**
- * Inverte la busta paga: dato un netto target restituisce il lordo annuo
- * esatto. La funzione gross→net e' lineare a tratti (rispetto al gross)
- * perche':
- *   net = gross - INPS(gross) - IRPEF(gross-INPS) - addizionali*(gross-INPS)
- * dove sia INPS che IRPEF sono piecewise lineari. Si risolve scaglione per
- * scaglione: prima si determina lo scaglione INPS in cui cade il gross,
- * poi quello IRPEF. La complessita' e' O(n_inps_segments * n_irpef_segments)
- * = costante (al massimo 6 segmenti).
- *
- * Risolutore esatto, non iterativo. Sostituisce il "guess + ratio" precedente.
+ * Inverte la busta paga: dato un netto target restituisce il lordo annuo che
+ * lo produce. Dal 2026 il netto dipende anche dalle detrazioni da lavoro
+ * dipendente e dal "cuneo" (somma integrativa / ulteriore detrazione), che
+ * rendono net(gross) piecewise-lineare ma NON affine globalmente. Usiamo quindi
+ * un risolutore NUMERICO per bisezione su calculateNetSalary: cosi' l'inverso e'
+ * sempre CONSISTENTE col calcolo forward (non puo' divergere). net(gross) e'
+ * monotona crescente; le piccole discontinuita' di legge (soglie del cuneo a
+ * redditi bassi) introducono errori trascurabili.
  *
  * @param targetNet - Netto annuale desiderato
- * @param contractType - Tipo contratto
- * @param regionalRate - Aliquota regionale
- * @param municipalRate - Aliquota comunale
- * @param assumptions - Set fiscale
- * @returns Reddito lordo annuo che produce esattamente targetNet
+ * @returns Reddito lordo annuo che produce circa targetNet
  */
 export function invertNetSalary(
 	targetNet: number,
@@ -889,97 +975,20 @@ export function invertNetSalary(
 	assumptions: AssumptionSet = DEFAULT_2026
 ): number {
 	if (targetNet <= 0) return 0;
-
-	// Segmenti INPS: per dipendente abbiamo due tratti (entro/oltre massimale).
-	// Per parasubordinato e autonomo l'aliquota e' costante: un solo tratto.
-	const massimale = assumptions.inps.massimale;
-	type InpsSegment = { from: number; to: number; rate: number };
-	let inpsSegments: InpsSegment[];
-	switch (contractType) {
-		case 'dipendente':
-			inpsSegments = [
-				{ from: 0, to: massimale, rate: assumptions.inps.employeeBase },
-				{
-					from: massimale,
-					to: Number.POSITIVE_INFINITY,
-					rate: assumptions.inps.employeeBase + assumptions.inps.employeeAdditional
-				}
-			];
-			break;
-		case 'parasubordinato':
-			inpsSegments = [
-				{ from: 0, to: Number.POSITIVE_INFINITY, rate: assumptions.inps.parasubordinato }
-			];
-			break;
-		case 'autonomo':
-			inpsSegments = [{ from: 0, to: Number.POSITIVE_INFINITY, rate: assumptions.inps.autonomo }];
-			break;
+	const netOf = (g: number) =>
+		calculateNetSalary(g, contractType, regionalRate, municipalRate, assumptions).net;
+	// net(g) e' crescente e net < gross: il lordo cercato sta in (targetNet, hi].
+	let lo = targetNet;
+	let hi = targetNet * 1.6 + 20000;
+	let guard = 0;
+	while (netOf(hi) < targetNet && guard < 200) {
+		hi *= 1.5;
+		guard++;
 	}
-
-	const surtaxRate = regionalRate + municipalRate;
-
-	// Per ogni combinazione (segmento INPS, scaglione IRPEF) la funzione
-	// gross→net e' affine: net = a*gross + b. Si risolve per gross e si
-	// verifica che il risultato cada effettivamente nei due segmenti.
-	const irpefBrackets = assumptions.irpefBrackets;
-
-	let cumulativeInpsAtSegStart = 0;
-	for (const inpsSeg of inpsSegments) {
-		// In questo segmento INPS:
-		//   inps(g) = inpsAtSegStart + (g - inpsSeg.from) * inpsSeg.rate
-		// Imponibile = g - inps(g) = g*(1-rate) + (rate*inpsSeg.from - inpsAtSegStart)
-		const taxableAtFrom = inpsSeg.from - cumulativeInpsAtSegStart;
-		const taxableSlope = 1 - inpsSeg.rate;
-
-		let cumulativeIrpefAtBracketStart = 0;
-		for (const b of irpefBrackets) {
-			// IRPEF nello scaglione b: irpef(taxable) = cumIrpefAtBracketStart +
-			//   (taxable - b.from)*b.rate. La taxable corrispondente al gross g
-			//   e' taxable(g) = taxableAtFrom + (g - inpsSeg.from)*taxableSlope.
-			// Quindi:
-			//   irpef(g) = cumIrpefAtBracketStart + (taxableAtFrom + (g-inpsSeg.from)*taxableSlope - b.from)*b.rate
-			//           = b.rate*taxableSlope*g + [cumIrpefAtBracketStart + (taxableAtFrom - b.rate*inpsSeg.from*taxableSlope/b.rate ... )]
-			// Semplifichiamo numericamente: net(g) = g - inps(g) - irpef(taxable(g)) - surtaxRate*taxable(g)
-			//   = g - [inpsAtSegStart + (g-inpsSeg.from)*inpsSeg.rate]
-			//     - [cumIrpefAtBracketStart + (taxable(g)-b.from)*b.rate]
-			//     - surtaxRate*taxable(g)
-			// dove taxable(g) = taxableAtFrom + (g-inpsSeg.from)*taxableSlope
-			//
-			// Slope di net rispetto a g:
-			const slope = 1 - inpsSeg.rate - (b.rate + surtaxRate) * taxableSlope;
-			// net all'estremo inferiore del segmento (g = inpsSeg.from):
-			//   inps = inpsAtSegStart, taxable = taxableAtFrom
-			//   irpef = cumIrpefAtBracketStart + (taxableAtFrom - b.from)*b.rate
-			const netAtInpsFrom =
-				inpsSeg.from -
-				cumulativeInpsAtSegStart -
-				(cumulativeIrpefAtBracketStart + (taxableAtFrom - b.from) * b.rate) -
-				surtaxRate * taxableAtFrom;
-			// gross che produce targetNet: g = inpsSeg.from + (targetNet - netAtInpsFrom)/slope
-			if (Math.abs(slope) < 1e-12) {
-				// Aliquota effettiva 100%: impossibile, salto
-				cumulativeIrpefAtBracketStart += (b.to - b.from) * b.rate;
-				continue;
-			}
-			const candidate = inpsSeg.from + (targetNet - netAtInpsFrom) / slope;
-			// Validazione: candidate deve cadere in entrambi i segmenti
-			const taxableAtCandidate = taxableAtFrom + (candidate - inpsSeg.from) * taxableSlope;
-			if (
-				candidate >= inpsSeg.from - 1e-6 &&
-				candidate <= inpsSeg.to + 1e-6 &&
-				taxableAtCandidate >= b.from - 1e-6 &&
-				(b.to === Number.POSITIVE_INFINITY || taxableAtCandidate <= b.to + 1e-6)
-			) {
-				return Math.max(0, Math.round(candidate * 100) / 100);
-			}
-			cumulativeIrpefAtBracketStart +=
-				(b.to === Number.POSITIVE_INFINITY ? 0 : (b.to - b.from) * b.rate);
-		}
-		cumulativeInpsAtSegStart +=
-			(inpsSeg.to === Number.POSITIVE_INFINITY ? 0 : (inpsSeg.to - inpsSeg.from) * inpsSeg.rate);
+	for (let i = 0; i < 60; i++) {
+		const mid = (lo + hi) / 2;
+		if (netOf(mid) < targetNet) lo = mid;
+		else hi = mid;
 	}
-
-	// Fallback: se nessuno scaglione ha matchato (non dovrebbe accadere) torna
-	// una stima conservativa con un'aliquota effettiva del 30%
-	return Math.round((targetNet / 0.7) * 100) / 100;
+	return Math.round(((lo + hi) / 2) * 100) / 100;
 }
