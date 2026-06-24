@@ -28,7 +28,8 @@
 		BuildingSolid,
 		LandmarkOutline,
 		ScaleBalancedOutline,
-		UsersOutline
+		UsersOutline,
+		MessagesSolid
 	} from 'flowbite-svelte-icons';
 	import favicon from '$lib/assets/favicon.svg';
 	import { t } from '$lib/i18n/store.svelte';
@@ -151,6 +152,9 @@
 					</SidebarItem>
 					<SidebarItem label={t('nav.guide')} href="/guida/" active={isActive('/guida/')} onclick={() => (sidebarOpen = false)}>
 						{#snippet icon()}<BookOpenSolid class={iconClass} />{/snippet}
+					</SidebarItem>
+					<SidebarItem label="Assistente AI" href="/assistente/" active={isActive('/assistente/')} onclick={() => (sidebarOpen = false)}>
+						{#snippet icon()}<MessagesSolid class={iconClass} />{/snippet}
 					</SidebarItem>
 					<SidebarItem label={t('nav.settings')} href="/impostazioni/" active={isActive('/impostazioni/')} onclick={() => (sidebarOpen = false)}>
 						{#snippet icon()}<CogSolid class={iconClass} />{/snippet}
