@@ -8,7 +8,8 @@ import {
 	addCapitalLoss,
 	calculateEmployeeRelief,
 	calculateNetSalary,
-	invertNetSalary
+	invertNetSalary,
+	calculateInpsWorkerContribution
 } from './tax-italy';
 import { customizeAssumptions, DEFAULT_2026 } from './assumptions';
 
@@ -178,5 +179,27 @@ describe('invertNetSalary (bisezione) - consistenza col forward', () => {
 	it('netto <= 0 -> lordo 0', () => {
 		expect(invertNetSalary(0)).toBe(0);
 		expect(invertNetSalary(-100)).toBe(0);
+	});
+});
+
+describe('Contributi INPS lavoratore: banda +1% e massimale', () => {
+	it('sotto la prima fascia: solo aliquota base 9,19%', () => {
+		expect(calculateInpsWorkerContribution(40000, 'dipendente')).toBeCloseTo(40000 * 0.0919, 1);
+	});
+
+	it('tra prima fascia e massimale: +1% sulla fascia eccedente', () => {
+		// 56224*0.0919 + (80000-56224)*0.1019
+		const atteso = 56224 * 0.0919 + (80000 - 56224) * 0.1019;
+		expect(calculateInpsWorkerContribution(80000, 'dipendente')).toBeCloseTo(atteso, 1);
+	});
+
+	it('oltre il massimale: nessun versamento aggiuntivo (cap)', () => {
+		const alMassimale = calculateInpsWorkerContribution(122295, 'dipendente');
+		const oltre = calculateInpsWorkerContribution(200000, 'dipendente');
+		expect(oltre).toBeCloseTo(alMassimale, 2);
+	});
+
+	it('gestione separata (autonomo): base cappata al massimale', () => {
+		expect(calculateInpsWorkerContribution(200000, 'autonomo')).toBeCloseTo(122295 * 0.2623, 1);
 	});
 });

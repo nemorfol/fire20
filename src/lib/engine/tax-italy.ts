@@ -772,7 +772,8 @@ export function calculateTotalIncomeTax(
 /**
  * Contributi previdenziali INPS a carico del lavoratore (trattenuti in busta
  * paga). Aliquote 2026:
- * - Dipendente: 9.19% fino al massimale (~122.295€ nel 2026), poi 10.19%
+ * - Dipendente (post-1995): 9.19% fino alla prima fascia (~56.224€ nel 2026),
+ *   10.19% tra prima fascia e massimale (~122.295€), 0 oltre il massimale
  * - Parasubordinato (co.co.co iscritti alla gestione separata): 1/3 del 33.72% a carico ~11.24%
  * - Autonomo iscritto alla gestione separata: per convenzione consideriamo il
  *   26.23% nominale (in realta' l'autonomo paga tutto ma qui si calcola la
@@ -788,29 +789,22 @@ export function calculateInpsWorkerContribution(
 ): number {
 	if (grossIncome <= 0) return 0;
 
-	const MASSIMALE = assumptions.inps.massimale;
+	const { massimale, primaFascia, employeeBase, employeeAdditional, parasubordinato, autonomo } =
+		assumptions.inps;
 
-	let rate: number;
-	let additionalRate = 0;
-	switch (contractType) {
-		case 'dipendente':
-			rate = assumptions.inps.employeeBase;
-			additionalRate = assumptions.inps.employeeAdditional;
-			break;
-		case 'parasubordinato':
-			rate = assumptions.inps.parasubordinato;
-			break;
-		case 'autonomo':
-			rate = assumptions.inps.autonomo;
-			break;
+	if (contractType === 'dipendente') {
+		// Iscritto post-1995: base fino alla prima fascia, base+1% tra prima fascia
+		// e massimale, nulla oltre il massimale.
+		const capped = Math.min(grossIncome, massimale);
+		const quotaBase = Math.min(capped, primaFascia) * employeeBase;
+		const quotaSuperiore = Math.max(0, capped - primaFascia) * (employeeBase + employeeAdditional);
+		return Math.round((quotaBase + quotaSuperiore) * 100) / 100;
 	}
 
-	if (grossIncome <= MASSIMALE || additionalRate === 0) {
-		return Math.round(grossIncome * rate * 100) / 100;
-	}
-	const base = MASSIMALE * rate;
-	const excess = (grossIncome - MASSIMALE) * (rate + additionalRate);
-	return Math.round((base + excess) * 100) / 100;
+	// Gestione separata (parasubordinato/autonomo): aliquota costante, base
+	// contributiva cappata al massimale (oltre non si versa).
+	const rate = contractType === 'parasubordinato' ? parasubordinato : autonomo;
+	return Math.round(Math.min(grossIncome, massimale) * rate * 100) / 100;
 }
 
 /** Breakdown della busta paga annuale stimata */

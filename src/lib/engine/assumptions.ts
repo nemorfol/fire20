@@ -34,15 +34,17 @@ export interface CapitalIncomeRates {
 
 /** Aliquote contributive INPS lavoratore */
 export interface INPSRates {
-	/** Aliquota lavoratore dipendente fino al massimale */
+	/** Aliquota IVS a carico del lavoratore dipendente (~9,19%) */
 	employeeBase: number;
-	/** Aliquota aggiuntiva oltre il massimale */
+	/** Aliquota aggiuntiva 1% (L.438/1992) sulla fascia oltre la prima fascia */
 	employeeAdditional: number;
 	/** Aliquota parasubordinato (1/3 a carico collaboratore) */
 	parasubordinato: number;
 	/** Aliquota autonomo gestione separata (referenza) */
 	autonomo: number;
-	/** Massimale contributivo annuo */
+	/** Prima fascia di retribuzione: oltre questa scatta l'1% aggiuntivo */
+	primaFascia: number;
+	/** Massimale contributivo annuo (oltre: nessun versamento IVS, iscritti post-1995) */
 	massimale: number;
 }
 
@@ -146,9 +148,13 @@ export const DEFAULT_2026: AssumptionSet = {
 	},
 	inps: {
 		employeeBase: 0.0919,
-		employeeAdditional: 0.0101,
+		// Addizionale dell'1% esatto (art.3-ter L.438/1992) sulla fascia eccedente
+		// la prima fascia: 9,19% + 1,00% = 10,19%.
+		employeeAdditional: 0.01,
 		parasubordinato: 0.1124,
 		autonomo: 0.2623,
+		// Prima fascia 2026: 56.224€ (oltre scatta l'1% aggiuntivo, L.438/1992).
+		primaFascia: 56224,
 		// Massimale contributivo 2026: 122.295€ (INPS circolare n.6 del 30/01/2026,
 		// rivalutazione ISTAT; era 120.607€ nel 2025). Riguarda gli iscritti post-1995.
 		massimale: 122295
