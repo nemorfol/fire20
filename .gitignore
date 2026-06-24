@@ -25,3 +25,5 @@ vite.config.ts.timestamp-*
 # Dati personali / file utente
 /utils/
 *.xml
+# ...ma la sitemap e' un asset pubblico del sito: va versionata
+!static/sitemap.xml

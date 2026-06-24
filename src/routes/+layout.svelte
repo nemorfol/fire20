@@ -53,11 +53,34 @@
 		if (itemHref === '/') return path === '/';
 		return path.startsWith(itemHref);
 	}
+
+	// Titolo per-pagina (browser tab + crawler che eseguono JS). I default OG e
+	// la description statica vivono in app.html (per unfurler/no-JS, dato che
+	// ssr=false). Qui niente OG per non duplicare i tag a runtime.
+	const SITE_NAME = 'FIRE Planner';
+	const seoByPath: Record<string, { title: string; description: string }> = {
+		'/': { title: "FIRE Planner — Indipendenza finanziaria con fiscalita' italiana", description: "Pianificatore FIRE gratuito e privato per il contesto fiscale e previdenziale italiano." },
+		'/profilo': { title: 'Profilo finanziario — FIRE Planner', description: 'Inserisci reddito, spese, patrimonio e pensione per calcolare il tuo percorso FIRE.' },
+		'/calcolatore': { title: 'Calcolatore FIRE — FIRE Planner', description: 'FIRE number, Coast FIRE, anni al FIRE e strategie di prelievo (4%, VPW, Guyton-Klinger, CAPE).' },
+		'/simulazione': { title: 'Simulazione Monte Carlo — FIRE Planner', description: 'Migliaia di simulazioni con dati storici reali e tasso di successo del piano FIRE.' },
+		'/scenari': { title: 'Scenari — FIRE Planner', description: 'Crea e confronta scenari FIRE con parametri diversi.' },
+		'/rischi': { title: 'Scenari di rischio (stress test) — FIRE Planner', description: "Metti alla prova il piano: crash, inflazione, sequenza rendimenti, longevita'." },
+		'/dati-storici': { title: 'Dati storici dei mercati — FIRE Planner', description: 'Rendimenti, correlazioni e CAPE dal 1928 a oggi.' },
+		'/pensione': { title: 'Pensione INPS — FIRE Planner', description: 'Stima della pensione contributiva e del gap pensionistico.' },
+		'/fondo-pensione': { title: 'Fondo pensione e TFR — FIRE Planner', description: "Deducibilita', tassazione agevolata e rendita del fondo pensione." },
+		'/contenitori': { title: 'Confronto contenitori fiscali — FIRE Planner', description: 'Conto titoli, fondo pensione, BTP: quale conviene per il decumulo.' },
+		'/confronto-profili': { title: 'Confronto profili — FIRE Planner', description: 'Confronta piani e profili FIRE affiancati.' },
+		'/performance': { title: 'Performance del portafoglio — FIRE Planner', description: 'Rendimento time-weighted e confronto col benchmark.' },
+		'/guida': { title: 'Guida al FIRE in Italia — FIRE Planner', description: "Guida completa al FIRE con focus su fiscalita' e previdenza italiana." },
+		'/impostazioni': { title: 'Impostazioni — FIRE Planner', description: 'Import/export, lingua, valuta, assistente AI e backup.' },
+		'/community': { title: 'Benchmark e condivisione — FIRE Planner', description: 'Confronta il tuo piano tramite scenari condivisi via link.' }
+	};
+	const seo = $derived(seoByPath[page.url.pathname] ?? { title: SITE_NAME, description: '' });
 </script>
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
-	<title>FIRE Planner</title>
+	<title>{seo.title}</title>
 </svelte:head>
 
 <div class="flex flex-col h-screen">
