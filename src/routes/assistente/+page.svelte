@@ -19,6 +19,7 @@
 	import { calculateFireNumber, calculateNetWorth } from '$lib/engine/fire-calculator';
 	import { formatCurrency } from '$lib/utils/format';
 	import { guideSteps } from '$lib/guida/steps';
+	import { renderMarkdown, stripMarkdown } from '$lib/utils/markdown';
 
 	let enabled = $state(false);
 	let checking = $state(true);
@@ -208,15 +209,26 @@
 			{#each messages as m (m)}
 				<div class="flex {m.role === 'user' ? 'justify-end' : 'justify-start'}">
 					<div
-						class="max-w-[85%] whitespace-pre-wrap rounded-lg px-3 py-2 text-sm {m.role === 'user'
-							? 'bg-primary-600 text-white'
+						class="max-w-[85%] rounded-lg px-3 py-2 text-sm {m.role === 'user'
+							? 'whitespace-pre-wrap bg-primary-600 text-white'
 							: 'bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-gray-100'}"
 					>
-						{m.content || (busy ? '…' : '')}
-						{#if m.role === 'assistant' && m.content && ttsSupported}
-							<button class="ml-2 text-xs underline opacity-70" onclick={() => speak(m.content)}>
-								🔊 leggi
-							</button>
+						{#if m.role === 'assistant'}
+							{#if m.content}
+								<div class="leading-relaxed">{@html renderMarkdown(m.content)}</div>
+								{#if ttsSupported}
+									<button
+										class="mt-1 text-xs underline opacity-70"
+										onclick={() => speak(stripMarkdown(m.content))}
+									>
+										🔊 leggi
+									</button>
+								{/if}
+							{:else}
+								{busy ? '…' : ''}
+							{/if}
+						{:else}
+							{m.content}
 						{/if}
 					</div>
 				</div>
@@ -228,30 +240,29 @@
 		<Alert color="red" class="mb-3">{errorMsg}</Alert>
 	{/if}
 
-	<div class="flex items-end gap-2">
-		<Textarea
-			bind:value={input}
-			onkeydown={onKey}
-			rows={2}
-			placeholder="Scrivi una domanda…"
-			class="flex-1"
-		/>
-		{#if sttSupported}
-			<Button color="light" onclick={startListening} disabled={listening} title="Detta la domanda">
-				{listening ? '🎙️…' : '🎙️'}
-			</Button>
-		{/if}
+	<Textarea
+		bind:value={input}
+		onkeydown={onKey}
+		rows={3}
+		placeholder="Scrivi una domanda…  (Invio per inviare, Shift+Invio per andare a capo)"
+		class="mb-2 w-full"
+	/>
+	<div class="flex flex-wrap items-center justify-between gap-2">
+		<div class="flex items-center gap-3">
+			{#if sttSupported}
+				<Button color="light" onclick={startListening} disabled={listening} title="Detta la domanda">
+					{listening ? '🎙️ ascolto…' : '🎙️ Detta'}
+				</Button>
+			{/if}
+			{#if ttsSupported}
+				<Toggle bind:checked={ttsOn} size="small">Leggi ad alta voce</Toggle>
+			{/if}
+		</div>
 		<Button color="primary" onclick={send} disabled={busy || !input.trim()}>
 			{busy ? 'Genero…' : 'Invia'}
 		</Button>
 	</div>
-
-	<div class="mt-2 flex items-center justify-between">
-		{#if ttsSupported}
-			<Toggle bind:checked={ttsOn} size="small">Leggi le risposte ad alta voce</Toggle>
-		{:else}
-			<span></span>
-		{/if}
-		<span class="text-xs text-gray-400">Strumento educativo, non è consulenza finanziaria.</span>
-	</div>
+	<p class="mt-2 text-right text-xs text-gray-400">
+		Strumento educativo, non è consulenza finanziaria.
+	</p>
 {/if}
