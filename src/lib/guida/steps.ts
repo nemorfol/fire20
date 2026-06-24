@@ -53,6 +53,8 @@ export const guideSteps: GuideStep[] = [
 <li><strong>CoastFIRE</strong> — Aver accumulato abbastanza da giovani che, grazie all'interesse composto, il patrimonio crescerà da solo fino all'età pensionabile tradizionale. Non servono più risparmi aggiuntivi, solo coprire le spese correnti.</li>
 </ul>
 
+<p><strong>Ora le puoi quantificare:</strong> nel <em>Calcolatore FIRE</em> la sezione <strong>Varianti FIRE</strong> calcola Lean / FIRE / Barista / Chubby / Fat sui tuoi numeri (stesso tasso di prelievo; le soglie sono ipotesi modificabili), così vedi a colpo d'occhio quanto capitale serve per ciascuna.</p>
+
 <div class="example">
 <strong>Esempio pratico:</strong> Marco, 35 anni, sviluppatore software a Milano, guadagna 45.000€ netti l'anno. Spende 24.000€ l'anno (2.000€/mese). Il suo FIRE number con la regola del 4% è 600.000€. Con un tasso di risparmio del 47% e rendimenti del 7% annuo lordo, potrebbe raggiungere il FIRE in circa 14 anni, a 49 anni. Se optasse per un LeanFIRE a 18.000€/anno, il target scende a 450.000€ e il tempo a circa 11 anni.
 </div>
@@ -2028,11 +2030,15 @@ Ma il rendimento del 5% non è garantito. In scenari sfavorevoli, l'Opzione A po
 <div class="warning">
 <strong>Attenzione:</strong> l'assistente e' uno strumento educativo, <strong>non e' consulenza finanziaria</strong>. Le risposte di un'AI possono contenere errori: verifica sempre i numeri nelle sezioni dedicate dell'app e, per decisioni importanti, rivolgiti a un professionista.</div>
 
-<h3>Come attivarlo</h3>
-<p>Vai in <em>Impostazioni → Assistente AI</em>, attiva l'interruttore e premi "Rileva provider". Vedrai quali opzioni sono disponibili sul tuo dispositivo. Se usi Ollama, indica l'indirizzo (di default <code>http://localhost:11434</code>) e il modello (es. <code>llama3.2</code>).</p>
+<h3>Come attivarlo e usarlo</h3>
+<p>1) In <em>Impostazioni → Assistente AI</em> attiva l'interruttore e premi "Rileva provider": vedrai cosa e' disponibile sul tuo dispositivo. Se usi Ollama, l'indirizzo di default e' <code>http://localhost:11434</code> e il <strong>modello si sceglie da un menu a tendina</strong> tra quelli installati, con il piu' adatto all'app gia' <strong>selezionato di default</strong>.</p>
+<p>2) Apri la voce <em>Assistente AI</em> nel menu laterale: e' una <strong>chat</strong> che risponde basandosi sui tuoi numeri (FIRE number, fisco, pensione) e sui contenuti di questa guida.</p>
+
+<h3>Voce (opzionale)</h3>
+<p>Se il browser lo supporta, puoi <strong>dettare</strong> la domanda col microfono e farti <strong>leggere le risposte ad alta voce</strong> (sintesi vocale del browser). Tutto in locale, nessun audio inviato a server. Per una voce piu' naturale e' possibile, eseguendo l'app in locale, collegare motori TTS esterni (es. CosyVoice).</p>
 `,
-		appLink: '/impostazioni',
-		appLinkLabel: "Attiva l'assistente in Impostazioni"
+		appLink: '/assistente',
+		appLinkLabel: "Apri l'Assistente AI"
 	}
 ];
 
