@@ -162,7 +162,33 @@
 		<!-- Main Content Area -->
 		<main class="flex-1 overflow-y-auto p-4 md:p-6 md:ml-64">
 			<NotificationBanner />
-			{@render children()}
+			<!-- Error boundary: un errore in una sezione non deve azzerare l'intera app.
+			     I dati restano in IndexedDB (sul dispositivo), quindi e' sicuro riprovare. -->
+			<svelte:boundary>
+				{@render children()}
+				{#snippet failed(error, reset)}
+					<div
+						class="max-w-2xl mx-auto mt-8 rounded-lg border border-red-300 bg-red-50 p-6 text-center dark:border-red-800 dark:bg-red-950"
+					>
+						<h2 class="mb-2 text-lg font-semibold text-red-800 dark:text-red-200">
+							Si è verificato un errore in questa sezione
+						</h2>
+						<p class="mb-4 text-sm text-red-700 dark:text-red-300">
+							I tuoi dati sono al sicuro (restano nel browser). Puoi riprovare oppure ricaricare la
+							pagina.
+						</p>
+						<p class="mb-4 break-words text-xs text-gray-500 dark:text-gray-400">
+							{error instanceof Error ? error.message : String(error)}
+						</p>
+						<button
+							class="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+							onclick={reset}
+						>
+							Riprova
+						</button>
+					</div>
+				{/snippet}
+			</svelte:boundary>
 		</main>
 	</div>
 </div>
