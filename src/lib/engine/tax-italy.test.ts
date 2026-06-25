@@ -9,7 +9,8 @@ import {
 	calculateEmployeeRelief,
 	calculateNetSalary,
 	invertNetSalary,
-	calculateInpsWorkerContribution
+	calculateInpsWorkerContribution,
+	calculateSuccessionTax
 } from './tax-italy';
 import { customizeAssumptions, DEFAULT_2026 } from './assumptions';
 
@@ -201,5 +202,28 @@ describe('Contributi INPS lavoratore: banda +1% e massimale', () => {
 
 	it('gestione separata (autonomo): base cappata al massimale', () => {
 		expect(calculateInpsWorkerContribution(200000, 'autonomo')).toBeCloseTo(122295 * 0.2623, 1);
+	});
+});
+
+describe('Imposta di successione (D.Lgs. 346/1990)', () => {
+	it('coniuge/linea retta: 0 sotto la franchigia di 1M', () => {
+		expect(calculateSuccessionTax(500_000, 'spouse-direct')).toBe(0);
+	});
+	it('coniuge/linea retta: 4% sull\'eccedenza oltre 1M', () => {
+		// (1.5M - 1M) * 4% = 20.000
+		expect(calculateSuccessionTax(1_500_000, 'spouse-direct')).toBeCloseTo(20_000, 2);
+	});
+	it('fratelli: franchigia 100k, 6%', () => {
+		// (300k - 100k) * 6% = 12.000
+		expect(calculateSuccessionTax(300_000, 'siblings')).toBeCloseTo(12_000, 2);
+	});
+	it('altri parenti: 6% senza franchigia', () => {
+		expect(calculateSuccessionTax(100_000, 'other-relatives')).toBeCloseTo(6_000, 2);
+	});
+	it('estranei: 8% senza franchigia', () => {
+		expect(calculateSuccessionTax(100_000, 'unrelated')).toBeCloseTo(8_000, 2);
+	});
+	it('importo <= 0 -> 0', () => {
+		expect(calculateSuccessionTax(0, 'unrelated')).toBe(0);
 	});
 });

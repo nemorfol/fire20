@@ -231,6 +231,52 @@ export function calculateIVAFE(
 	return Math.round(foreignAssetsValue * assumptions.capital.ivafe * 100) / 100;
 }
 
+/** Grado di parentela del beneficiario, per l'imposta di successione. */
+export type SuccessionRelationship = 'spouse-direct' | 'siblings' | 'other-relatives' | 'unrelated';
+
+/**
+ * Imposta di successione italiana (D.Lgs. 346/1990). Franchigie e aliquote
+ * verificate (Agenzia delle Entrate, vigenti 2025/2026):
+ * - coniuge e parenti in linea retta (figli, genitori): franchigia 1.000.000€
+ *   ciascuno, 4% sull'eccedenza;
+ * - fratelli/sorelle: franchigia 100.000€, 6%;
+ * - altri parenti fino al 4° grado / affini fino al 3°: 6%, nessuna franchigia;
+ * - altri soggetti (estranei): 8%, nessuna franchigia.
+ * (Imposte ipotecaria/catastale su immobili - 2%+1% - non incluse qui.)
+ *
+ * @param amount - Valore ereditato lordo dal singolo beneficiario
+ * @param relationship - Grado di parentela (default coniuge/linea retta)
+ * @returns Imposta di successione dovuta
+ */
+export function calculateSuccessionTax(
+	amount: number,
+	relationship: SuccessionRelationship = 'spouse-direct'
+): number {
+	if (amount <= 0) return 0;
+	let franchigia = 0;
+	let rate = 0;
+	switch (relationship) {
+		case 'spouse-direct':
+			franchigia = 1_000_000;
+			rate = 0.04;
+			break;
+		case 'siblings':
+			franchigia = 100_000;
+			rate = 0.06;
+			break;
+		case 'other-relatives':
+			franchigia = 0;
+			rate = 0.06;
+			break;
+		case 'unrelated':
+			franchigia = 0;
+			rate = 0.08;
+			break;
+	}
+	const taxable = Math.max(0, amount - franchigia);
+	return Math.round(taxable * rate * 100) / 100;
+}
+
 /**
  * Imposte patrimoniali totali sul portafoglio (bollo titoli + IVAFE).
  * Riceve la quota italiana e la quota estera separate (se l'utente non sa,

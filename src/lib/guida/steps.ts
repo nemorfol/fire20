@@ -199,6 +199,7 @@ Con spese annue di 22.000€ e FIRE number di 550.000€, è al <strong>15%</str
 <li><strong>Disoccupazione:</strong> reddito a zero per N anni consecutivi</li>
 <li><strong>Part-time:</strong> riduzione del reddito del X% per un periodo (tipico post-nascita figli)</li>
 <li><strong>Variazione permanente stipendio:</strong> aumento/taglio che si applica dall'anno X in poi</li>
+<li><strong>Eredità:</strong> entrata una-tantum con <strong>imposta di successione</strong> applicata in base al grado di parentela (coniuge/figli: franchigia 1M€, 4%; fratelli: 100k€, 6%; altri parenti 6%; estranei 8%). Puoi indicare se è <strong>liquidità</strong> (il netto entra nel portafoglio e viene reinvestito) o un <strong>immobile</strong> ereditato (illiquido: non sommato al portafoglio investito).</li>
 </ul>
 <p>Ogni evento ha un toggle di attivazione (what-if rapido senza eliminarli) e appare nel cash flow dettagliato nell'anno corrispondente. Engine: <code>life-events.ts</code> con <code>computeYearlyImpact</code> che consolida tutti gli eventi di un anno.</p>
 

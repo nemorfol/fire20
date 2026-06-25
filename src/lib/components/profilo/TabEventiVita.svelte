@@ -9,6 +9,7 @@
 	import CurrencyInput from '$lib/components/shared/CurrencyInput.svelte';
 	import PercentInput from '$lib/components/shared/PercentInput.svelte';
 	import { createDefaultLifeEvent, type LifeEvent, type LifeEventType } from '$lib/engine/life-events';
+	import type { SuccessionRelationship } from '$lib/engine/tax-italy';
 
 	let {
 		lifeEvents = $bindable<LifeEvent[]>([])
@@ -23,7 +24,8 @@
 		{ value: 'oneTimeExpense', name: 'Spesa una-tantum' },
 		{ value: 'unemployment', name: 'Disoccupazione' },
 		{ value: 'partTime', name: 'Part-time' },
-		{ value: 'incomeChange', name: 'Variazione permanente stipendio' }
+		{ value: 'incomeChange', name: 'Variazione permanente stipendio' },
+		{ value: 'inheritance', name: 'Eredità' }
 	];
 
 	const typeLabels: Record<LifeEventType, string> = {
@@ -31,7 +33,8 @@
 		oneTimeExpense: 'Spesa',
 		unemployment: 'Disoccupazione',
 		partTime: 'Part-time',
-		incomeChange: 'Variazione stipendio'
+		incomeChange: 'Variazione stipendio',
+		inheritance: 'Eredità'
 	};
 
 	const typeColors: Record<LifeEventType, 'green' | 'red' | 'yellow' | 'blue' | 'primary'> = {
@@ -39,8 +42,16 @@
 		oneTimeExpense: 'red',
 		unemployment: 'red',
 		partTime: 'yellow',
-		incomeChange: 'blue'
+		incomeChange: 'blue',
+		inheritance: 'green'
 	};
+
+	const relationshipOptions: { value: SuccessionRelationship; name: string }[] = [
+		{ value: 'spouse-direct', name: 'Coniuge / figli / genitori (franchigia 1M€, 4%)' },
+		{ value: 'siblings', name: 'Fratelli/sorelle (franchigia 100k€, 6%)' },
+		{ value: 'other-relatives', name: 'Altri parenti (6%, no franchigia)' },
+		{ value: 'unrelated', name: 'Estranei (8%, no franchigia)' }
+	];
 
 	function addEvent(type: LifeEventType) {
 		lifeEvents = [...lifeEvents, createDefaultLifeEvent(type, currentYear + 1)];
@@ -171,6 +182,26 @@
 								step={500}
 							/>
 						{/if}
+
+						{#if event.type === 'inheritance'}
+							<CurrencyInput
+								bind:value={event.amount}
+								label="Valore ereditato (lordo)"
+								id="evt-inh-amount-{event.id}"
+								step={1000}
+							/>
+							<div>
+								<Label for="evt-inh-rel-{event.id}" class="mb-2">Parentela (successione)</Label>
+								<Select
+									id="evt-inh-rel-{event.id}"
+									items={relationshipOptions}
+									bind:value={event.relationship}
+								/>
+							</div>
+							<div class="flex items-end pb-2">
+								<Toggle bind:checked={event.isProperty}>Immobile (illiquido, non investito)</Toggle>
+							</div>
+						{/if}
 					</div>
 				</Card>
 			{/each}
@@ -191,6 +222,9 @@
 			</Button>
 			<Button color="alternative" size="sm" onclick={() => addEvent('incomeChange')}>
 				<PlusOutline class="w-3 h-3 me-1" /> Variazione stipendio
+			</Button>
+			<Button color="alternative" size="sm" onclick={() => addEvent('inheritance')}>
+				<PlusOutline class="w-3 h-3 me-1" /> Eredità
 			</Button>
 		</div>
 	</section>

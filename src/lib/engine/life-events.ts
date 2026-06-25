@@ -1,8 +1,10 @@
 /**
  * Eventi di vita parametrici: bonus, periodi di disoccupazione, part-time,
- * spese straordinarie una-tantum. Servono a rendere la fase di accumulo FIRE
- * piu' realistica. Integrati da `projectPortfolio` in `fire-calculator.ts`.
+ * spese straordinarie una-tantum, eredita'. Servono a rendere la fase di
+ * accumulo FIRE piu' realistica. Integrati da `projectPortfolio` in
+ * `fire-calculator.ts`.
  */
+import { calculateSuccessionTax, type SuccessionRelationship } from './tax-italy';
 
 /** Tipo di evento di vita */
 export type LifeEventType =
@@ -10,7 +12,8 @@ export type LifeEventType =
 	| 'oneTimeExpense'     // una-tantum spesa straordinaria (matrimonio, auto, casa, ecc.)
 	| 'unemployment'       // reddito a zero per N anni
 	| 'partTime'           // riduzione reddito del X% per N anni
-	| 'incomeChange';      // variazione permanente del reddito da un certo anno
+	| 'incomeChange'       // variazione permanente del reddito da un certo anno
+	| 'inheritance';       // eredita' una-tantum (con imposta di successione)
 
 /** Evento di vita configurato dall'utente.
  *  Tutti i campi numerici sono obbligatori (anche se non usati dal tipo
@@ -34,6 +37,10 @@ export interface LifeEvent {
 	percentage: number;
 	/** Flag abilitato: se false l'evento viene ignorato (utile per what-if) */
 	enabled: boolean;
+	/** Solo 'inheritance': grado di parentela del beneficiario (imposta di successione) */
+	relationship: SuccessionRelationship;
+	/** Solo 'inheritance': true = immobile ereditato (illiquido, non reinvestito) */
+	isProperty: boolean;
 }
 
 /** Impatto degli eventi di vita su un singolo anno della simulazione */
@@ -129,6 +136,22 @@ export function computeYearlyImpact(
 				}
 				break;
 			}
+			case 'inheritance': {
+				if (e.year === targetYear && e.amount > 0) {
+					const net =
+						e.amount - calculateSuccessionTax(e.amount, e.relationship ?? 'spouse-direct');
+					if (e.isProperty) {
+						// Immobile ereditato: illiquido, NON entra nel portafoglio investito.
+						activeLabels.push(
+							`Eredità (immobile): ${e.label} (netto ${Math.round(net)} €, non investito)`
+						);
+					} else {
+						bonusIncome += Math.max(0, net);
+						activeLabels.push(`Eredità: ${e.label} (+${Math.round(Math.max(0, net))} € netti)`);
+					}
+				}
+				break;
+			}
 		}
 	}
 
@@ -140,7 +163,17 @@ export function computeYearlyImpact(
  */
 export function createDefaultLifeEvent(type: LifeEventType, year: number): LifeEvent {
 	const id = `le-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-	const base = { id, type, year, enabled: true, durationYears: 0, amount: 0, percentage: 0 };
+	const base = {
+		id,
+		type,
+		year,
+		enabled: true,
+		durationYears: 0,
+		amount: 0,
+		percentage: 0,
+		relationship: 'spouse-direct' as SuccessionRelationship,
+		isProperty: false
+	};
 	switch (type) {
 		case 'bonus':
 			return { ...base, type, label: 'Bonus', amount: 3000 };
@@ -152,5 +185,14 @@ export function createDefaultLifeEvent(type: LifeEventType, year: number): LifeE
 			return { ...base, type, label: 'Part-time', durationYears: 2, percentage: 0.5 };
 		case 'incomeChange':
 			return { ...base, type, label: 'Variazione stipendio', amount: 5000 };
+		case 'inheritance':
+			return {
+				...base,
+				type,
+				label: 'Eredità',
+				amount: 50000,
+				relationship: 'spouse-direct',
+				isProperty: false
+			};
 	}
 }
