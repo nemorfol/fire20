@@ -108,7 +108,8 @@
 			isOpen={sidebarOpen}
 			closeSidebar={() => (sidebarOpen = false)}
 			activeUrl={page.url.pathname}
-			class="z-20"
+			class="z-20 top-16"
+			divClass="max-h-[calc(100dvh-4rem)]"
 		>
 			<SidebarWrapper class="py-2">
 				<SidebarGroup>
