@@ -90,7 +90,9 @@ export interface ProjectionParams {
 	/** Tasso di prelievo (es. 0.04 per 4%) */
 	withdrawalRate: number;
 	/** Strategia di prelievo */
-	withdrawalStrategy?: 'fixed' | 'vpw' | 'guyton-klinger' | 'cape-based';
+	withdrawalStrategy?: 'fixed' | 'vpw' | 'guyton-klinger' | 'cape-based' | 'amortized';
+	/** Valore terminale target da lasciare agli eredi, in euro di oggi (strategia 'amortized') */
+	targetBequest?: number;
 	/** Pensione INPS annua lorda (13 mensilita) */
 	annualPension?: number;
 	/** Eta' di accesso alla pensione INPS */
@@ -412,6 +414,7 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 		taxRate,
 		withdrawalRate,
 		withdrawalStrategy = 'fixed',
+		targetBequest = 0,
 		annualPension = 0,
 		pensionAge = 67,
 		otherIncome = 0,
@@ -556,6 +559,8 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 					year: yearsSinceRetirement,
 					age,
 					lifeExpectancy,
+					realReturn: (1 + expectedReturn) / (1 + inflationRate) - 1,
+					targetBequest,
 					guytonKlinger: withdrawalStrategy === 'guyton-klinger' ? {
 						portfolio,
 						initialWithdrawal: retirementPortfolio * withdrawalRate,

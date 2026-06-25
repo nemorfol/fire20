@@ -45,7 +45,9 @@ export interface MonteCarloParams {
 	/** Tasso di prelievo (es. 0.04) */
 	withdrawalRate: number;
 	/** Strategia di prelievo */
-	withdrawalStrategy: 'fixed' | 'vpw' | 'guyton-klinger' | 'cape-based';
+	withdrawalStrategy: 'fixed' | 'vpw' | 'guyton-klinger' | 'cape-based' | 'amortized';
+	/** Valore terminale target (euro di oggi) per la strategia 'amortized' (die-with-X) */
+	targetBequest?: number;
 	/** Allocazione in azioni (0..1) */
 	stockAllocation: number;
 	/** Allocazione in obbligazioni (0..1) */
@@ -486,6 +488,21 @@ function runSingleSimulation(params: MonteCarloParams): number[] {
 						capeRatio: params.capeRatio ?? 25
 					});
 					break;
+
+				case 'amortized': {
+					// Rendimento reale di pianificazione (blend atteso azioni/bond).
+					const blendedNominal =
+						(params.expectedStockReturn ?? 0.07) * params.stockAllocation +
+						(params.expectedBondReturn ?? 0.03) * params.bondAllocation;
+					withdrawal = calculateWithdrawal('amortized', {
+						portfolio,
+						age: (params.currentAge ?? 40) + year,
+						lifeExpectancy: params.lifeExpectancy ?? 90,
+						realReturn: (1 + blendedNominal) / (1 + params.inflationRate) - 1,
+						targetBequest: params.targetBequest ?? 0
+					});
+					break;
+				}
 
 				default:
 					withdrawal = portfolio * params.withdrawalRate;

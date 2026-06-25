@@ -117,7 +117,9 @@ export interface SavedAssetClassConfig {
 
 export interface SimulationParams {
 	withdrawalRate: number;
-	withdrawalStrategy: 'fixed' | 'vpw' | 'guyton-klinger' | 'cape-based';
+	withdrawalStrategy: 'fixed' | 'vpw' | 'guyton-klinger' | 'cape-based' | 'amortized';
+	/** Valore terminale target (euro di oggi) per la strategia 'amortized' (die-with-X) */
+	targetBequest?: number;
 	stockAllocation: number;
 	bondAllocation: number;
 	glidePathEnabled: boolean;

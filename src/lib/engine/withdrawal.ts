@@ -39,6 +39,10 @@ export interface WithdrawalParams {
 	guytonKlinger?: GuytonKlingerParams;
 	/** Rapporto CAPE corrente */
 	capeRatio?: number;
+	/** Rendimento reale atteso (per la strategia ad ammortamento 'amortized') */
+	realReturn?: number;
+	/** Valore terminale target da lasciare agli eredi, in euro di oggi ('amortized') */
+	targetBequest?: number;
 }
 
 /**
@@ -179,15 +183,46 @@ export function capeBasedWithdrawal(portfolio: number, capeRatio: number): numbe
 }
 
 /**
+ * Prelievo ad AMMORTAMENTO con valore terminale target ("die-with-X").
+ * Consuma il capitale in modo che il portafoglio raggiunga un valore terminale
+ * target X (anche 0) all'aspettativa di vita. Va ricalcolato ogni anno sul
+ * portafoglio corrente (auto-correttivo), in termini reali.
+ *
+ * Capitale spendibile = P - VA(X);  W = spendibile * r / (1 - (1+r)^-N)
+ * (rata di una rendita certa di N anni). Con r~0 degrada a spendibile/N.
+ *
+ * @param portfolio - Portafoglio corrente
+ * @param realReturn - Rendimento reale atteso (es. 0.03)
+ * @param yearsRemaining - Anni residui all'aspettativa di vita
+ * @param targetBequest - Valore terminale target in euro di oggi (default 0 = die-with-zero)
+ * @returns Importo del prelievo annuale (euro correnti)
+ */
+export function amortizedWithdrawal(
+	portfolio: number,
+	realReturn: number,
+	yearsRemaining: number,
+	targetBequest: number = 0
+): number {
+	if (portfolio <= 0) return 0;
+	const N = Math.max(1, Math.round(yearsRemaining));
+	const X = Math.max(0, targetBequest);
+	const pvBequest = realReturn <= -1 ? X : X / Math.pow(1 + realReturn, N);
+	const spendable = portfolio - pvBequest;
+	if (spendable <= 0) return 0;
+	if (Math.abs(realReturn) < 1e-9) return spendable / N;
+	return (spendable * realReturn) / (1 - Math.pow(1 + realReturn, -N));
+}
+
+/**
  * Funzione unificata per calcolare il prelievo in base alla strategia scelta.
  * Dispatcha alla funzione appropriata.
  *
- * @param strategy - Tipo di strategia ('fixed' | 'vpw' | 'guyton-klinger' | 'cape-based')
+ * @param strategy - Tipo di strategia
  * @param params - Parametri del prelievo
  * @returns Importo del prelievo annuale
  */
 export function calculateWithdrawal(
-	strategy: 'fixed' | 'vpw' | 'guyton-klinger' | 'cape-based',
+	strategy: 'fixed' | 'vpw' | 'guyton-klinger' | 'cape-based' | 'amortized',
 	params: WithdrawalParams
 ): number {
 	switch (strategy) {
@@ -222,6 +257,14 @@ export function calculateWithdrawal(
 			return capeBasedWithdrawal(
 				params.portfolio,
 				params.capeRatio ?? 25
+			);
+
+		case 'amortized':
+			return amortizedWithdrawal(
+				params.portfolio,
+				params.realReturn ?? 0.03,
+				(params.lifeExpectancy ?? 90) - (params.age ?? 65),
+				params.targetBequest ?? 0
 			);
 
 		default:

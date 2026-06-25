@@ -61,7 +61,10 @@
 	let expectedReturn = $state(7);
 	let inflationRate = $state(2);
 	let taxMode = $state<'stocks' | 'btp' | 'blended'>('blended');
-	let withdrawalStrategy = $state<'fixed' | 'vpw' | 'guyton-klinger' | 'cape-based'>('fixed');
+	let withdrawalStrategy = $state<'fixed' | 'vpw' | 'guyton-klinger' | 'cape-based' | 'amortized'>(
+		'fixed'
+	);
+	let targetBequest = $state(0);
 
 	// === What-If overrides (initialized from profile in onMount) ===
 	let wiAnnualExpenses = $state(20000);
@@ -232,7 +235,8 @@
 					foreignBrokerShare: profile.foreignBrokerShare ?? 0,
 					glidePathEnabled: profile.glidePathEnabled ?? false,
 					glidePathStartEquity: profile.glidePathStartEquity,
-					glidePathEndEquity: profile.glidePathEndEquity
+					glidePathEndEquity: profile.glidePathEndEquity,
+					targetBequest: targetBequest
 				})
 			: []
 	);
@@ -332,6 +336,8 @@
 					else if (strat === 'vpw') withdrawalStrategy = 'vpw';
 					else if (strat === 'guyton-klinger') withdrawalStrategy = 'guyton-klinger';
 					else if (strat === 'cape-based') withdrawalStrategy = 'cape-based';
+					else if (strat === 'amortized') withdrawalStrategy = 'amortized';
+					targetBequest = profile.simulation.targetBequest ?? 0;
 				}
 				initWhatIfFromProfile(profile);
 			}
@@ -495,7 +501,7 @@
 
 			<!-- Controls Row: Strategy + Parameters -->
 			<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-				<WithdrawalStrategySelector bind:selected={withdrawalStrategy} />
+				<WithdrawalStrategySelector bind:selected={withdrawalStrategy} bind:targetBequest />
 				<ParameterControls bind:swr bind:expectedReturn bind:inflationRate bind:taxMode returnOverridden={deriveReturn} />
 			</div>
 

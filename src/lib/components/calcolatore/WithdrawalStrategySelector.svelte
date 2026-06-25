@@ -1,12 +1,14 @@
 <script lang="ts">
-	import { Card, Radio } from 'flowbite-svelte';
+	import { Card, Radio, Input, Label } from 'flowbite-svelte';
 
-	type Strategy = 'fixed' | 'vpw' | 'guyton-klinger' | 'cape-based';
+	type Strategy = 'fixed' | 'vpw' | 'guyton-klinger' | 'cape-based' | 'amortized';
 
 	let {
-		selected = $bindable('fixed' as Strategy)
+		selected = $bindable('fixed' as Strategy),
+		targetBequest = $bindable(0)
 	}: {
 		selected?: Strategy;
+		targetBequest?: number;
 	} = $props();
 
 	const strategies: { id: Strategy; label: string; description: string }[] = [
@@ -33,6 +35,12 @@
 			label: 'CAPE-Based',
 			description:
 				'Il tasso di prelievo si adatta alle valutazioni di mercato tramite il rapporto CAPE. Formula: portafoglio x (2% + 0,5 / CAPE).'
+		},
+		{
+			id: 'amortized',
+			label: 'Die-with-X (ammortamento)',
+			description:
+				'Consuma il capitale per arrivare, all\'aspettativa di vita, a un valore target da lasciare in eredita\' (anche 0). Si ricalcola ogni anno sul portafoglio corrente.'
 		}
 	];
 </script>
@@ -51,12 +59,7 @@
 				onclick={() => (selected = strategy.id)}
 			>
 				<div class="flex items-start gap-3">
-					<Radio
-						name="strategy"
-						value={strategy.id}
-						bind:group={selected}
-						class="mt-0.5"
-					/>
+					<Radio name="strategy" value={strategy.id} bind:group={selected} class="mt-0.5" />
 					<div>
 						<p class="font-semibold text-gray-900 dark:text-white text-sm">
 							{strategy.label}
@@ -69,4 +72,15 @@
 			</button>
 		{/each}
 	</div>
+
+	{#if selected === 'amortized'}
+		<div class="mt-4 max-w-sm">
+			<Label class="mb-1">Valore da lasciare in eredità (€ di oggi)</Label>
+			<Input type="number" min="0" step="1000" bind:value={targetBequest} />
+			<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+				Il prelievo si calcola per arrivare a questo valore all'aspettativa di vita (0 = consuma
+				tutto il capitale).
+			</p>
+		</div>
+	{/if}
 </Card>

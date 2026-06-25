@@ -672,12 +672,22 @@ Dopo un anno negativo con inflazione al 3%: NON adegui per l'inflazione. Resti a
 <li>Il reddito varia ma entro limiti gestibili</li>
 </ul>
 
+<h3>5. Die-with-X (ammortamento con lascito target)</h3>
+<p>Strategia di <strong>consumo del capitale</strong>: invece di preservare il patrimonio (come il 4% "perpetuo"), lo si <strong>ammortizza</strong> per arrivare, all'aspettativa di vita, a un <strong>valore terminale target X</strong> da lasciare agli eredi — anche 0 ("die with zero"). Ogni anno il prelievo si ricalcola sul portafoglio corrente come rata di una rendita certa:</p>
+<ul>
+<li>imposti il valore da lasciare (in euro di oggi); 0 = consumi tutto il capitale</li>
+<li>il prelievo è più alto delle strategie "perpetue" (stai spendendo anche il capitale, non solo i rendimenti)</li>
+<li>è auto-correttivo come il VPW, ma con orizzonte e lascito espliciti</li>
+</ul>
+<p>Disponibile nel Calcolatore (tab Simulazione → Strategia di Prelievo → "Die-with-X"), con il campo per il valore da lasciare.</p>
+
 <h3>Quale Strategia Scegliere?</h3>
 <ul>
 <li><strong>4% fisso</strong> — Se vuoi semplicità e hai altre entrate di backup</li>
 <li><strong>Guyton-Klinger</strong> — Se vuoi un buon compromesso tra semplicità e adattabilità</li>
 <li><strong>VPW</strong> — Se accetti la variabilità e vuoi la massima efficienza matematica</li>
 <li><strong>CAPE-based</strong> — Se vuoi adattarti alle condizioni di mercato</li>
+<li><strong>Die-with-X (ammortamento)</strong> — Se vuoi consumare il capitale lasciando un importo preciso (anche 0) agli eredi</li>
 </ul>
 
 <div class="tip">
