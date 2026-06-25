@@ -103,6 +103,10 @@ export interface Spouse {
 	contributionYears: number;
 	/** Contributo annuo al fondo pensione complementare (deducibile per il partner) */
 	pensionFundContribution: number;
+	/** Patrimonio investito (liquido) gia' di proprieta' del coniuge, in euro di oggi.
+	 *  Si aggiunge al patrimonio del nucleo nel calcolo FIRE (le imposte italiane su
+	 *  investimenti sono piatte, quindi aggregare equivale a tenerli separati). */
+	initialPortfolio?: number;
 	/** Eta' di reversibilita' della pensione del primo (60% standard) — solo informativa */
 	includeReversibility?: boolean;
 }

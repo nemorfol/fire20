@@ -162,8 +162,8 @@
 	let hasPensionBridge = $derived(effPension > 0 && bridgeYears > 0);
 
 	// Patrimonio totale (info), liquido (usato per FIRE) e illiquido (immobili/TFR)
-	let netWorth = $derived(profile ? calculateNetWorth(profile.portfolio as unknown as Record<string, number>) : 0);
-	let liquidNetWorth = $derived(profile ? calculateLiquidNetWorth(profile.portfolio as unknown as Record<string, number>) : 0);
+	let netWorth = $derived(profile ? calculateNetWorth(profile.portfolio as unknown as Record<string, number>) + (profile.spouse?.initialPortfolio || 0) : 0);
+	let liquidNetWorth = $derived(profile ? calculateLiquidNetWorth(profile.portfolio as unknown as Record<string, number>) + (profile.spouse?.initialPortfolio || 0) : 0);
 	let illiquidNetWorth = $derived(profile ? calculateIlliquidNetWorth(profile.portfolio as unknown as Record<string, number>) : 0);
 
 	let annualSavings = $derived(wiAnnualContribution);
@@ -298,7 +298,7 @@
 		const lifeExp = p.lifeExpectancy || 90;
 		const defaults = {
 			annualExpenses: p.fireExpenses || p.annualExpenses || 20000,
-			initialPortfolio: liquidNw,
+			initialPortfolio: liquidNw + (p.spouse?.initialPortfolio || 0),
 			annualContribution: contribution,
 			retirementAge: p.retirementAge || 65,
 			pensionAmount: p.pension?.estimatedMonthly || 0,

@@ -36,6 +36,7 @@
 				pensionAge: 67,
 				contributionYears: 10,
 				pensionFundContribution: 0,
+				initialPortfolio: 0,
 				includeReversibility: false
 			};
 		}
@@ -159,6 +160,13 @@
 					<CurrencyInput bind:value={spouse.pensionFundContribution} />
 					<span class="text-xs text-gray-500 dark:text-gray-400">
 						Deducibile fino a 5.300€ (Legge di Bilancio 2026), separato dal tuo
+					</span>
+				</div>
+				<div>
+					<span class="block text-sm font-medium mb-1">Investimenti / patrimonio attuale del coniuge</span>
+					<CurrencyInput bind:value={spouse.initialPortfolio} />
+					<span class="text-xs text-gray-500 dark:text-gray-400">
+						Capitale gia' investito dal coniuge: si somma al patrimonio del nucleo nel calcolo FIRE.
 					</span>
 				</div>
 			</div>
