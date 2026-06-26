@@ -146,7 +146,10 @@
 		children = (p.children ?? []).map((c: Child) => ({ ...c }));
 		mortgage = p.mortgage ? { ...p.mortgage } : undefined;
 		lifeEvents = (p.lifeEvents ?? []).map((e: LifeEvent) => ({ ...e }));
-		spouse = p.spouse ? { ...p.spouse } : undefined;
+		// Normalizza i campi opzionali aggiunti dopo, cosi' i profili salvati PRIMA
+		// dell'update non rompono i bind (es. CurrencyInput ha fallback 0 e non
+		// accetta undefined -> svelte props_invalid_value). Vedi issue #33.
+		spouse = p.spouse ? { ...p.spouse, initialPortfolio: p.spouse.initialPortfolio ?? 0 } : undefined;
 	}
 
 	function getStateAsProfileData() {
