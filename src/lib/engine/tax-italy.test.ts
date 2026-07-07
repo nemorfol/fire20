@@ -10,7 +10,9 @@ import {
 	calculateNetSalary,
 	invertNetSalary,
 	calculateInpsWorkerContribution,
-	calculateSuccessionTax
+	calculateSuccessionTax,
+	calculatePropertyCapitalGainsTax,
+	blendedCapitalGainsRate
 } from './tax-italy';
 import { customizeAssumptions, DEFAULT_2026 } from './assumptions';
 
@@ -225,5 +227,45 @@ describe('Imposta di successione (D.Lgs. 346/1990)', () => {
 	});
 	it('importo <= 0 -> 0', () => {
 		expect(calculateSuccessionTax(0, 'unrelated')).toBe(0);
+	});
+});
+
+describe('blendedCapitalGainsRate', () => {
+	const cap = DEFAULT_2026.capital;
+	it('tutto azioni -> 26%', () => {
+		expect(blendedCapitalGainsRate({ stocks: 100000 }, cap)).toBeCloseTo(0.26, 5);
+	});
+	it('tutto BFP -> 12,5%', () => {
+		expect(blendedCapitalGainsRate({ bfp: 100000 }, cap)).toBeCloseTo(0.125, 5);
+	});
+	it('tutto cripto -> 33%', () => {
+		expect(blendedCapitalGainsRate({ crypto: 100000 }, cap)).toBeCloseTo(0.33, 5);
+	});
+	it('mix 50/50 azioni/BFP -> media ponderata 19,25%', () => {
+		expect(blendedCapitalGainsRate({ stocks: 50000, bfp: 50000 }, cap)).toBeCloseTo(0.1925, 5);
+	});
+	it('portafoglio vuoto -> fallback aliquota azionaria', () => {
+		expect(blendedCapitalGainsRate({}, cap)).toBeCloseTo(0.26, 5);
+	});
+	it('il fondo pensione e gli illiquidi sono ESCLUSI dalla base', () => {
+		// pensionFund/realEstate/tfr non concorrono: resta l aliquota delle azioni
+		expect(
+			blendedCapitalGainsRate({ stocks: 100000, pensionFund: 999999, realEstate: 999999, tfr: 999999 }, cap)
+		).toBeCloseTo(0.26, 5);
+	});
+});
+
+describe('calculatePropertyCapitalGainsTax (regola 5 anni)', () => {
+	it('oltre 5 anni -> esente', () => {
+		expect(calculatePropertyCapitalGainsTax(300000, 200000, 6, false)).toBe(0);
+	});
+	it('entro 5 anni -> 26% sulla plusvalenza', () => {
+		expect(calculatePropertyCapitalGainsTax(300000, 200000, 3, false)).toBe(26000);
+	});
+	it('abitazione principale -> esente anche entro 5 anni', () => {
+		expect(calculatePropertyCapitalGainsTax(300000, 200000, 2, true)).toBe(0);
+	});
+	it('nessuna plusvalenza se prezzo vendita <= acquisto', () => {
+		expect(calculatePropertyCapitalGainsTax(180000, 200000, 1, false)).toBe(0);
 	});
 });

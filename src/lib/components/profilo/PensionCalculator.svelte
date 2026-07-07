@@ -1,12 +1,11 @@
 <script lang="ts">
-	import { Card, Heading, Label, Input, Select, Badge, Alert } from 'flowbite-svelte';
+	import { Card, Heading, Label, Input, Select, Badge, Alert, Toggle } from 'flowbite-svelte';
 	import { InfoCircleSolid } from 'flowbite-svelte-icons';
 	import CurrencyInput from '$lib/components/shared/CurrencyInput.svelte';
 	import PercentInput from '$lib/components/shared/PercentInput.svelte';
 	import {
 		calculateContributivePension,
 		estimatePensionAge,
-		getPensionRequirements,
 		calculatePensionGap,
 		type ContributivePensionResult
 	} from '$lib/engine/pension-italy';
@@ -16,11 +15,15 @@
 	let {
 		birthYear = 1990,
 		retirementAge = 50,
-		annualExpenses = 20000
+		annualExpenses = 20000,
+		stopContributionsAtFire = $bindable(true)
 	}: {
 		birthYear?: number;
 		retirementAge?: number;
 		annualExpenses?: number;
+		/** #37: se true, i contributi INPS si fermano all'età FIRE (retirementAge)
+		 *  quando questa precede la pensione. Bindable per persistere nel profilo. */
+		stopContributionsAtFire?: boolean;
 	} = $props();
 
 	// Input state
@@ -36,20 +39,26 @@
 	let contributionStartAge = $derived(contributionStartYear - birthYear);
 	let contributionRate = $derived(workerType === 'dipendente' ? 0.33 : 0.2623);
 
-	let pensionResult = $derived.by((): ContributivePensionResult => {
-		const requirements = getPensionRequirements();
-		const pensionAge = estimatePensionAge(birthYear, contributionStartAge, gender);
+	let estimatedPensionAge = $derived(estimatePensionAge(birthYear, contributionStartAge, gender));
+	// #37: i contributi si fermano all'età FIRE solo se questa precede la pensione.
+	let willStopContributions = $derived(stopContributionsAtFire && retirementAge < estimatedPensionAge);
 
+	function computePension(contribEnd: number | undefined): ContributivePensionResult {
 		return calculateContributivePension({
 			currentSalary,
 			salaryGrowthRate: salaryGrowthRate / 100,
 			currentContributionYears: contributionYears,
 			currentAge,
-			retirementAge: pensionAge,
+			retirementAge: estimatedPensionAge,
 			inflationRate: 0.02,
-			montanteRevaluationRate: 0.015
+			montanteRevaluationRate: 0.015,
+			contributionEndAge: contribEnd
 		});
-	});
+	}
+
+	let pensionResult = $derived(computePension(willStopContributions ? retirementAge : undefined));
+	// Confronto: pensione se si continuasse a lavorare fino alla pensione (#37)
+	let pensionResultNoStop = $derived(computePension(undefined));
 
 	// Adjust montante for self-employed (different contribution rate)
 	let adjustedResult = $derived.by((): ContributivePensionResult => {
@@ -176,6 +185,37 @@
 			{/if}
 		</div>
 	</div>
+
+	<!-- #37: Stop contributi INPS all'età FIRE -->
+	{#if retirementAge < estimatedPensionAge}
+		<div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+			<Toggle bind:checked={stopContributionsAtFire}>
+				<span class="font-medium text-gray-900 dark:text-white">
+					Interrompi i contributi INPS all'età FIRE ({retirementAge} anni)
+				</span>
+			</Toggle>
+			<p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+				In un percorso FIRE smetti di lavorare (e di versare) prima della pensione. Con lo
+				stop attivo, dopo i {retirementAge} anni il montante si <strong>rivaluta</strong> ma
+				<strong>non</strong> ricevi nuovi contributi fino ai {estimatedPensionAge} anni.
+				Disattivalo per assumere lavoro continuato fino alla pensione (stima più ottimistica).
+			</p>
+			{#if willStopContributions && pensionResultNoStop.monthlyPension > 0}
+				<div class="mt-3 flex flex-wrap gap-4 text-sm">
+					<span class="text-gray-700 dark:text-gray-300">
+						Con stop a {retirementAge}:
+						<strong class="text-green-600 dark:text-green-400">{formatCurrency(pensionResult.monthlyPension)}/mese</strong>
+					</span>
+					<span class="text-gray-500 dark:text-gray-400">
+						Lavoro fino a {estimatedPensionAge}: {formatCurrency(pensionResultNoStop.monthlyPension)}/mese
+						<span class="text-red-500 dark:text-red-400">
+							(−{formatCurrency(pensionResultNoStop.monthlyPension - pensionResult.monthlyPension)})
+						</span>
+					</span>
+				</div>
+			{/if}
+		</div>
+	{/if}
 
 	<!-- Results Card -->
 	{#if adjustedResult.monthlyPension > 0}

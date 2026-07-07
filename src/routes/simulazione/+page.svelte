@@ -20,7 +20,8 @@
 		getSeriesPreset,
 		type SeriesPresetId
 	} from '$lib/data/default-series';
-	import { DEFAULT_2026 } from '$lib/engine/assumptions';
+	import { DEFAULT_2026, getPreset } from '$lib/engine/assumptions';
+	import { blendedCapitalGainsRate } from '$lib/engine/tax-italy';
 	import {
 		createResult,
 		getAllResults,
@@ -48,6 +49,10 @@
 	let toastType = $state<'success' | 'error'>('success');
 	let showToast = $state(false);
 	let profileLoaded = $state(false);
+	// Parametri fiscali del MC derivati dal profilo (coerenza col deterministico):
+	// aliquota capital gain blended dalla composizione e quota BFP esente da bollo.
+	let mcCapGainsRate = $state(0);
+	let mcBolloExemptShare = $state(0);
 	// #5: valori iniziali della simulazione ereditati dal profilo (come il calcolatore).
 	let simDefaults = $state<{
 		initialPortfolio?: number; annualContribution?: number; annualExpenses?: number;
@@ -91,6 +96,11 @@
 			if (profiles.length > 0) {
 				const p = profiles[0];
 				const liquid = calculateLiquidNetWorth(p.portfolio as unknown as Record<string, number>);
+				mcCapGainsRate = blendedCapitalGainsRate(
+					p.portfolio as unknown as Record<string, number>,
+					getPreset(p.assumptionsId).capital
+				);
+				mcBolloExemptShare = liquid > 0 ? (p.portfolio.bfp ?? 0) / liquid : 0;
 				const monthly =
 					Object.values(p.monthlyContributions).reduce((s, v) => s + (v || 0), 0) * 12;
 				const income = (p.annualIncome || 0) + (p.otherIncome || 0);
@@ -237,6 +247,8 @@
 					stampDutyRate: params.stampDutyRate ?? DEFAULT_2026.capital.stampDuty,
 					ivafeRate: params.ivafeRate ?? DEFAULT_2026.capital.ivafe,
 					foreignBrokerShare: params.foreignBrokerShare ?? 0,
+					capitalGainsTaxRate: params.capitalGainsTaxRate ?? mcCapGainsRate,
+					bolloExemptShare: params.bolloExemptShare ?? mcBolloExemptShare,
 					currentAge: params.currentAge,
 					annualPension: params.annualPension ?? 0,
 					pensionAge: params.pensionAge,

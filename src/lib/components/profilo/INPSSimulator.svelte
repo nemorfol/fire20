@@ -44,6 +44,10 @@
 	let riscattoEnabled = $state(false);
 	let riscattoYears = $state(3);
 
+	// #37: stop contributi all'età FIRE. Il relativo controllo appare solo quando
+	// il FIRE precede i 67, quindi il default ON è appropriato.
+	let stopContributionsAtFire = $state(true);
+
 	// Computed
 	let riscattoCost = $derived(calculateRiscattoLaureaCost(riscattoYears, contractType));
 
@@ -61,6 +65,8 @@
 		targetRetirementAge: retirementAge,
 		careerGaps: careerGaps.length > 0 ? careerGaps : undefined,
 		riscattoLaurea: riscattoEnabled ? { years: riscattoYears, cost: riscattoCost } : undefined,
+		// Stop contributi alla fine lavoro/FIRE: nel gap solo rivalutazione. (#37)
+		contributionEndAge: stopContributionsAtFire ? retirementAge : undefined,
 	}));
 
 	let result = $derived.by((): INPSSimulatorResult | null => {
@@ -173,6 +179,19 @@
 			{/if}
 		</div>
 	</div>
+
+	<!-- #37: Stop contributi all'età FIRE -->
+	{#if retirementAge < 67}
+		<div class="mb-6 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+			<Toggle bind:checked={stopContributionsAtFire}>
+				<span class="font-medium">Interrompi i contributi all'età FIRE ({retirementAge} anni)</span>
+			</Toggle>
+			<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+				In un percorso FIRE i versamenti si fermano a fine lavoro; nel gap fino alla pensione
+				il montante si rivaluta senza nuovi contributi. Disattiva per assumere lavoro continuato.
+			</p>
+		</div>
+	{/if}
 
 	<!-- Career Gaps -->
 	<div class="mb-6">

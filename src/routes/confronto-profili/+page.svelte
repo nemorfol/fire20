@@ -37,6 +37,8 @@
 		type YearlyProjection
 	} from '$lib/engine/fire-calculator';
 	import { childTotalRemainingCost } from '$lib/engine/family';
+	import { blendedCapitalGainsRate } from '$lib/engine/tax-italy';
+	import { getPreset } from '$lib/engine/assumptions';
 	import EChart from '$lib/components/simulazione/EChart.svelte';
 	import { formatCurrency, formatCompact, formatPercent } from '$lib/utils/format';
 
@@ -73,7 +75,10 @@
 			annualExpenses: p.fireExpenses,
 			expectedReturn: p.simulation.expectedReturn,
 			inflationRate: p.simulation.inflationRate,
-			taxRate: 0.26,
+			taxRate: blendedCapitalGainsRate(
+				p.portfolio as unknown as Record<string, number>,
+				getPreset(p.assumptionsId).capital
+			),
 			withdrawalRate: p.simulation.withdrawalRate,
 			annualPension: (p.pension.estimatedMonthly || 0) * 13,
 			pensionAge: p.pension.pensionAge,

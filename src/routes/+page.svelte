@@ -31,6 +31,8 @@
 		type ProjectionParams,
 		type YearlyProjection
 	} from '$lib/engine/fire-calculator';
+	import { blendedCapitalGainsRate } from '$lib/engine/tax-italy';
+	import { getPreset } from '$lib/engine/assumptions';
 	import { formatCurrency, formatPercent, formatCompact, formatDate } from '$lib/utils/format';
 	import StatCard from '$lib/components/shared/StatCard.svelte';
 	import EChart from '$lib/components/simulazione/EChart.svelte';
@@ -195,7 +197,10 @@
 					annualExpenses: profile.fireExpenses,
 					expectedReturn: profile.simulation.expectedReturn,
 					inflationRate: profile.simulation.inflationRate,
-					taxRate: 0.26,
+					taxRate: blendedCapitalGainsRate(
+						profile.portfolio as unknown as Record<string, number>,
+						getPreset(profile.assumptionsId).capital
+					),
 					withdrawalRate: profile.simulation.withdrawalRate,
 					currentAge: new Date().getFullYear() - profile.birthYear,
 					retirementAge: profile.retirementAge,

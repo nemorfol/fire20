@@ -17,6 +17,7 @@
 	} from '$lib/engine/assumptions';
 	import { Card, Badge } from 'flowbite-svelte';
 	import { ChevronDownOutline, ChevronUpOutline } from 'flowbite-svelte-icons';
+	import { ADDIZIONALI_REGIONALI } from '$lib/data/addizionali-regionali';
 
 	let {
 		assumptions = $bindable(DEFAULT_2026)
@@ -308,6 +309,34 @@
 				<h4 class="text-sm font-semibold mb-2 text-gray-900 dark:text-white">
 					Addizionali medie nazionali
 				</h4>
+				{#if editing}
+					<div class="mb-2 text-xs">
+						<label class="text-gray-600 dark:text-gray-400" for="region-select">
+							Precompila l'addizionale regionale dalla tua regione:
+						</label>
+						<select
+							id="region-select"
+							class="ml-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-1 py-0.5"
+							onchange={(e) => {
+								const sel = (e.target as HTMLSelectElement).value;
+								const r = ADDIZIONALI_REGIONALI.find((x) => x.region === sel);
+								if (r) updateSurtax('regional', r.rate);
+							}}
+						>
+							<option value="">— scegli regione —</option>
+							{#each ADDIZIONALI_REGIONALI as r}
+								<option value={r.region}>
+									{r.region} ({fmtPercent(r.rate)}{r.note ? ', ' + r.note : ''})
+								</option>
+							{/each}
+						</select>
+						<p class="text-gray-500 dark:text-gray-400 mt-1">
+							Valori <strong>indicativi</strong>: le regioni applicano scaglioni propri e
+							soglie di esenzione, e i valori cambiano per anno e reddito — verifica la
+							delibera della tua regione. L'addizionale comunale (sotto) va impostata a parte.
+						</p>
+					</div>
+				{/if}
 				<div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
 					<div class="p-2 bg-gray-50 dark:bg-gray-800 rounded">
 						<span class="text-gray-600 dark:text-gray-400">Regionale (media IT):</span>

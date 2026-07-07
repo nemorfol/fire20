@@ -12,6 +12,8 @@ import {
 	projectPortfolio
 } from '$lib/engine/fire-calculator';
 import type { YearlyProjection } from '$lib/engine/fire-calculator';
+import { blendedCapitalGainsRate } from '$lib/engine/tax-italy';
+import { getPreset } from '$lib/engine/assumptions';
 
 /** Formatta un numero in stile italiano (1.234,56) con suffisso EUR */
 function fmtEur(value: number, decimals = 0): string {
@@ -36,6 +38,8 @@ function fmtPct(value: number): string {
 const PORTFOLIO_LABELS: Record<string, string> = {
 	stocks: 'Azioni',
 	bonds: 'Obbligazioni',
+	bfp: 'Buoni Postali',
+	cd: 'Conti deposito',
 	cash: 'Liquidita\'',
 	realEstate: 'Immobiliare',
 	gold: 'Oro',
@@ -352,7 +356,10 @@ export function generateFireReport(profile: Profile): void {
 			annualExpenses: profile.fireExpenses,
 			expectedReturn: profile.simulation.expectedReturn,
 			inflationRate: profile.simulation.inflationRate,
-			taxRate: 0.26,
+			taxRate: blendedCapitalGainsRate(
+				profile.portfolio as unknown as Record<string, number>,
+				getPreset(profile.assumptionsId).capital
+			),
 			withdrawalRate: profile.simulation.withdrawalRate,
 			currentAge,
 			retirementAge: profile.retirementAge,

@@ -21,6 +21,8 @@
 		type YearlyProjection
 	} from '$lib/engine/fire-calculator';
 	import { PREDEFINED_RISK_EVENTS, applyRiskEvent, applyRiskEvents, type RiskEvent } from '$lib/engine/risk-scenarios';
+	import { blendedCapitalGainsRate } from '$lib/engine/tax-italy';
+	import { getPreset } from '$lib/engine/assumptions';
 	import RiskScenarioCard from '$lib/components/rischi/RiskScenarioCard.svelte';
 	import CustomScenarioForm from '$lib/components/rischi/CustomScenarioForm.svelte';
 	import StressTestResults from '$lib/components/rischi/StressTestResults.svelte';
@@ -65,7 +67,10 @@
 			annualExpenses: p.fireExpenses,
 			expectedReturn: p.simulation.expectedReturn,
 			inflationRate: p.simulation.inflationRate,
-			taxRate: 0.26,
+			taxRate: blendedCapitalGainsRate(
+				p.portfolio as unknown as Record<string, number>,
+				getPreset(p.assumptionsId).capital
+			),
 			withdrawalRate: p.simulation.withdrawalRate,
 			currentAge: new Date().getFullYear() - p.birthYear,
 			retirementAge: p.retirementAge,

@@ -2,17 +2,18 @@
 	import { Heading } from 'flowbite-svelte';
 	import CurrencyInput from '$lib/components/shared/CurrencyInput.svelte';
 	import BrokerImport from '$lib/components/profilo/BrokerImport.svelte';
+	import GestptfImport from '$lib/components/profilo/GestptfImport.svelte';
 	import type { PortfolioAllocation, MonthlyContributions } from '$lib/db/index';
 	import type { PortfolioImport } from '$lib/utils/broker-import';
 	import { LIQUID_ASSET_KEYS, ILLIQUID_ASSET_KEYS } from '$lib/engine/fire-calculator';
 
 	let {
 		portfolio = $bindable<PortfolioAllocation>({
-			stocks: 0, bonds: 0, cash: 0, realEstate: 0,
+			stocks: 0, bonds: 0, bfp: 0, cd: 0, cash: 0, realEstate: 0,
 			gold: 0, crypto: 0, pensionFund: 0, tfr: 0, other: 0
 		}),
 		monthlyContributions = $bindable<MonthlyContributions>({
-			stocks: 0, bonds: 0, cash: 0, realEstate: 0,
+			stocks: 0, bonds: 0, bfp: 0, cd: 0, cash: 0, realEstate: 0,
 			gold: 0, crypto: 0, pensionFund: 0, tfr: 0, other: 0
 		})
 	}: {
@@ -23,7 +24,9 @@
 	const assetLabels: Record<keyof PortfolioAllocation, string> = {
 		stocks: 'Azioni / ETF azionari',
 		bonds: 'Obbligazioni / ETF obbligazionari',
-		cash: 'Liquidita (conti, depositi)',
+		bfp: 'Buoni Fruttiferi Postali (BFP)',
+		cd: 'Conti deposito',
+		cash: 'Liquidita (conti correnti)',
 		realEstate: 'Immobili (valore netto)',
 		gold: 'Oro / metalli preziosi',
 		crypto: 'Criptovalute',
@@ -49,6 +52,19 @@
 		portfolio.cash += result.cash;
 		portfolio.gold += result.gold;
 		portfolio.other += result.other;
+	}
+
+	function handleGestptfImport(
+		assets: Record<keyof PortfolioAllocation, number>,
+		mode: 'replace' | 'add'
+	) {
+		// Lo snapshot e' completo (tutte le 11 categorie): in "replace" rimpiazza,
+		// in "add" somma. Copre sia gli asset liquidi sia quelli illiquidi.
+		for (const k of [...liquidKeys, ...illiquidKeys]) {
+			const v = assets[k];
+			if (v == null) continue;
+			portfolio[k] = mode === 'add' ? (portfolio[k] || 0) + v : v;
+		}
 	}
 </script>
 
@@ -82,6 +98,12 @@
 					</div>
 				{/each}
 			</div>
+			<p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+				<strong>BFP</strong> e <strong>conti deposito</strong> sono a capitale garantito e
+				volatilita' quasi nulla: tienili distinti da azioni/obbligazioni. Fiscalmente i BFP
+				sono tassati al 12,5% (come i titoli di stato) ed esenti da imposta di bollo; i conti
+				deposito al 26% con bollo 0,2% annuo.
+			</p>
 		</div>
 
 		<div>
@@ -138,5 +160,11 @@
 
 	<div>
 		<BrokerImport onApply={handleBrokerImport} />
+	</div>
+
+	<hr class="border-gray-200 dark:border-gray-700" />
+
+	<div>
+		<GestptfImport onApply={handleGestptfImport} />
 	</div>
 </div>

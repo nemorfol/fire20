@@ -49,6 +49,41 @@ export function childAnnualExpense(
 }
 
 /**
+ * Solo la quota UNIVERSITARIA della spesa di un figlio per l'anno indicato
+ * (inflazionata). 0 fuori dagli anni di università. Serve al "bucket obiettivo"
+ * (#38), che copre solo i costi universitari, non la spesa corrente del figlio.
+ */
+export function childUniversityExpense(
+	child: Child,
+	calendarYear: number,
+	baseYear: number,
+	inflationRate: number
+): number {
+	const uniStart = child.universityStartAge;
+	const uniYears = child.universityYears ?? 0;
+	const uniCost = child.universityAnnualCost ?? 0;
+	if (uniStart === undefined || uniYears <= 0 || uniCost <= 0) return 0;
+	const age = calendarYear - child.birthYear;
+	if (age < uniStart || age >= uniStart + uniYears) return 0;
+	const inflationFactor = Math.pow(1 + inflationRate, Math.max(0, calendarYear - baseYear));
+	return uniCost * inflationFactor;
+}
+
+/** Somma delle spese UNIVERSITARIE di tutti i figli per l'anno di calendario. */
+export function totalUniversityExpenses(
+	children: Child[] | undefined,
+	calendarYear: number,
+	baseYear: number,
+	inflationRate: number
+): number {
+	if (!children || children.length === 0) return 0;
+	return children.reduce(
+		(sum, c) => sum + childUniversityExpense(c, calendarYear, baseYear, inflationRate),
+		0
+	);
+}
+
+/**
  * Rata annuale del mutuo (monthlyPayment * 12) se ancora attivo nell'anno
  * di calendario indicato, 0 altrimenti. Nel mese in cui il mutuo termina a
  * meta anno, restituiamo il pro-quota sui mesi residui.

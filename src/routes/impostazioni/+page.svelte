@@ -137,6 +137,9 @@
 	let importPreview = $state('');
 	let pendingImportData: any = $state(null);
 	let pendingImportType = $state<'backup' | 'profile'>('backup');
+	// Modalità di import: 'merge' (default, non distruttivo: aggiunge ai dati
+	// esistenti) o 'replace' (sostituisce: cancella i dati attuali). Vedi #5.
+	let importMode = $state<'merge' | 'replace'>('merge');
 
 	// Load counts
 	async function loadCounts() {
@@ -334,37 +337,54 @@
 		try {
 			if (pendingImportType === 'backup') {
 				const d = pendingImportData.data || pendingImportData;
-				await db.transaction('rw', [db.profiles, db.scenarios, db.simulation_results], async () => {
-					// Clear existing data
-					await db.profiles.clear();
-					await db.scenarios.clear();
-					await db.simulation_results.clear();
-					// Import new data
-					if (d.profiles?.length) {
-						// Fix dates
-						const profiles = d.profiles.map((p: any) => ({
-							...p,
-							createdAt: new Date(p.createdAt),
-							updatedAt: new Date(p.updatedAt)
-						}));
-						await db.profiles.bulkAdd(profiles);
-					}
-					if (d.scenarios?.length) {
-						const scenarios = d.scenarios.map((s: any) => ({
-							...s,
-							createdAt: new Date(s.createdAt)
-						}));
-						await db.scenarios.bulkAdd(scenarios);
-					}
-					if (d.results?.length) {
-						const results = d.results.map((r: any) => ({
-							...r,
-							runAt: new Date(r.runAt)
-						}));
-						await db.simulation_results.bulkAdd(results);
-					}
-				});
-				notify('Backup importato con successo!');
+				// Guardia di struttura: un file malformato NON deve toccare i dati.
+				if (!d || typeof d !== 'object' || !Array.isArray(d.profiles)) {
+					notify('File di backup non valido: manca l\'elenco dei profili.', 'error');
+					return;
+				}
+				if (importMode === 'replace') {
+					// SOSTITUISCI: comportamento distruttivo, esplicito e confermato.
+					await db.transaction('rw', [db.profiles, db.scenarios, db.simulation_results], async () => {
+						await db.profiles.clear();
+						await db.scenarios.clear();
+						await db.simulation_results.clear();
+						if (d.profiles.length) {
+							await db.profiles.bulkAdd(
+								d.profiles.map((p: any) => ({
+									...p,
+									createdAt: new Date(p.createdAt),
+									updatedAt: new Date(p.updatedAt)
+								}))
+							);
+						}
+						if (Array.isArray(d.scenarios) && d.scenarios.length) {
+							await db.scenarios.bulkAdd(
+								d.scenarios.map((s: any) => ({ ...s, createdAt: new Date(s.createdAt) }))
+							);
+						}
+						if (Array.isArray(d.results) && d.results.length) {
+							await db.simulation_results.bulkAdd(
+								d.results.map((r: any) => ({ ...r, runAt: new Date(r.runAt) }))
+							);
+						}
+					});
+					notify('Backup importato (sostituzione completata).');
+				} else {
+					// UNISCI (default, NON distruttivo): aggiunge i profili con NUOVI id,
+					// senza cancellare nulla. Scenari e risultati di simulazione sono
+					// rigenerabili e legati a id che cambierebbero: non vengono uniti.
+					const merged = d.profiles.map((p: any) => {
+						const rest = { ...p };
+						delete rest.id; // nuovo id autoincrementale: niente collisioni
+						return {
+							...rest,
+							createdAt: p.createdAt ? new Date(p.createdAt) : new Date(),
+							updatedAt: new Date()
+						};
+					});
+					await db.profiles.bulkAdd(merged);
+					notify(`Backup unito: ${merged.length} profilo/i aggiunto/i ai dati esistenti.`);
+				}
 			} else {
 				// Import profile(s)
 				const profiles = Array.isArray(pendingImportData) ? pendingImportData : [pendingImportData];
@@ -722,6 +742,21 @@
 	<div>
 		<InfoCircleSolid class="mx-auto mb-4 h-12 w-12 text-blue-500" />
 		<p class="text-sm whitespace-pre-line text-gray-700 dark:text-gray-300">{importPreview}</p>
+		{#if pendingImportType === 'backup'}
+			<fieldset class="mt-4 space-y-2 text-left">
+				<legend class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Come importare</legend>
+				<label class="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
+					<input type="radio" name="import-mode" value="merge" bind:group={importMode} class="mt-1" />
+					<span><strong>Unisci</strong> (consigliato) — aggiunge i profili del backup a quelli
+						attuali, senza cancellare nulla.</span>
+				</label>
+				<label class="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
+					<input type="radio" name="import-mode" value="replace" bind:group={importMode} class="mt-1" />
+					<span><strong>Sostituisci</strong> — <span class="text-red-600 dark:text-red-400">cancella
+						tutti i dati attuali</span> e li rimpiazza con il backup. Irreversibile.</span>
+				</label>
+			</fieldset>
+		{/if}
 	</div>
 	{#snippet footer()}
 		<div class="flex justify-end gap-3">

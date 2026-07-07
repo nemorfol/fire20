@@ -11,7 +11,7 @@ import {
 	calculatePortfolioStampDuties
 } from './tax-italy';
 import { DEFAULT_2026, type AssumptionSet } from './assumptions';
-import { totalFamilyExpenses } from './family';
+import { totalFamilyExpenses, totalUniversityExpenses } from './family';
 import { computeYearlyImpact, type LifeEvent } from './life-events';
 import { spouseYearlyCashFlow } from './couple';
 import type { Child, Mortgage, Spouse } from '$lib/db/index';
@@ -32,8 +32,12 @@ export interface YearlyProjection {
 	returns: number;
 	/** Tasse pagate nell'anno sui rendimenti del portafoglio */
 	taxes: number;
-	/** Patrimonio netto totale */
+	/** Patrimonio netto totale (portafoglio liquido + bucket obiettivo) */
 	netWorth: number;
+	/** Saldo del bucket obiettivo per eredità goal a fine anno (#38) */
+	goalBucketBalance?: number;
+	/** Prelievo dal bucket obiettivo nell'anno (copertura costi universitari) (#38) */
+	goalBucketWithdrawal?: number;
 	/** Reddito pensionistico nell'anno */
 	pensionIncome?: number;
 	// --- Breakdown dettagliato (cash flow) ---
@@ -71,6 +75,37 @@ export interface YearlyProjection {
 	equityShare?: number;
 	/** Netto del coniuge nell'anno (lavoro + pensione, post-IRPEF separata) */
 	spouseNetIncome?: number;
+}
+
+/**
+ * Configurazione del "retirement spending smile" (Blanchett): in pensione le
+ * spese reali non sono costanti. Tipicamente: fase attiva "go-go" (spesa piena),
+ * fase "slow-go" (spesa ridotta, meno viaggi/consumi), fase tarda "no-go" (la
+ * spesa puo' risalire per la sanita'/assistenza). In Italia il SSN attenua la
+ * risalita finale, tranne la non-autosufficienza: i fattori sono configurabili.
+ */
+export interface SpendingSmileConfig {
+	/** Se false, spese reali costanti (comportamento legacy) */
+	enabled: boolean;
+	/** Eta' di fine fase attiva "go-go" (spesa piena fino a questa eta', es. 75) */
+	goGoEndAge: number;
+	/** Fattore moltiplicativo spese nella fase "slow-go" (es. 0.85) */
+	slowGoFactor: number;
+	/** Eta' di inizio fase tarda "no-go" (es. 85) */
+	noGoStartAge: number;
+	/** Fattore moltiplicativo spese nella fase "no-go" (es. 1.0; >1 se risale) */
+	noGoFactor: number;
+}
+
+/**
+ * Fattore di spesa per eta' secondo lo spending smile. 1 = spesa piena.
+ * Senza configurazione (o disabilitato) ritorna sempre 1 (retrocompatibile).
+ */
+export function spendingSmileFactor(age: number, smile?: SpendingSmileConfig): number {
+	if (!smile || !smile.enabled) return 1;
+	if (age <= smile.goGoEndAge) return 1;
+	if (age >= smile.noGoStartAge) return smile.noGoFactor;
+	return smile.slowGoFactor;
 }
 
 /** Parametri per la proiezione deterministica del portafoglio */
@@ -133,6 +168,16 @@ export interface ProjectionParams {
 	 * concettualmente diversi). Default 0.
 	 */
 	foreignBrokerShare?: number;
+	/**
+	 * Quota del portafoglio ESENTE da bollo titoli (tipicamente i BFP). 0..1.
+	 * Default 0. Esclusa dalla base del bollo (i BFP non lo scontano).
+	 */
+	bolloExemptShare?: number;
+	/**
+	 * Spending smile: modula le spese di base in pensione per fase (go-go/slow-go/
+	 * no-go). Default assente = spese reali costanti (comportamento legacy).
+	 */
+	spendingSmile?: SpendingSmileConfig;
 	/**
 	 * Glide path: se true, l'allocazione equity decresce linearmente da
 	 * `glidePathStartEquity` (oggi) a `glidePathEndEquity` (a `lifeExpectancy`).
@@ -372,7 +417,7 @@ export function calculateNetWorth(portfolio: Record<string, number>): number {
  * del FIRE Number e della proiezione con SWR (regola del 4%).
  */
 export const LIQUID_ASSET_KEYS = [
-	'stocks', 'bonds', 'cash', 'gold', 'crypto', 'pensionFund', 'other'
+	'stocks', 'bonds', 'bfp', 'cd', 'cash', 'gold', 'crypto', 'pensionFund', 'other'
 ] as const;
 
 /**
@@ -395,6 +440,21 @@ export function calculateLiquidNetWorth(portfolio: Record<string, number>): numb
  */
 export function calculateIlliquidNetWorth(portfolio: Record<string, number>): number {
 	return ILLIQUID_ASSET_KEYS.reduce((sum, key) => sum + (portfolio[key] || 0), 0);
+}
+
+/**
+ * Funded ratio: rapporto tra il capitale liquido disponibile e il capitale
+ * necessario a coprire le spese future (il FIRE Number, gia' al netto di
+ * pensione e altri redditi nel calcolatore). Metrica piu' intuitiva del success
+ * rate: >= 1 (100%) significa "gia' finanziato"; 0,8 = coperto all'80%.
+ *
+ * @param liquidNetWorth - Patrimonio liquido attuale
+ * @param fireNumber - Capitale necessario (FIRE Number)
+ * @returns Funded ratio (0..∞); 0 se fireNumber non positivo
+ */
+export function calculateFundedRatio(liquidNetWorth: number, fireNumber: number): number {
+	if (fireNumber <= 0) return 0;
+	return Math.round((liquidNetWorth / fireNumber) * 10000) / 10000;
 }
 
 /**
@@ -431,6 +491,8 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 		lifeEvents,
 		assumptions = DEFAULT_2026,
 		foreignBrokerShare = 0,
+		bolloExemptShare = 0,
+		spendingSmile,
 		glidePathEnabled = false,
 		glidePathStartEquity = 0.7,
 		glidePathEndEquity = 0.3,
@@ -455,6 +517,16 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 	let retirementPortfolio = 0; // portafoglio al momento del pensionamento
 	let previousWithdrawal = 0;
 	let retirementYear = 0; // anno (0-based) di inizio pensione
+
+	// #38: bucket obiettivo per eredità "goal" (accantonate a basso rischio,
+	// non reinvestite nel portafoglio growth). Rendimento e modalità università
+	// derivati dagli eventi 'inheritance' con allocation='goal'.
+	const goalEvents = (lifeEvents ?? []).filter(
+		(e) => e.enabled && e.type === 'inheritance' && e.allocation === 'goal'
+	);
+	const goalBucketReturn = goalEvents.length > 0 ? goalEvents[0].goalAnnualReturn ?? 0.02 : 0.02;
+	const goalUniversityMode = goalEvents.some((e) => e.goalPurpose === 'university');
+	let goalBucket = 0;
 
 	// Stima del reddito lordo da lavoro per l'anno base: partiamo dal contributo
 	// annuo come upper bound (non abbiamo annualIncome qui). Se il caller vuole
@@ -504,6 +576,19 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 		const lifeExpenseNominal = lifeImpact.oneTimeExpenses * inflationCumulative;
 		const lifeIncomeDeltaNominal = lifeImpact.incomeDelta * inflationCumulative;
 
+		// #38: bucket obiettivo — rivaluta il saldo, versa le eredità goal dell'anno
+		// e (se modalità università) copre i costi universitari prima che pesino sul
+		// portafoglio. Il residuo di spese familiari a carico del portafoglio è netto.
+		goalBucket *= 1 + goalBucketReturn;
+		goalBucket += lifeImpact.goalBucketDeposit * inflationCumulative;
+		let goalBucketWithdrawal = 0;
+		if (goalUniversityMode && goalBucket > 0) {
+			const uniCost = totalUniversityExpenses(children, year, startYear, inflationRate);
+			goalBucketWithdrawal = Math.min(goalBucket, uniCost);
+			goalBucket -= goalBucketWithdrawal;
+		}
+		const familyTotalNet = Math.max(0, family.total - goalBucketWithdrawal);
+
 		// Contributi (solo in fase di accumulazione)
 		// Base: annualContribution inflazionato, ridotto dalle spese familiari
 		// e dagli eventi di vita. incomeMultiplier modula il reddito (0 = disoccupato).
@@ -524,7 +609,7 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 			// contributo base, modulato dagli eventi di vita. Il netto del
 			// coniuge si somma al risparmio del nucleo.
 			const savingsBase =
-				incomeAdjusted - family.total - lifeExpenseNominal + lifeBonusNominal + spouseTotalNet;
+				incomeAdjusted - familyTotalNet - lifeExpenseNominal + lifeBonusNominal + spouseTotalNet;
 			if (savingsBase >= 0) {
 				contributions = savingsBase + accumPensionIncome;
 			} else {
@@ -549,7 +634,8 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 			// Prelievo BASE calcolato dalla strategia (per coprire annualExpenses)
 			let baseWithdrawal: number;
 			if (withdrawalStrategy === 'fixed') {
-				baseWithdrawal = annualExpenses * inflationCumulative;
+				baseWithdrawal =
+					annualExpenses * inflationCumulative * spendingSmileFactor(age, spendingSmile);
 			} else {
 				baseWithdrawal = calculateWithdrawal(withdrawalStrategy, {
 					initialPortfolio: retirementPortfolio,
@@ -577,7 +663,7 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 			// uscite = prelievo base + spese famiglia + spese una-tantum
 			const totalPassiveIncome =
 				pensionIncome + otherIncomeActive + lifeBonusNominal + spouseTotalNet;
-			const totalCashNeeds = baseWithdrawal + family.total + lifeExpenseNominal;
+			const totalCashNeeds = baseWithdrawal + familyTotalNet + lifeExpenseNominal;
 			const netNeed = totalCashNeeds - totalPassiveIncome;
 
 			if (netNeed > 0) {
@@ -622,8 +708,11 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 		const portfolioPreStamp = portfolio + contributions + (grossReturns - taxes) - actualWithdrawals;
 		const stampBase = Math.max(0, portfolioPreStamp);
 		const italianShare = Math.max(0, Math.min(1, 1 - foreignBrokerShare));
+		// La quota esente (BFP) non concorre alla base del bollo titoli italiano.
+		const exemptShare = Math.max(0, Math.min(1, bolloExemptShare));
+		const italianBolloBase = Math.max(0, stampBase * italianShare - stampBase * exemptShare);
 		const stampDuties = calculatePortfolioStampDuties(
-			stampBase * italianShare,
+			italianBolloBase,
 			stampBase * (1 - italianShare),
 			assumptions
 		);
@@ -673,7 +762,8 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 
 		// Spese base dell'anno (senza famiglia/mutuo): post-FIRE e' annualExpenses
 		// inflazionato, pre-FIRE e' annualExpenses inflazionato (vita corrente).
-		const baseExpensesYear = annualExpenses * inflationCumulative;
+		const baseExpensesYear =
+			annualExpenses * inflationCumulative * spendingSmileFactor(age, spendingSmile);
 		const totalExpensesYear = baseExpensesYear + family.total + lifeExpenseNominal;
 
 		projections.push({
@@ -684,7 +774,9 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 			withdrawals: actualWithdrawals,
 			returns: netReturns,
 			taxes,
-			netWorth: portfolio,
+			netWorth: portfolio + goalBucket,
+			goalBucketBalance: Math.round(goalBucket),
+			goalBucketWithdrawal: Math.round(goalBucketWithdrawal),
 			pensionIncome: pensionIncomeForProjection,
 			grossSalary: isRetired ? 0 : Math.round(grossSalary),
 			irpef: isRetired ? 0 : Math.round(irpef),

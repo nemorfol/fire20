@@ -22,6 +22,9 @@ export interface CapitalIncomeRates {
 	stocksAndEtf: number;
 	/** Capital gain e cedole su titoli di stato italiani e equiparati (white list) */
 	governmentBonds: number;
+	/** Plusvalenze su cripto-attivita' (dal 1/1/2026 al 33%; le e-money/stablecoin
+	 *  in euro restano al 26%, qui non distinte). Legge di Bilancio 2025/2026. */
+	cryptoGains: number;
 	/** Cedolare secca affitti (regime sostitutivo) */
 	cedolareSecca: number;
 	/** Bollo titoli annuo su deposito titoli (% sul controvalore) */
@@ -141,6 +144,9 @@ export const DEFAULT_2026: AssumptionSet = {
 	capital: {
 		stocksAndEtf: 0.26,
 		governmentBonds: 0.125,
+		// Cripto: 33% dal 2026 (e-money/stablecoin euro 26%). Fonti: L. Bilancio
+		// 2025 art.1 c.25; conferma Manovra 2026. Franchigia 2.000€ abolita dal 2025.
+		cryptoGains: 0.33,
 		cedolareSecca: 0.21,
 		stampDuty: 0.002,
 		ivafe: 0.002,

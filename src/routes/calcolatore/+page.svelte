@@ -36,7 +36,7 @@
 		calculateCoastFireNumber,
 		type YearlyProjection
 	} from '$lib/engine/fire-calculator';
-	import { optimizeWithdrawalOrder, type WithdrawalPlan } from '$lib/engine/tax-italy';
+	import { optimizeWithdrawalOrder, blendedCapitalGainsRate, type WithdrawalPlan } from '$lib/engine/tax-italy';
 	import { DEFAULT_2026, getPreset, type AssumptionSet } from '$lib/engine/assumptions';
 
 	import FireHero from '$lib/components/calcolatore/FireHero.svelte';
@@ -106,8 +106,18 @@
 	}
 
 	// === Derived values ===
+	// "blended" = aliquota derivata dalla composizione reale del portafoglio
+	// (BFP 12,5%, cripto 33%, resto 26%) invece di un flat 0.20; "stocks"/"btp"
+	// restano override manuali, ora agganciati all'AssumptionSet attivo.
 	let taxRate = $derived(
-		taxMode === 'stocks' ? 0.26 : taxMode === 'btp' ? 0.125 : 0.20
+		taxMode === 'stocks'
+			? assumptions.capital.stocksAndEtf
+			: taxMode === 'btp'
+				? assumptions.capital.governmentBonds
+				: blendedCapitalGainsRate(
+						(profile?.portfolio ?? {}) as unknown as Record<string, number>,
+						assumptions.capital
+					)
 	);
 
 	let annualExpenses = $derived(wiAnnualExpenses);
@@ -164,6 +174,10 @@
 	// Patrimonio totale (info), liquido (usato per FIRE) e illiquido (immobili/TFR)
 	let netWorth = $derived(profile ? calculateNetWorth(profile.portfolio as unknown as Record<string, number>) + (profile.spouse?.initialPortfolio || 0) : 0);
 	let liquidNetWorth = $derived(profile ? calculateLiquidNetWorth(profile.portfolio as unknown as Record<string, number>) + (profile.spouse?.initialPortfolio || 0) : 0);
+	// Quota BFP (esente da bollo titoli) sul liquido, per il calcolo patrimoniale.
+	let bolloExemptShare = $derived(
+		liquidNetWorth > 0 ? (profile?.portfolio?.bfp ?? 0) / liquidNetWorth : 0
+	);
 	let illiquidNetWorth = $derived(profile ? calculateIlliquidNetWorth(profile.portfolio as unknown as Record<string, number>) : 0);
 
 	let annualSavings = $derived(wiAnnualContribution);
@@ -233,6 +247,7 @@
 					spouse: profile.spouse,
 					assumptions: assumptions,
 					foreignBrokerShare: profile.foreignBrokerShare ?? 0,
+					bolloExemptShare: bolloExemptShare,
 					glidePathEnabled: profile.glidePathEnabled ?? false,
 					glidePathStartEquity: profile.glidePathStartEquity,
 					glidePathEndEquity: profile.glidePathEndEquity,
@@ -267,6 +282,7 @@
 					spouse: profile.spouse,
 					assumptions: assumptions,
 					foreignBrokerShare: profile.foreignBrokerShare ?? 0,
+					bolloExemptShare: bolloExemptShare,
 					glidePathEnabled: profile.glidePathEnabled ?? false
 				}
 			: null

@@ -25,6 +25,14 @@
 
 	let annualPension = $derived(pension.estimatedMonthly * 13);
 
+	// #37: default dello stop contributi = ON quando il FIRE precede la pensione.
+	// Inizializza solo se non ancora impostato (profili pre-#37), poi persiste.
+	$effect(() => {
+		if (pension.stopContributionsAtFire === undefined) {
+			pension.stopContributionsAtFire = retirementAge < pension.pensionAge;
+		}
+	});
+
 	function handleINPSImport(data: { contributionYears: number; estimatedMonthly: number }) {
 		pension.contributionYears = data.contributionYears;
 		pension.estimatedMonthly = data.estimatedMonthly;
@@ -74,7 +82,12 @@
 	<!-- Sotto-tab per gli strumenti avanzati -->
 	<Tabs tabStyle="underline" classes={{ content: 'mt-3' }}>
 		<TabItem open title="Calcolatore INPS">
-			<PensionCalculator {birthYear} {retirementAge} {annualExpenses} />
+			<PensionCalculator
+				{birthYear}
+				{retirementAge}
+				{annualExpenses}
+				bind:stopContributionsAtFire={pension.stopContributionsAtFire}
+			/>
 		</TabItem>
 
 		<TabItem title="Simulatore Avanzato">

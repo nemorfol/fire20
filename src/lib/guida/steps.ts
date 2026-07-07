@@ -199,7 +199,8 @@ Con spese annue di 22.000€ e FIRE number di 550.000€, è al <strong>15%</str
 <li><strong>Disoccupazione:</strong> reddito a zero per N anni consecutivi</li>
 <li><strong>Part-time:</strong> riduzione del reddito del X% per un periodo (tipico post-nascita figli)</li>
 <li><strong>Variazione permanente stipendio:</strong> aumento/taglio che si applica dall'anno X in poi</li>
-<li><strong>Eredità:</strong> entrata una-tantum con <strong>imposta di successione</strong> applicata in base al grado di parentela (coniuge/figli: franchigia 1M€, 4%; fratelli: 100k€, 6%; altri parenti 6%; estranei 8%). Puoi indicare se è <strong>liquidità</strong> (il netto entra nel portafoglio e viene reinvestito) o un <strong>immobile</strong> ereditato (illiquido: non sommato al portafoglio investito).</li>
+<li><strong>Eredità:</strong> entrata una-tantum con <strong>imposta di successione</strong> applicata in base al grado di parentela (coniuge/figli: franchigia 1M€, 4%; fratelli: 100k€, 6%; altri parenti 6%; estranei 8%). Puoi indicare se è <strong>liquidità</strong> o un <strong>immobile</strong> ereditato (illiquido: non sommato al portafoglio investito). Per l'eredità liquida scegli la <strong>destinazione</strong>: <em>reinvesti nel portafoglio</em> (ETF, esposta alla volatilità) oppure <strong>bucket obiettivo</strong> — un pool separato a <strong>basso rischio</strong> (rendimento configurabile, default 2%) tenuto fuori dal portafoglio FIRE. Se scegli l'obiettivo <em>"università figli"</em>, il bucket <strong>copre automaticamente i costi universitari</strong> dei figli anno per anno, prima che pesino sui risparmi/prelievi dal portafoglio; con obiettivo <em>"riserva generica"</em> resta un accantonamento senza prelievo automatico. Il patrimonio netto include il saldo del bucket.</li>
+<li><strong>Vendita immobile (liquidazione):</strong> monetizzi un immobile (illiquido) trasformandolo in liquidità per finanziare il piano. Indichi <strong>valore di vendita</strong>, <strong>prezzo di acquisto</strong> e <strong>anno di acquisto</strong>: il motore applica la <strong>regola dei 5 anni</strong> sulla plusvalenza (art. 67 TUIR — tassata al 26% solo se ceduto entro 5 anni dall'acquisto, altrimenti esente), con esenzione a prescindere se spunti <strong>"abitazione principale / prima casa"</strong>. Puoi scegliere <strong>incasso unico</strong> (il netto entra nell'anno di vendita) o <strong>rateale</strong> su N anni a un tasso (vendita con riserva di proprietà / seller financing): in quel caso vedi l'annualità e il <strong>TIR implicito</strong>, che conviene rispetto all'incasso unico solo se supera il rendimento atteso dei tuoi investimenti.</li>
 </ul>
 <p>Ogni evento ha un toggle di attivazione (what-if rapido senza eliminarli) e appare nel cash flow dettagliato nell'anno corrispondente. Engine: <code>life-events.ts</code> con <code>computeYearlyImpact</code> che consolida tutti gli eventi di un anno.</p>
 
@@ -452,6 +453,14 @@ La differenza? Il FIRE Number è sceso di 342.000€ E il risparmio mensile è p
 <li><strong>Materie prime / Oro</strong> — Protezione dall'inflazione, decorrelazione. Tipicamente 5-10% del portafoglio.</li>
 </ul>
 
+<h3>BFP e Conti Deposito: il reddito fisso garantito italiano</h3>
+<p>Nel tab <strong>Patrimonio</strong> trovi due classi dedicate, molto diffuse tra i risparmiatori italiani, che è bene <strong>non confondere</strong> con obbligazioni o liquidità generica perché hanno rischio e fiscalità propri:</p>
+<ul>
+<li><strong>Buoni Fruttiferi Postali (BFP)</strong> — Capitale <strong>garantito dallo Stato</strong> (Cassa Depositi e Prestiti), volatilità praticamente nulla. Interessi tassati al <strong>12,5%</strong> (equiparati ai titoli di Stato) ed <strong>esenti dall'imposta di bollo</strong>. Rimborsabili in qualsiasi momento al valore maturato.</li>
+<li><strong>Conti deposito (CD)</strong> — Capitale garantito (fondo interbancario FITD fino a 100.000€), volatilità nulla. Interessi tassati al <strong>26%</strong> e soggetti a <strong>imposta di bollo 0,2%</strong> annua.</li>
+</ul>
+<p>Perché tenerli distinti: metterli tra le "obbligazioni" attribuirebbe loro la <strong>volatilità di mercato</strong> dei fondi obbligazionari (facendo sembrare il portafoglio più rischioso del reale); metterli in "liquidità" ne azzererebbe il rendimento. Entrambi sono <strong>asset liquidi</strong> e rientrano nel FIRE Number. Per la proiezione, il rendimento atteso resta quello complessivo che imposti nel Calcolatore: ricordati che BFP e CD sono strumenti a <strong>basso rendimento garantito</strong>, quindi una quota elevata in questi asset giustifica un rendimento atteso medio più prudente.</p>
+
 <h3>Regole Pratiche per l'Asset Allocation</h3>
 <p>La regola tradizionale suggerisce:</p>
 <p><strong>% in obbligazioni = Età</strong> (quindi a 30 anni: 30% obbligazioni, 70% azioni)</p>
@@ -512,6 +521,13 @@ La differenza? Il FIRE Number è sceso di 342.000€ E il risparmio mensile è p
 <li><strong>Mitigazione del Sequence of Returns Risk</strong>: il rischio numero 1 nei primi 5-10 anni di pensione e' un crash che ti obbliga a vendere equity in ribasso. Con un equity al 30-40% l'impatto e' molto attenuato.</li>
 </ul>
 <p>Nel calcolatore puoi attivare il glide path nel profilo (campi <code>glidePathEnabled</code>, <code>glidePathStartEquity</code>, <code>glidePathEndEquity</code>). Il motore deterministico modula il rendimento atteso anno per anno in funzione dell'allocazione dinamica; il Monte Carlo lo applica al ribilanciamento. <strong>Attenzione</strong>: alcuni studi recenti (McClung, Pfau) suggeriscono che un glide path "rising" (parti basso e cresci di nuovo) post-pensione e' superiore al "decreasing" classico. Sperimenta entrambe le configurazioni nel tornado chart.</p>
+
+<h3>Importare il patrimonio (broker e GestPTF)</h3>
+<p>Per non inserire tutto a mano, nel tab <strong>Patrimonio</strong> trovi due importatori, entrambi <strong>100% locali</strong> (nessun dato lascia il dispositivo):</p>
+<ul>
+<li><strong>Da broker</strong> — carichi un CSV/XLS esportato dal tuo broker (es. Fineco): le posizioni vengono classificate in azioni/obbligazioni/liquidità/oro/altro.</li>
+<li><strong>Da GestPTF</strong> — se usi <strong>GestPTF</strong> (l'app di gestione patrimoniale), esporti da lì un file JSON (<em>Import/Export → Esporta per FIRE Planner</em>) e lo carichi qui. Il patrimonio per categoria viene riportato 1:1, inclusi <strong>BFP</strong> e <strong>conti deposito</strong> come classi dedicate. Puoi scegliere <strong>Sostituisci</strong> (rimpiazza i valori con lo snapshot — consigliato perché lo snapshot è completo) o <strong>Somma</strong> (aggiunge agli importi esistenti). Debiti e affitti sono mostrati come promemoria ma <strong>non</strong> importati automaticamente: li inserisci dove pertinente (Debiti/Mutuo e Reddito → Altri redditi). Il dettaglio per singolo titolo/ISIN resta in GestPTF: FIRE Planner ragiona per classi di asset.</li>
+</ul>
 `
 	},
 
@@ -701,6 +717,16 @@ Dopo un anno negativo con inflazione al 3%: NON adegui per l'inflazione. Resti a
 
 <div class="warning">
 <strong>Attenzione:</strong> Le strategie dinamiche funzionano meglio sulla carta che nella vita reale. Ridurre le spese del 10-15% durante un crollo di mercato richiede disciplina emotiva e spese effettivamente comprimibili. Pianifica in anticipo quali spese puoi tagliare nei periodi difficili.
+</div>
+
+<h3>Spending smile: le spese non sono costanti per 40 anni</h3>
+<p>L'assunzione di spese reali costanti per tutta la pensione è la più prudente (sovrastima il capitale necessario del 10-20%). La ricerca (Blanchett) mostra invece un <strong>"sorriso"</strong>: fase attiva "go-go" a spesa piena, fase "slow-go" a spesa ridotta (meno viaggi/consumi), fase tarda "no-go" in cui la spesa può risalire per la sanità. Puoi attivare uno spending smile configurabile (età di fine fase attiva, fattore slow-go, età e fattore della fase tarda): in Italia il <strong>SSN</strong> attenua la risalita finale — tranne la <strong>non-autosufficienza</strong>, che va modellata a parte. Default: spese costanti (retrocompatibile).</p>
+
+<h3>Funded ratio: quanto sei già finanziato</h3>
+<p>Oltre al success rate (probabilistico) trovi il <strong>funded ratio</strong>: il rapporto tra il tuo capitale liquido e il capitale necessario (FIRE Number, già al netto di pensione e altri redditi). È una metrica più intuitiva: <strong>100% = già finanziato</strong>, 80% = coperto all'80%. Utile per capire "quanto manca" senza ragionare in probabilità.</p>
+
+<div class="tip">
+<strong>Backup sicuro dei tuoi dati:</strong> in <em>Impostazioni</em>, l'import di un backup ora è <strong>non distruttivo</strong> di default ("Unisci": aggiunge i profili senza cancellare nulla). La vecchia "Sostituisci" (che cancella tutto) resta disponibile ma è una scelta esplicita e segnalata. I file malformati vengono rifiutati senza toccare i dati.
 </div>
 `
 	},
@@ -1056,8 +1082,26 @@ Per compensare, dovresti vendere un'azione o un'obbligazione singola con 5.000�
 </ul>
 <p>Il "vincitore" non e' sempre lo stesso: dipende dall'aliquota IRPEF marginale (piu' alta = piu' conviene il FP per la deduzione), dalla durata (oltre 20 anni il FP tende a prevalere grazie alla riduzione della tassazione sulla prestazione fino al 9%), e dal profilo di rischio.</p>
 
-<h3>Compensazione minusvalenze modellata</h3>
-<p>Dalla versione corrente l'engine include le funzioni <code>applyCapitalLossOffset</code> e <code>addCapitalLoss</code> in <code>tax-italy.ts</code> che rispettano la regola dei 4 anni di scadenza e FIFO (si usa prima la minus piu' vecchia). E' possibile simulare scenari di realizzazione con un pacchetto di minus pregresse, per capire quale anno fiscale conviene chiudere posizioni in guadagno.</p>
+<h3>Compensazione minusvalenze (funzioni disponibili)</h3>
+<p>L'engine include le funzioni <code>applyCapitalLossOffset</code> e <code>addCapitalLoss</code> in <code>tax-italy.ts</code>, che rispettano la regola dei 4 anni di scadenza, l'ordine FIFO e la peculiarità italiana per cui le plusvalenze su ETF (redditi di capitale) <strong>non</strong> compensano le minusvalenze (redditi diversi). Sono testate e usabili per analisi what-if puntuali. <strong>Nota di trasparenza:</strong> non sono ancora applicate automaticamente nella proiezione anno-per-anno, che usa un rendimento medio sempre positivo e quindi non realizza minusvalenze; il loro collegamento al decumulo per-container è in roadmap.</p>
+
+<h3>Aliquota capital gain "blended" e novità fiscali 2026</h3>
+<p>Il calcolatore non usa più un'unica aliquota fissa sui rendimenti: la calcola come <strong>media ponderata sulla composizione</strong> del portafoglio (<code>blendedCapitalGainsRate</code>). Così un 60/40 azioni/BTP, o un mix con BFP, paga l'aliquota reale e non un valore di comodo. Le aliquote per classe:</p>
+<ul>
+<li><strong>Azioni/ETF/obbligazioni/CD/oro</strong>: 26%</li>
+<li><strong>BFP e titoli di stato</strong>: 12,5% — e i <strong>BFP sono esenti dall'imposta di bollo</strong> 0,2% (esclusi dalla base nel calcolo patrimoniale)</li>
+<li><strong>Cripto-attività</strong>: <strong>33% dal 1/1/2026</strong> (Legge di Bilancio 2025/2026; le e-money/stablecoin in euro restano al 26%, franchigia 2.000€ abolita dal 2025)</li>
+</ul>
+<p>La stessa aliquota blended alimenta dashboard, confronto profili, scenari di rischio e il report PDF (prima usavano un 26% fisso, incoerente con le tue ipotesi).</p>
+
+<h3>Monte Carlo coerente col deterministico</h3>
+<p>Il Monte Carlo ora <strong>tassa il capital gain sui rendimenti positivi</strong> con la stessa aliquota della proiezione deterministica (prima applicava solo bollo/IVAFE, lasciando i rendimenti lordi): il "ventaglio" di esiti non è più sistematicamente più ottimista della proiezione. Anche l'esenzione bollo dei BFP è applicata in entrambi i motori.</p>
+
+<h3>Pensione INPS: adeguamento alla speranza di vita 2027-2028</h3>
+<p>Dopo il blocco fino al 2026, i requisiti tornano ad adeguarsi (decreto direttoriale 19/12/2025): <strong>+1 mese dal 2027</strong> e <strong>+3 mesi dal 2028</strong>. La vecchiaia passa da 67 a 67 anni e 1 mese (2027) e 67 e 3 mesi (2028); l'anticipata da 42a10m/41a10m a 43a1m/42a1m. La stima dell'età di pensione tiene conto dell'anno di decorrenza, così il "ponte" FIRE→pensione non è più sottostimato per chi va in pensione dopo il 2026.</p>
+
+<h3>Stop dei contributi INPS all'età FIRE</h3>
+<p>Chi punta al FIRE smette di lavorare (e di versare all'INPS) <strong>molto prima</strong> della pensione. Il simulatore INPS (in <em>Profilo → Pensione</em>) ha ora un toggle <strong>"Interrompi i contributi INPS all'età FIRE"</strong>: quando attivo, i versamenti si fermano alla fine del lavoro e nel <strong>gap</strong> fino alla pensione il montante <strong>si rivaluta soltanto</strong>, senza nuovi contributi. È <strong>attivo di default</strong> quando l'età FIRE precede quella pensionabile. Disattivandolo torni all'ipotesi (ottimistica) di lavoro continuato fino a 67. La differenza è tutt'altro che trascurabile: per un FIRE anticipato di 10-15 anni può valere <strong>centinaia di euro/mese</strong> di pensione lorda in meno. Il calcolatore mostra il confronto esplicito tra le due ipotesi.</p>
 
 <h3>Pannello "Ipotesi attive": basta black box</h3>
 <p>Sopra al calcolatore trovi adesso un pannello "Ipotesi attive" che mostra <strong>tutti</strong> i parametri normativi/fiscali che il calcolatore sta applicando in questo momento: scaglioni IRPEF, capital gain, bollo titoli, IVAFE, cedolare secca, INPS, fondo pensione, addizionali. Ogni numero del calcolatore puo' essere ricondotto a una delle aliquote del pannello.</p>
@@ -1068,6 +1112,7 @@ Per compensare, dovresti vendere un'azione o un'obbligazione singola con 5.000�
 <li><strong>Ipotesi flat 23/33</strong>: scenario speculativo per stress test fiscale</li>
 </ul>
 <p>Cliccando "Modifica" puoi creare un set <em>Personalizzato</em> alterando le aliquote che ti interessano. Cosi' puoi rispondere a domande tipo: "se l'IRPEF salisse al 28% sul primo scaglione, il mio FIRE Number cambia di quanto?".</p>
+<p>In modalità <em>Modifica</em>, nella sezione <strong>Addizionali</strong>, trovi un <strong>selettore della regione</strong> che precompila l'<strong>addizionale regionale</strong> con un valore indicativo per la tua regione, invece della media nazionale. Sono valori <strong>indicativi</strong>: le regioni applicano scaglioni propri e soglie di esenzione, e i valori cambiano per anno e reddito, quindi verifica sempre la delibera della tua regione; restano comunque sovrascrivibili a mano. L'<strong>addizionale comunale</strong> (che varia per singolo comune) va impostata a parte.</p>
 
 <h3>Bollo titoli e IVAFE: l'erosione silenziosa</h3>
 <p>Su ogni euro investito in deposito titoli paghi annualmente lo <strong>0,2% di bollo titoli</strong> (su broker italiani) o l'equivalente <strong>IVAFE 0,2%</strong> (su broker esteri tipo Interactive Brokers, Trade Republic, Degiro). Su un patrimonio FIRE da 500.000€ sono <strong>1.000€/anno</strong>; su 1M€ sono <strong>2.000€/anno</strong>: niente affatto un dettaglio. Il calcolatore ora applica queste imposte patrimoniali ogni anno della proiezione, e la quota "estera" e' configurabile via il campo <code>foreignBrokerShare</code> del profilo (per chi tiene il portafoglio su IBKR / TR / Degiro).</p>

@@ -36,6 +36,9 @@
 	let birthYear = $derived(profile?.birthYear ?? 1990);
 	let targetRetirementAge = $derived(profile?.pension.pensionAge ?? 67);
 	let lifeExpectancy = $derived(profile?.lifeExpectancy ?? 85);
+	// #37: età FIRE / fine lavoro e toggle stop contributi (default dal profilo)
+	let fireAge = $derived(profile?.retirementAge ?? 67);
+	let stopContributionsAtFire = $state(true);
 
 	let simulatorParams = $derived.by((): INPSSimulatorParams => ({
 		birthYear,
@@ -48,7 +51,10 @@
 		partTimePercentage,
 		existingContributionYears,
 		existingMontante,
-		targetRetirementAge
+		targetRetirementAge,
+		// #37: stop contributi alla fine lavoro/FIRE (se precede la pensione)
+		contributionEndAge:
+			stopContributionsAtFire && fireAge < targetRetirementAge ? fireAge : undefined
 	}));
 
 	let result = $derived.by((): INPSSimulatorResult | null => {
@@ -208,6 +214,20 @@
 				/>
 			{/if}
 		</div>
+
+		{#if fireAge < targetRetirementAge}
+			<div class="mt-4 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+				<Toggle bind:checked={stopContributionsAtFire}>
+					<span class="font-medium text-gray-900 dark:text-white">
+						Interrompi i contributi INPS all'età FIRE ({fireAge} anni)
+					</span>
+				</Toggle>
+				<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+					In un percorso FIRE i versamenti si fermano a fine lavoro; nel gap fino alla pensione
+					il montante si rivaluta senza nuovi contributi (stima più realistica). #37
+				</p>
+			</div>
+		{/if}
 
 		<Alert color="blue" class="mt-4">
 			{#snippet icon()}

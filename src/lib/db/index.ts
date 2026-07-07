@@ -12,6 +12,14 @@ export type { LifeEvent } from '$lib/engine/life-events';
 export interface PortfolioAllocation {
 	stocks: number;
 	bonds: number;
+	/** Buoni Fruttiferi Postali: capitale garantito (CDP/Stato), volatilita' ~0.
+	 *  Interessi tassati al 12,5% (equiparati ai titoli di stato) ed ESENTI da
+	 *  imposta di bollo. Asset liquido. (db v6) */
+	bfp: number;
+	/** Conti deposito (anche vincolati): capitale garantito (FITD fino a 100k€),
+	 *  volatilita' ~0. Interessi tassati al 26% e soggetti a imposta di bollo
+	 *  0,2%/anno. Asset liquido. (db v6) */
+	cd: number;
 	cash: number;
 	realEstate: number;
 	gold: number;
@@ -24,6 +32,10 @@ export interface PortfolioAllocation {
 export interface MonthlyContributions {
 	stocks: number;
 	bonds: number;
+	/** Versamento mensile in Buoni Fruttiferi Postali. (db v6) */
+	bfp: number;
+	/** Versamento mensile in conti deposito. (db v6) */
+	cd: number;
 	cash: number;
 	realEstate: number;
 	gold: number;
@@ -71,6 +83,13 @@ export interface PensionInfo {
 	contributionYears: number;
 	estimatedMonthly: number;
 	pensionAge: number;
+	/** Se true, i contributi INPS si fermano all'età FIRE / fine lavoro
+	 *  (`contributionEndAge`): nel gap fino alla pensione il montante si rivaluta
+	 *  senza nuovi versamenti. Default: contribuzione fino alla pensione. (#37) */
+	stopContributionsAtFire?: boolean;
+	/** Età di fine contribuzione quando `stopContributionsAtFire` è attivo
+	 *  (default: età FIRE / retirementAge del profilo). (#37) */
+	contributionEndAge?: number;
 }
 
 /**
@@ -109,6 +128,11 @@ export interface Spouse {
 	initialPortfolio?: number;
 	/** Eta' di reversibilita' della pensione del primo (60% standard) — solo informativa */
 	includeReversibility?: boolean;
+	/** Se true, i contributi INPS del coniuge si fermano alla sua età FIRE / fine
+	 *  lavoro; nel gap fino alla pensione il montante si rivaluta senza versamenti. (#37) */
+	stopContributionsAtFire?: boolean;
+	/** Età di fine contribuzione del coniuge quando lo stop è attivo. (#37) */
+	contributionEndAge?: number;
 }
 
 /** Configurazione di una asset class salvata nel DB */
@@ -336,6 +360,36 @@ db.version(5).stores({
 	portfolio_snapshots: '++id, profileId, date',
 	cash_flows: '++id, profileId, date, type'
 });
+
+// v6: aggiunte le asset class `bfp` (Buoni Fruttiferi Postali) e `cd` (Conti
+// Deposito) a PortfolioAllocation/MonthlyContributions. Schema store invariato.
+// L'upgrade backfilla a 0 i due nuovi campi sui profili salvati prima: cosi' i
+// bind dei CurrencyInput non ricevono undefined (svelte props_invalid_value,
+// cfr. issue #33). Difesa ulteriore: normalize on-load in loadProfileIntoState.
+db.version(6)
+	.stores({
+		profiles: '++id, name, createdAt, updatedAt',
+		scenarios: '++id, profileId, name, type, createdAt',
+		simulation_results: '++id, scenarioId, profileId, runAt',
+		risk_events: '++id, name, type',
+		portfolio_snapshots: '++id, profileId, date',
+		cash_flows: '++id, profileId, date, type'
+	})
+	.upgrade(async (tx) => {
+		await tx
+			.table('profiles')
+			.toCollection()
+			.modify((p: { portfolio?: Record<string, number>; monthlyContributions?: Record<string, number> }) => {
+				if (p.portfolio) {
+					if (p.portfolio.bfp == null) p.portfolio.bfp = 0;
+					if (p.portfolio.cd == null) p.portfolio.cd = 0;
+				}
+				if (p.monthlyContributions) {
+					if (p.monthlyContributions.bfp == null) p.monthlyContributions.bfp = 0;
+					if (p.monthlyContributions.cd == null) p.monthlyContributions.cd = 0;
+				}
+			});
+	});
 
 export { db };
 

@@ -7,7 +7,12 @@
  * AssumptionSet che rende esplicite le aliquote applicate. Se non passato
  * usano i default 2026.
  */
-import { DEFAULT_2026, type AssumptionSet, type IRPEFBracketDef } from './assumptions';
+import {
+	DEFAULT_2026,
+	type AssumptionSet,
+	type CapitalIncomeRates,
+	type IRPEFBracketDef
+} from './assumptions';
 
 /** Risultato del calcolo IRPEF con dettaglio per scaglione */
 export interface IRPEFResult {
@@ -192,6 +197,49 @@ export function calculateCapitalGainsTax(
 }
 
 /**
+ * Aliquota media (blended) sul capital gain del portafoglio, derivata dalla
+ * COMPOSIZIONE per asset class invece di un'unica aliquota flat. Pesa ogni
+ * bucket per il suo valore:
+ * - BFP e titoli di stato/equiparati: 12,5% (governmentBonds)
+ * - cripto: 33% (cryptoGains)
+ * - azioni/ETF/obbligazioni/CD/cash/oro/altro: 26% (stocksAndEtf)
+ *
+ * Il fondo pensione (regime proprio ~20%) e gli asset illiquidi (immobili, TFR)
+ * sono ESCLUSI dalla base: non concorrono a questa aliquota. Se la base e' nulla
+ * si torna all'aliquota azionaria di default.
+ *
+ * Usata per de-hardcodare la `taxRate` flat nelle proiezioni (dashboard,
+ * confronto profili, rischi, PDF) e per il taxMode "blended" del calcolatore.
+ *
+ * @param portfolio - Allocazione del portafoglio (chiavi PortfolioAllocation)
+ * @param rates - Aliquote sui redditi di capitale (da AssumptionSet.capital)
+ */
+export function blendedCapitalGainsRate(
+	portfolio: Record<string, number>,
+	rates: CapitalIncomeRates
+): number {
+	const rateByKey: Record<string, number> = {
+		stocks: rates.stocksAndEtf,
+		bonds: rates.stocksAndEtf,
+		bfp: rates.governmentBonds,
+		cd: rates.stocksAndEtf,
+		cash: rates.stocksAndEtf,
+		gold: rates.stocksAndEtf,
+		crypto: rates.cryptoGains,
+		other: rates.stocksAndEtf
+	};
+	let base = 0;
+	let weighted = 0;
+	for (const [key, rate] of Object.entries(rateByKey)) {
+		const v = Math.max(0, portfolio[key] || 0);
+		base += v;
+		weighted += v * rate;
+	}
+	if (base <= 0) return rates.stocksAndEtf;
+	return Math.round((weighted / base) * 10000) / 10000;
+}
+
+/**
  * Bollo titoli (imposta di bollo su deposito titoli/strumenti finanziari).
  * Aliquota standard: 0.2% annuo sul controvalore al 31/12. Si applica anche
  * a fondi pensione "individuali" e a investimenti in OICR. NON si applica a
@@ -275,6 +323,37 @@ export function calculateSuccessionTax(
 	}
 	const taxable = Math.max(0, amount - franchigia);
 	return Math.round(taxable * rate * 100) / 100;
+}
+
+/**
+ * Plusvalenza immobiliare (art. 67, c.1 lett. b, TUIR). La plusvalenza da
+ * cessione di un immobile e' tassabile SOLO se l'immobile e' ceduto ENTRO 5
+ * ANNI dall'acquisto/costruzione. E' invece ESENTE quando:
+ * - sono trascorsi piu' di 5 anni dall'acquisto, OPPURE
+ * - l'immobile e' stato adibito ad ABITAZIONE PRINCIPALE del cedente o dei suoi
+ *   familiari per la maggior parte del periodo di possesso, OPPURE
+ * - e' stato acquisito per SUCCESSIONE (eredita').
+ * Se imponibile, si applica l'imposta sostitutiva del 26% sulla plusvalenza
+ * (valore di cessione - prezzo di acquisto/costo, art. 1 c.496 L.266/2005),
+ * in alternativa alla tassazione IRPEF ordinaria.
+ *
+ * @param saleValue - Valore/corrispettivo di cessione
+ * @param costBasis - Prezzo di acquisto o costo di costruzione (base)
+ * @param yearsHeld - Anni di possesso (cessione - acquisto)
+ * @param isPrimaryResidence - true se abitazione principale o ereditato (esente)
+ * @param rate - Aliquota imposta sostitutiva (default 26%)
+ * @returns Imposta sulla plusvalenza dovuta (0 se esente)
+ */
+export function calculatePropertyCapitalGainsTax(
+	saleValue: number,
+	costBasis: number,
+	yearsHeld: number,
+	isPrimaryResidence: boolean,
+	rate = 0.26
+): number {
+	if (isPrimaryResidence || yearsHeld >= 5) return 0;
+	const gain = Math.max(0, saleValue - costBasis);
+	return Math.round(gain * rate * 100) / 100;
 }
 
 /**

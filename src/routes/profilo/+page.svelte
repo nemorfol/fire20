@@ -49,11 +49,11 @@
 	let fireExpenses = $state(18000);
 	let expenseInflation = $state(2.0);
 	let portfolio = $state<PortfolioAllocation>({
-		stocks: 0, bonds: 0, cash: 10000, realEstate: 0,
+		stocks: 0, bonds: 0, bfp: 0, cd: 0, cash: 10000, realEstate: 0,
 		gold: 0, crypto: 0, pensionFund: 0, tfr: 0, other: 0
 	});
 	let monthlyContributions = $state<MonthlyContributions>({
-		stocks: 300, bonds: 100, cash: 0, realEstate: 0,
+		stocks: 300, bonds: 100, bfp: 0, cd: 0, cash: 0, realEstate: 0,
 		gold: 0, crypto: 0, pensionFund: 0, tfr: 0, other: 0
 	});
 	let debts = $state<Debt[]>([]);
@@ -98,11 +98,11 @@
 			fireExpenses: 18000,
 			expenseInflation: 2.0,
 			portfolio: {
-				stocks: 0, bonds: 0, cash: 10000, realEstate: 0,
+				stocks: 0, bonds: 0, bfp: 0, cd: 0, cash: 10000, realEstate: 0,
 				gold: 0, crypto: 0, pensionFund: 0, tfr: 0, other: 0
 			} as PortfolioAllocation,
 			monthlyContributions: {
-				stocks: 300, bonds: 100, cash: 0, realEstate: 0,
+				stocks: 300, bonds: 100, bfp: 0, cd: 0, cash: 0, realEstate: 0,
 				gold: 0, crypto: 0, pensionFund: 0, tfr: 0, other: 0
 			} as MonthlyContributions,
 			debts: [] as Debt[],
@@ -139,8 +139,15 @@
 		annualExpenses = p.annualExpenses;
 		fireExpenses = p.fireExpenses;
 		expenseInflation = p.expenseInflation;
-		portfolio = { ...p.portfolio };
-		monthlyContributions = { ...p.monthlyContributions };
+		// bfp/cd aggiunti in v6: la migrazione Dexie li backfilla a 0, ma un
+		// profilo importato da JSON puo' bypassarla: default 0 difensivo cosi' i
+		// CurrencyInput (fallback 0) non ricevono undefined. Vedi issue #33.
+		portfolio = { bfp: 0, cd: 0, ...(p.portfolio as Partial<PortfolioAllocation>) } as PortfolioAllocation;
+		monthlyContributions = {
+			bfp: 0,
+			cd: 0,
+			...(p.monthlyContributions as Partial<MonthlyContributions>)
+		} as MonthlyContributions;
 		debts = p.debts.map(d => ({ ...d }));
 		pension = { ...p.pension };
 		children = (p.children ?? []).map((c: Child) => ({ ...c }));

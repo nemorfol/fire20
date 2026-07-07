@@ -4,6 +4,7 @@
  * analisi riscatto laurea, RITA e gap FIRE.
  */
 import { getTransformationCoefficient } from './assumptions.js';
+import { getPensionRequirements } from './pension-italy';
 
 export interface INPSSimulatorParams {
   birthYear: number;
@@ -19,6 +20,9 @@ export interface INPSSimulatorParams {
   targetRetirementAge?: number;
   careerGaps?: { fromYear: number; toYear: number; reason: string }[];
   riscattoLaurea?: { years: number; cost: number };
+  /** Età di fine contribuzione (fine lavoro/FIRE): oltre questa età il montante
+   *  si rivaluta senza nuovi versamenti. Default: nessuno stop (fino a pensione). #37 */
+  contributionEndAge?: number;
 }
 
 export interface PensionAtAge {
@@ -152,7 +156,12 @@ function projectMontante(params: INPSSimulatorParams, retirementAge: number): {
   let lastSalary = params.currentGrossSalary;
 
   for (let year = currentYear; year < retirementYear; year++) {
-    if (isInGap(year, params.careerGaps)) {
+    // Stop contribuzione alla fine lavoro / FIRE: oltre contributionEndAge il
+    // montante si rivaluta ma non si versano nuovi contributi. (#37)
+    const ageThisYear = year - params.birthYear;
+    const contribStopped =
+      params.contributionEndAge != null && ageThisYear >= params.contributionEndAge;
+    if (isInGap(year, params.careerGaps) || contribStopped) {
       // Rivaluta il montante esistente ma non aggiungi contributi
       montante *= 1 + DEFAULT_GDP_REVALUATION;
       continue;
@@ -190,13 +199,20 @@ function calculateEarliestRetirementAge(params: INPSSimulatorParams): {
   const gapYears = calculateGapYears(params.careerGaps);
   const riscattoYears = params.riscattoLaurea?.years || 0;
 
-  // Canale 1: Pensione di vecchiaia (67 anni, 20 anni contributi)
-  const totalContribYearsAt67 = 67 - contributionStartAge - gapYears + riscattoYears;
-  const oldAgeEligible = totalContribYearsAt67 >= 20;
-  const oldAge = 67;
+  // Requisiti con adeguamento alla speranza di vita per l'anno di decorrenza
+  // (approssimato all'anno in cui si compiono i 67).
+  const req = getPensionRequirements(params.birthYear + 67);
 
-  // Canale 2: Pensione anticipata (42a 10m uomini / 41a 10m donne)
-  const requiredMonths = params.gender === 'M' ? 42 * 12 + 10 : 41 * 12 + 10;
+  // Canale 1: Pensione di vecchiaia (67 anni + adeguamento, 20 anni contributi)
+  const oldAge = req.oldAge.age;
+  const totalContribYearsAtOldAge = oldAge - contributionStartAge - gapYears + riscattoYears;
+  const oldAgeEligible = totalContribYearsAtOldAge >= req.oldAge.minContributionYears;
+
+  // Canale 2: Pensione anticipata (42a 10m uomini / 41a 10m donne + adeguamento)
+  const requiredMonths =
+    params.gender === 'M'
+      ? req.early.menYears * 12 + req.early.menMonths
+      : req.early.womenYears * 12 + req.early.womenMonths;
   const effectiveContribMonths = (params.existingContributionYears + riscattoYears) * 12;
   const currentAge = new Date().getFullYear() - params.birthYear;
   const remainingMonths = Math.max(0, requiredMonths - effectiveContribMonths);

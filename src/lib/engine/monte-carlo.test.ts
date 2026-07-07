@@ -56,3 +56,43 @@ describe('Monte Carlo - errore standard e IC del successRate', () => {
 		expect(r.successRate).toBeLessThanOrEqual(r.successRateCI95.upper);
 	});
 });
+
+describe('Monte Carlo - coerenza fiscale col deterministico (#1)', () => {
+	// Scenario che sopravvive (mediana finale positiva), cosi' l'effetto fiscale
+	// e' osservabile sulla mediana e non mascherato da un portafoglio esaurito.
+	const survivingParams: MonteCarloParams = {
+		...baseParams,
+		initialPortfolio: 1_000_000,
+		annualContribution: 20000,
+		annualExpenses: 20000,
+		yearsToFire: 5,
+		yearsInRetirement: 20
+	};
+
+	it('tassare il capital gain riduce la mediana finale (MC non piu ottimista "gratis")', () => {
+		const untaxed = runMonteCarloSimulation({ ...survivingParams, capitalGainsTaxRate: 0 });
+		const taxed = runMonteCarloSimulation({ ...survivingParams, capitalGainsTaxRate: 0.26 });
+		expect(untaxed.medianFinalValue).toBeGreaterThan(0);
+		expect(taxed.medianFinalValue).toBeLessThan(untaxed.medianFinalValue);
+	});
+
+	it('la quota esente da bollo (BFP) riduce l erosione patrimoniale', () => {
+		const noExempt = runMonteCarloSimulation({
+			...survivingParams,
+			stampDutyRate: 0.002,
+			bolloExemptShare: 0
+		});
+		const exempt = runMonteCarloSimulation({
+			...survivingParams,
+			stampDutyRate: 0.002,
+			bolloExemptShare: 0.5
+		});
+		expect(exempt.medianFinalValue).toBeGreaterThan(noExempt.medianFinalValue);
+	});
+
+	it('default retrocompatibile: senza i nuovi parametri il MC non tassa i rendimenti', () => {
+		const a = runMonteCarloSimulation(baseParams);
+		const b = runMonteCarloSimulation({ ...baseParams, capitalGainsTaxRate: 0, bolloExemptShare: 0 });
+		expect(a.medianFinalValue).toBe(b.medianFinalValue);
+	});
+});

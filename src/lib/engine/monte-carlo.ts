@@ -125,6 +125,19 @@ export interface MonteCarloParams {
 	stampDutyRate?: number;
 	ivafeRate?: number;
 	foreignBrokerShare?: number;
+	/**
+	 * Aliquota capital gain sui rendimenti POSITIVI (es. blended 0.26/0.125/0.33
+	 * dalla composizione). Default 0 = retrocompatibile (le simulazioni storiche
+	 * non tassano). Allinea il Monte Carlo al proiettore deterministico, che
+	 * gia' tassa i rendimenti: senza questo il fan chart e' sistematicamente piu'
+	 * ottimista della proiezione.
+	 */
+	capitalGainsTaxRate?: number;
+	/**
+	 * Quota del portafoglio ESENTE da bollo titoli (tipicamente i BFP). 0..1.
+	 * Default 0. Viene sottratta dalla base del bollo (i BFP non lo scontano).
+	 */
+	bolloExemptShare?: number;
 }
 
 /** Risultato completo della simulazione Monte Carlo */
@@ -422,17 +435,24 @@ function runSingleSimulation(params: MonteCarloParams): number[] {
 			}
 		}
 
-		// Applica rendimenti
+		// Applica rendimenti, al netto del capital gain sui rendimenti POSITIVI
+		// (coerente col proiettore deterministico: senza questo il MC e' troppo
+		// ottimista). Default 0 = retrocompatibile con le simulazioni storiche.
 		const returns = portfolio * portfolioReturn;
-		portfolio += returns;
+		const capGainsRate = params.capitalGainsTaxRate ?? 0;
+		const capGainsTax = returns > 0 ? returns * capGainsRate : 0;
+		portfolio += returns - capGainsTax;
 
 		// Imposte patrimoniali (bollo titoli + IVAFE) sul controvalore di
 		// fine anno. Default 0 = retrocompatibile con simulazioni storiche.
 		const stampRate = params.stampDutyRate ?? 0;
 		const ivafeRate = params.ivafeRate ?? 0;
 		const foreignShare = Math.max(0, Math.min(1, params.foreignBrokerShare ?? 0));
+		const exemptShare = Math.max(0, Math.min(1, params.bolloExemptShare ?? 0));
 		if ((stampRate > 0 || ivafeRate > 0) && portfolio > 0) {
-			const italianValue = portfolio * (1 - foreignShare);
+			// Base del bollo: quota italiana NON esente (i BFP non scontano il bollo).
+			// L'IVAFE si applica alla quota su intermediari esteri.
+			const italianValue = Math.max(0, portfolio * (1 - foreignShare - exemptShare));
 			const foreignValue = portfolio * foreignShare;
 			const stamp = italianValue * stampRate;
 			const ivafe = foreignValue * ivafeRate;

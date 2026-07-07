@@ -25,6 +25,12 @@ export interface ContributivePensionParams {
 	inflationRate: number;
 	/** Tasso di rivalutazione del montante (media PIL nominale, default 1.5%) */
 	montanteRevaluationRate?: number;
+	/**
+	 * Età di fine contribuzione (fine lavoro / FIRE). Oltre questa età non si
+	 * versano nuovi contributi ma il montante continua a rivalutarsi fino alla
+	 * pensione. Default: `retirementAge` (contribuzione piena, legacy). Issue #37.
+	 */
+	contributionEndAge?: number;
 }
 
 /** Risultato del calcolo della pensione contributiva */
@@ -95,7 +101,8 @@ export function calculateContributivePension(
 		currentAge,
 		retirementAge,
 		inflationRate,
-		montanteRevaluationRate = 0.015
+		montanteRevaluationRate = 0.015,
+		contributionEndAge
 	} = params;
 
 	if (currentSalary <= 0 || retirementAge <= currentAge) {
@@ -126,9 +133,14 @@ export function calculateContributivePension(
 		montante += contribution * Math.pow(1 + montanteRevaluationRate, yearsAgo);
 	}
 
-	// Montante per gli anni futuri fino alla pensione
+	// Montante per gli anni futuri: si versano contributi solo fino alla fine
+	// lavoro (FIRE); il montante gia' accumulato continua a rivalutarsi fino alla
+	// pensione anche nel "gap" senza nuovi versamenti. (#37)
+	const contribEndAge = Math.min(contributionEndAge ?? retirementAge, retirementAge);
+	const futureContribYears = Math.max(0, contribEndAge - currentAge);
 	let lastSalary = currentSalary;
 	for (let i = 1; i <= yearsToRetirement; i++) {
+		if (i > futureContribYears) break; // fine contribuzione: nessun nuovo versamento
 		const futureSalary = currentSalary * Math.pow(1 + salaryGrowthRate, i);
 		lastSalary = futureSalary;
 		const contribution = futureSalary * CONTRIBUTION_RATE;
@@ -175,23 +187,53 @@ export function calculatePensionGap(
 }
 
 /**
- * Restituisce i requisiti pensionistici italiani attuali (2026).
+ * Mesi di adeguamento dei requisiti pensionistici agli incrementi della
+ * speranza di vita, per ANNO DI DECORRENZA. Dopo il blocco fino al 2026, il
+ * decreto direttoriale 19/12/2025 (biennio 2027-2028) reintroduce l'adeguamento
+ * in modo graduale: +1 mese dal 1/1/2027, +3 mesi dal 1/1/2028.
+ * Fonti: INPS (msg./circ. 2026), decreto dir. MEF-MLPS 19/12/2025.
  *
+ * @param year - Anno di decorrenza della pensione
+ * @returns Mesi aggiuntivi da sommare ai requisiti (0 fino al 2026)
+ */
+export function lifeExpectancyAdjustmentMonths(year: number): number {
+	if (year >= 2028) return 3;
+	if (year >= 2027) return 1;
+	return 0;
+}
+
+/**
+ * Restituisce i requisiti pensionistici italiani per un dato anno di decorrenza,
+ * applicando l'adeguamento alla speranza di vita (vedi lifeExpectancyAdjustmentMonths).
+ * Per il 2025-2026 i requisiti sono quelli base (67 anni; anticipata 42a10m / 41a10m).
+ *
+ * @param referenceYear - Anno di decorrenza (default 2026 = nessun adeguamento)
  * @returns Oggetto con i tre canali di accesso alla pensione
  */
-export function getPensionRequirements(): PensionRequirements {
+export function getPensionRequirements(referenceYear: number = 2026): PensionRequirements {
+	const adj = lifeExpectancyAdjustmentMonths(referenceYear);
+
+	const oldAgeMonths = 67 * 12 + adj;
+	const earlyMenMonths = 42 * 12 + 10 + adj;
+	const earlyWomenMonths = 41 * 12 + 10 + adj;
+	const fmt = (m: number) => {
+		const y = Math.floor(m / 12);
+		const mm = m % 12;
+		return mm > 0 ? `${y} anni e ${mm} mesi` : `${y} anni`;
+	};
+
 	return {
 		oldAge: {
-			age: 67,
+			age: oldAgeMonths / 12,
 			minContributionYears: 20,
-			description: 'Pensione di vecchiaia: 67 anni di età con almeno 20 anni di contributi'
+			description: `Pensione di vecchiaia: ${fmt(oldAgeMonths)} di età con almeno 20 anni di contributi`
 		},
 		early: {
-			menYears: 42,
-			menMonths: 10,
-			womenYears: 41,
-			womenMonths: 10,
-			description: 'Pensione anticipata: 42 anni e 10 mesi di contributi (uomini) o 41 anni e 10 mesi (donne), indipendentemente dall\'età'
+			menYears: Math.floor(earlyMenMonths / 12),
+			menMonths: earlyMenMonths % 12,
+			womenYears: Math.floor(earlyWomenMonths / 12),
+			womenMonths: earlyWomenMonths % 12,
+			description: `Pensione anticipata: ${fmt(earlyMenMonths)} di contributi (uomini) o ${fmt(earlyWomenMonths)} (donne), indipendentemente dall'età`
 		},
 		earlyContributive: {
 			age: 64,
@@ -219,12 +261,16 @@ export function estimatePensionAge(
 	contributionStartAge: number,
 	gender: 'M' | 'F'
 ): number {
-	const requirements = getPensionRequirements();
+	// L'adeguamento alla speranza di vita dipende dall'anno di decorrenza:
+	// approssimiamo con l'anno in cui si compiono i 67 (canale vecchiaia).
+	const referenceYear = birthYear + 67;
+	const requirements = getPensionRequirements(referenceYear);
 
-	// Canale 1: Pensione di vecchiaia (67 anni con 20 anni di contributi)
-	const contributionYearsAt67 = 67 - contributionStartAge;
-	const oldAgeEligible = contributionYearsAt67 >= requirements.oldAge.minContributionYears;
-	const oldAgeAge = oldAgeEligible ? 67 : Infinity;
+	// Canale 1: Pensione di vecchiaia (67 anni + adeguamento, con 20 anni di contributi)
+	const oldAgeThreshold = requirements.oldAge.age;
+	const contributionYearsAtOldAge = oldAgeThreshold - contributionStartAge;
+	const oldAgeEligible = contributionYearsAtOldAge >= requirements.oldAge.minContributionYears;
+	const oldAgeAge = oldAgeEligible ? oldAgeThreshold : Infinity;
 
 	// Canale 2: Pensione anticipata (42a 10m uomini, 41a 10m donne)
 	const requiredMonths = gender === 'M'
@@ -244,6 +290,6 @@ export function estimatePensionAge(
 	// Restituisci l'età minima tra i canali disponibili
 	const minAge = Math.min(oldAgeAge, earlyAge, earlyContributiveAge);
 
-	// Se nessun canale è raggiungibile, restituisci l'età di vecchiaia
-	return minAge === Infinity ? 67 : Math.ceil(minAge);
+	// Se nessun canale è raggiungibile, restituisci l'età di vecchiaia (adeguata)
+	return minAge === Infinity ? Math.ceil(oldAgeThreshold) : Math.ceil(minAge);
 }

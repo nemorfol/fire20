@@ -8,7 +8,9 @@
 	} from 'flowbite-svelte-icons';
 	import CurrencyInput from '$lib/components/shared/CurrencyInput.svelte';
 	import PercentInput from '$lib/components/shared/PercentInput.svelte';
+	import { formatCurrency } from '$lib/utils/format';
 	import { createDefaultLifeEvent, type LifeEvent, type LifeEventType } from '$lib/engine/life-events';
+	import { calculatePropertyCapitalGainsTax } from '$lib/engine/tax-italy';
 	import type { SuccessionRelationship } from '$lib/engine/tax-italy';
 
 	let {
@@ -25,7 +27,8 @@
 		{ value: 'unemployment', name: 'Disoccupazione' },
 		{ value: 'partTime', name: 'Part-time' },
 		{ value: 'incomeChange', name: 'Variazione permanente stipendio' },
-		{ value: 'inheritance', name: 'Eredità' }
+		{ value: 'inheritance', name: 'Eredità' },
+		{ value: 'propertySale', name: 'Vendita immobile' }
 	];
 
 	const typeLabels: Record<LifeEventType, string> = {
@@ -34,7 +37,8 @@
 		unemployment: 'Disoccupazione',
 		partTime: 'Part-time',
 		incomeChange: 'Variazione stipendio',
-		inheritance: 'Eredità'
+		inheritance: 'Eredità',
+		propertySale: 'Vendita immobile'
 	};
 
 	const typeColors: Record<LifeEventType, 'green' | 'red' | 'yellow' | 'blue' | 'primary'> = {
@@ -43,8 +47,39 @@
 		unemployment: 'red',
 		partTime: 'yellow',
 		incomeChange: 'blue',
-		inheritance: 'green'
+		inheritance: 'green',
+		propertySale: 'primary'
 	};
+
+	/** Imposta plusvalenza dell'evento vendita immobile (per anteprima live). */
+	function propertySaleTax(e: LifeEvent): number {
+		const yearsHeld = e.purchaseYear > 0 ? e.year - e.purchaseYear : 99;
+		return calculatePropertyCapitalGainsTax(e.amount, e.costBasis, yearsHeld, e.isPrimaryResidence);
+	}
+
+	/** Nota descrittiva sulla plusvalenza (esente / imponibile) per l'anteprima. */
+	function propertySaleTaxNote(e: LifeEvent): string {
+		const yearsHeld = e.purchaseYear > 0 ? e.year - e.purchaseYear : 99;
+		const tax = propertySaleTax(e);
+		if (tax > 0)
+			return `Plusvalenza imponibile ${Math.round(tax)} € (26%, possesso ${yearsHeld} anni < 5)`;
+		if (e.isPrimaryResidence) return 'Plusvalenza esente (abitazione principale / prima casa)';
+		return `Plusvalenza esente (possesso ${yearsHeld} anni ≥ 5)`;
+	}
+
+	/** Netto incassato dalla vendita (al netto della plusvalenza). */
+	function propertySaleNet(e: LifeEvent): number {
+		return Math.max(0, e.amount - propertySaleTax(e));
+	}
+
+	/** Annualita' costante (ammortamento francese) se vendita rateale. */
+	function propertySaleAnnuity(e: LifeEvent): number {
+		const n = Math.max(0, Math.floor(e.durationYears));
+		if (n <= 0) return 0;
+		const net = propertySaleNet(e);
+		const r = e.percentage > 0 ? e.percentage : 0;
+		return r > 0 ? (net * r) / (1 - Math.pow(1 + r, -n)) : net / n;
+	}
 
 	const relationshipOptions: { value: SuccessionRelationship; name: string }[] = [
 		{ value: 'spouse-direct', name: 'Coniuge / figli / genitori (franchigia 1M€, 4%)' },
@@ -84,7 +119,8 @@
 		<p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
 			Aggiungi eventi "una-tantum" o periodi particolari che alterano il piano
 			FIRE: bonus, spese straordinarie (matrimonio, auto, ristrutturazione),
-			periodi di disoccupazione, part-time, variazioni permanenti di stipendio.
+			periodi di disoccupazione, part-time, variazioni permanenti di stipendio,
+			eredità e la vendita di un immobile (con plusvalenza e regola dei 5 anni).
 			Ogni evento impatta il cash flow e la proiezione del portafoglio.
 		</p>
 
@@ -201,6 +237,130 @@
 							<div class="flex items-end pb-2">
 								<Toggle bind:checked={event.isProperty}>Immobile (illiquido, non investito)</Toggle>
 							</div>
+							{#if !event.isProperty}
+								<div>
+									<Label for="evt-inh-alloc-{event.id}" class="mb-2">Destinazione</Label>
+									<Select
+										id="evt-inh-alloc-{event.id}"
+										items={[
+											{ value: 'growth', name: 'Reinvesti nel portafoglio (ETF)' },
+											{ value: 'goal', name: 'Bucket obiettivo (basso rischio)' }
+										]}
+										bind:value={event.allocation}
+									/>
+								</div>
+								{#if event.allocation === 'goal'}
+									<PercentInput
+										bind:value={event.goalAnnualReturn}
+										label="Rendimento bucket"
+										id="evt-inh-goalret-{event.id}"
+										min={0}
+										max={0.06}
+										step={0.005}
+									/>
+									<div>
+										<Label for="evt-inh-goalpurp-{event.id}" class="mb-2">Obiettivo</Label>
+										<Select
+											id="evt-inh-goalpurp-{event.id}"
+											items={[
+												{ value: 'university', name: 'Università figli (prelievo automatico)' },
+												{ value: 'general', name: 'Riserva generica' }
+											]}
+											bind:value={event.goalPurpose}
+										/>
+									</div>
+									<div class="md:col-span-2 lg:col-span-4">
+										<Alert color="blue" class="py-2">
+											<span class="text-xs">
+												Il bucket è tenuto <strong>separato dal portafoglio FIRE</strong> (non
+												esposto alla volatilità) e cresce al tasso indicato.{event.goalPurpose ===
+												'university'
+													? ' Copre automaticamente i costi universitari dei figli prima che pesino sul portafoglio.'
+													: ''}
+											</span>
+										</Alert>
+									</div>
+								{/if}
+							{/if}
+						{/if}
+
+						{#if event.type === 'propertySale'}
+							<CurrencyInput
+								bind:value={event.amount}
+								label="Valore di vendita"
+								id="evt-ps-amount-{event.id}"
+								step={5000}
+							/>
+							<CurrencyInput
+								bind:value={event.costBasis}
+								label="Prezzo di acquisto"
+								id="evt-ps-cost-{event.id}"
+								step={5000}
+							/>
+							<div>
+								<Label for="evt-ps-py-{event.id}" class="mb-2">Anno di acquisto</Label>
+								<Input
+									id="evt-ps-py-{event.id}"
+									type="number"
+									min={1950}
+									max={currentYear + 80}
+									bind:value={event.purchaseYear}
+								/>
+							</div>
+							<div class="flex items-end pb-2">
+								<Toggle bind:checked={event.isPrimaryResidence}>
+									Abitazione principale / prima casa
+								</Toggle>
+							</div>
+							<div>
+								<Label for="evt-ps-ry-{event.id}" class="mb-2">
+									Rateizza su (anni, 0 = incasso unico)
+								</Label>
+								<Input
+									id="evt-ps-ry-{event.id}"
+									type="number"
+									min={0}
+									max={40}
+									bind:value={event.durationYears}
+								/>
+							</div>
+							{#if event.durationYears > 0}
+								<PercentInput
+									bind:value={event.percentage}
+									label="Tasso di interesse (rateale)"
+									id="evt-ps-rate-{event.id}"
+									min={0}
+									max={0.1}
+									step={0.005}
+								/>
+							{/if}
+							<div class="md:col-span-2 lg:col-span-4">
+								<Alert color={propertySaleTax(event) > 0 ? 'yellow' : 'green'} class="py-2">
+									<span class="text-xs">
+										{propertySaleTaxNote(event)} ·
+										{#if event.durationYears > 0}
+											incasso rateale (la liquidita' entra anno per anno).
+										{:else}
+											la vendita immette il netto come liquidita' nell'anno indicato
+											(immobile illiquido monetizzato).
+										{/if}
+									</span>
+								</Alert>
+							</div>
+							{#if event.durationYears > 0}
+								<div class="md:col-span-2 lg:col-span-4">
+									<Alert color="blue" class="py-2">
+										<span class="text-xs">
+											Rateale: ~{formatCurrency(propertySaleAnnuity(event))}/anno per
+											{event.durationYears} anni (totale ~{formatCurrency(
+												propertySaleAnnuity(event) * event.durationYears
+											)}). TIR implicito {(event.percentage * 100).toFixed(1)}%: il rateale
+											conviene rispetto all'incasso unico solo se questo tasso supera il
+											rendimento atteso dei tuoi investimenti.
+										</span>
+									</Alert>
+								</div>
+							{/if}
 						{/if}
 					</div>
 				</Card>
@@ -225,6 +385,9 @@
 			</Button>
 			<Button color="alternative" size="sm" onclick={() => addEvent('inheritance')}>
 				<PlusOutline class="w-3 h-3 me-1" /> Eredità
+			</Button>
+			<Button color="alternative" size="sm" onclick={() => addEvent('propertySale')}>
+				<PlusOutline class="w-3 h-3 me-1" /> Vendita immobile
 			</Button>
 		</div>
 	</section>
