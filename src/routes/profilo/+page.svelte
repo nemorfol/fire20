@@ -60,7 +60,8 @@
 	let pension = $state<PensionInfo>({
 		contributionYears: 5,
 		estimatedMonthly: 1200,
-		pensionAge: 67
+		pensionAge: 67,
+		stopContributionsAtFire: false
 	});
 	let children = $state<Child[]>([]);
 	let mortgage = $state<Mortgage | undefined>(undefined);
@@ -112,7 +113,8 @@
 			pension: {
 				contributionYears: 5,
 				estimatedMonthly: 1200,
-				pensionAge: 67
+				pensionAge: 67,
+				stopContributionsAtFire: false
 			} as PensionInfo,
 			simulation: {
 				withdrawalRate: 0.04,
@@ -149,13 +151,28 @@
 			...(p.monthlyContributions as Partial<MonthlyContributions>)
 		} as MonthlyContributions;
 		debts = p.debts.map(d => ({ ...d }));
-		pension = { ...p.pension };
+		// Normalizza i campi opzionali aggiunti dopo (stopContributionsAtFire #37,
+		// allocation/goal* #38), cosi' i profili salvati PRIMA non rompono i bind
+		// verso prop $bindable con fallback (svelte props_invalid_value). Vedi #33.
+		pension = {
+			...p.pension,
+			stopContributionsAtFire:
+				p.pension.stopContributionsAtFire ?? p.retirementAge < p.pension.pensionAge
+		};
 		children = (p.children ?? []).map((c: Child) => ({ ...c }));
 		mortgage = p.mortgage ? { ...p.mortgage } : undefined;
-		lifeEvents = (p.lifeEvents ?? []).map((e: LifeEvent) => ({ ...e }));
-		// Normalizza i campi opzionali aggiunti dopo, cosi' i profili salvati PRIMA
-		// dell'update non rompono i bind (es. CurrencyInput ha fallback 0 e non
-		// accetta undefined -> svelte props_invalid_value). Vedi issue #33.
+		lifeEvents = (p.lifeEvents ?? []).map(
+			(e: LifeEvent) =>
+				({
+					allocation: 'growth' as const,
+					goalAnnualReturn: 0.02,
+					goalPurpose: 'general' as const,
+					purchaseYear: 0,
+					costBasis: 0,
+					isPrimaryResidence: false,
+					...(e as Partial<LifeEvent>)
+				}) as LifeEvent
+		);
 		spouse = p.spouse ? { ...p.spouse, initialPortfolio: p.spouse.initialPortfolio ?? 0 } : undefined;
 	}
 
