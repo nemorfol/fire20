@@ -17,6 +17,10 @@ sua riga nella sezione «Non rilasciato».
 
 ### Aggiunto
 
+- **Link contestuali tra sezioni** (discoverability): da _Profilo_ un aggancio a _Confronto profili_
+  quando esistono 2+ profili salvati; da _Scenari_ un aggancio a _Community_ per condividere lo
+  scenario in forma anonima. Migliorato l'empty state di _Community_ (quando manca un profilo, ora
+  rimanda esplicitamente a _Profilo_ con link).
 - **Tab «Destinazione TFR»** nella pagina Fondo Pensione: confronta il netto a scadenza del TFR
   lasciato in azienda (rivalutazione 1,5% + 75% inflazione, tassazione separata) contro il
   conferimento al fondo pensione (D.Lgs. 252/2005), con grafico e rendimento netto annualizzato,

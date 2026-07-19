@@ -22,7 +22,8 @@
 		ShareNodesSolid,
 		ClipboardOutline,
 		TrashBinOutline,
-		PlusOutline
+		PlusOutline,
+		ArrowRightOutline
 	} from 'flowbite-svelte-icons';
 	import { page } from '$app/state';
 	import { getAllProfiles } from '$lib/db/profiles';
@@ -269,7 +270,15 @@
 			Condividi il tuo scenario
 		</Button>
 		{#if !profile}
-			<p class="mt-2 text-xs text-gray-400">Crea prima un profilo finanziario.</p>
+			<p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+				Per condividere uno scenario serve prima un profilo finanziario.
+				<a
+					href="/profilo/"
+					class="text-primary-600 dark:text-primary-400 inline-flex items-center gap-1 font-medium hover:underline"
+				>
+					Crea il tuo profilo <ArrowRightOutline class="h-3 w-3" />
+				</a>
+			</p>
 		{/if}
 	</Card>
 

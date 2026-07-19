@@ -19,7 +19,9 @@
 		WalletOutline,
 		ChartOutline,
 		BriefcaseOutline,
-		CreditCardOutline
+		CreditCardOutline,
+		UsersOutline,
+		ArrowRightOutline
 	} from 'flowbite-svelte-icons';
 	import { onMount } from 'svelte';
 	import type {
@@ -446,6 +448,22 @@
 				{/if}
 			</div>
 		</div>
+		{#if profiles.length >= 2}
+			<div
+				class="mt-4 flex flex-col gap-1 border-t border-gray-100 pt-3 text-sm sm:flex-row sm:items-center sm:justify-between dark:border-gray-700"
+			>
+				<span class="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+					<UsersOutline class="h-4 w-4" />
+					Hai piu' profili salvati: confrontali fianco a fianco.
+				</span>
+				<a
+					href="/confronto-profili/"
+					class="text-primary-600 dark:text-primary-400 inline-flex items-center gap-1 font-medium hover:underline"
+				>
+					Confronta profili <ArrowRightOutline class="h-3 w-3" />
+				</a>
+			</div>
+		{/if}
 	</Card>
 
 	<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">

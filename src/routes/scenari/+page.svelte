@@ -20,7 +20,9 @@
 		CloseCircleSolid,
 		FileCopySolid,
 		PlaySolid,
-		ChartOutline
+		ChartOutline,
+		ShareNodesSolid,
+		ArrowRightOutline
 	} from 'flowbite-svelte-icons';
 	import type { Profile, Scenario, SimulationResult } from '$lib/db/index';
 	import {
@@ -438,6 +440,22 @@
 			</div>
 		</Card>
 	{:else}
+		<!-- Aggancio contestuale verso la Community (discreto) -->
+		<div
+			class="mb-4 flex flex-col gap-1 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between dark:border-gray-700 dark:bg-gray-800"
+		>
+			<span class="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+				<ShareNodesSolid class="h-4 w-4" />
+				Condividi il tuo scenario in forma anonima e confrontalo con la community.
+			</span>
+			<a
+				href="/community/"
+				class="text-primary-600 dark:text-primary-400 inline-flex items-center gap-1 font-medium hover:underline"
+			>
+				Vai alla Community <ArrowRightOutline class="h-3 w-3" />
+			</a>
+		</div>
+
 		<!-- Scenario Cards Grid -->
 		<div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
 			{#each scenarios as scenario (scenario.id)}
