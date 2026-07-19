@@ -37,22 +37,22 @@
 
 <Card class="max-w-none">
 	<div class="flex items-start justify-between gap-3">
-		<div class="flex-1 min-w-0">
-			<p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{title}</p>
+		<div class="min-w-0 flex-1">
+			<p class="mb-1 text-sm font-medium text-gray-500 dark:text-gray-400">{title}</p>
 			<div class="flex items-center gap-2">
-				<p class="text-2xl font-bold text-gray-900 dark:text-white break-words">{value}</p>
+				<p class="text-2xl font-bold break-words text-gray-900 dark:text-white">{value}</p>
 				{#if trend === 'up'}
-					<ArrowUpOutline class="w-4 h-4 {trendColors.up}" />
+					<ArrowUpOutline class="h-4 w-4 {trendColors.up}" />
 				{:else if trend === 'down'}
-					<ArrowDownOutline class="w-4 h-4 {trendColors.down}" />
+					<ArrowDownOutline class="h-4 w-4 {trendColors.down}" />
 				{/if}
 			</div>
 			{#if subtitle}
-				<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>
+				<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{subtitle}</p>
 			{/if}
 		</div>
 		{#if icon}
-			<div class="p-3 rounded-lg flex-shrink-0 {colorClasses[color] ?? colorClasses.primary}">
+			<div class="flex-shrink-0 rounded-lg p-3 {colorClasses[color] ?? colorClasses.primary}">
 				{@render iconRender()}
 			</div>
 		{/if}
@@ -62,6 +62,6 @@
 {#snippet iconRender()}
 	{#if icon}
 		{@const Icon = icon}
-		<Icon class="w-6 h-6" />
+		<Icon class="h-6 w-6" />
 	{/if}
 {/snippet}

@@ -291,13 +291,13 @@
 </script>
 
 <Card class="max-w-none">
-	<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+	<h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
 		Configurazione Simulazione
 	</h3>
 
 	<div class="space-y-5">
 		<!-- Portfolio Parameters -->
-		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 			<div>
 				<Label for="initial-portfolio" class="mb-2">Portafoglio iniziale (&euro;)</Label>
 				<Input
@@ -320,17 +320,11 @@
 			</div>
 			<div>
 				<Label for="annual-expenses" class="mb-2">Spese annuali in pensione (&euro;)</Label>
-				<Input
-					id="annual-expenses"
-					type="number"
-					bind:value={annualExpenses}
-					min={0}
-					step={1000}
-				/>
+				<Input id="annual-expenses" type="number" bind:value={annualExpenses} min={0} step={1000} />
 			</div>
 		</div>
 
-		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 			<div>
 				<Label for="stock-alloc" class="mb-2">Allocazione azioni (%)</Label>
 				<Input
@@ -378,38 +372,77 @@
 		</div>
 
 		<!-- Redditi in pensione (opzionali): riducono il prelievo netto dal portafoglio -->
-		<div class="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800 space-y-3">
+		<div
+			class="space-y-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-800 dark:bg-emerald-900/20"
+		>
 			<div class="flex items-center gap-2">
 				<p class="text-sm font-medium text-emerald-800 dark:text-emerald-300">
 					Redditi in pensione (opzionale)
 				</p>
 				<span id="tip-redditi-pensione">
-					<InfoCircleSolid class="w-4 h-4 text-gray-400 cursor-help" />
+					<InfoCircleSolid class="h-4 w-4 cursor-help text-gray-400" />
 				</span>
 				<Tooltip triggeredBy="#tip-redditi-pensione" class="max-w-xs">
-					Pensione INPS e altri redditi (affitti, dividendi) riducono il prelievo dal portafoglio durante la pensione. Lascia a 0 per ignorarli (il portafoglio coprir&agrave; da solo tutte le spese).
+					Pensione INPS e altri redditi (affitti, dividendi) riducono il prelievo dal portafoglio
+					durante la pensione. Lascia a 0 per ignorarli (il portafoglio coprir&agrave; da solo tutte
+					le spese).
 				</Tooltip>
 			</div>
-			<div class="grid grid-cols-2 lg:grid-cols-3 gap-3">
+			<div class="grid grid-cols-2 gap-3 lg:grid-cols-3">
 				<div>
 					<Label for="current-age" class="mb-1 text-xs">Et&agrave; attuale</Label>
-					<Input id="current-age" type="number" bind:value={currentAge} min={18} max={90} size="sm" />
+					<Input
+						id="current-age"
+						type="number"
+						bind:value={currentAge}
+						min={18}
+						max={90}
+						size="sm"
+					/>
 				</div>
 				<div>
 					<Label for="pension-annual" class="mb-1 text-xs">Pensione INPS annua (&euro;)</Label>
-					<Input id="pension-annual" type="number" bind:value={pensionAnnual} min={0} step={1000} size="sm" />
+					<Input
+						id="pension-annual"
+						type="number"
+						bind:value={pensionAnnual}
+						min={0}
+						step={1000}
+						size="sm"
+					/>
 				</div>
 				<div>
 					<Label for="pension-age" class="mb-1 text-xs">Et&agrave; pensione INPS</Label>
-					<Input id="pension-age" type="number" bind:value={pensionStartAge} min={50} max={90} size="sm" />
+					<Input
+						id="pension-age"
+						type="number"
+						bind:value={pensionStartAge}
+						min={50}
+						max={90}
+						size="sm"
+					/>
 				</div>
 				<div>
 					<Label for="other-income" class="mb-1 text-xs">Altri redditi annui (&euro;)</Label>
-					<Input id="other-income" type="number" bind:value={otherIncomeAnnual} min={0} step={1000} size="sm" />
+					<Input
+						id="other-income"
+						type="number"
+						bind:value={otherIncomeAnnual}
+						min={0}
+						step={1000}
+						size="sm"
+					/>
 				</div>
 				<div>
 					<Label for="other-income-end" class="mb-1 text-xs">Fino a et&agrave;</Label>
-					<Input id="other-income-end" type="number" bind:value={otherIncomeEndAge} min={18} max={110} size="sm" />
+					<Input
+						id="other-income-end"
+						type="number"
+						bind:value={otherIncomeEndAge}
+						min={18}
+						max={110}
+						size="sm"
+					/>
 				</div>
 			</div>
 		</div>
@@ -420,27 +453,38 @@
 				Modalit&agrave; avanzata (multi-asset)
 			</Toggle>
 			<span id="tip-advanced">
-				<InfoCircleSolid class="w-4 h-4 text-gray-400 cursor-help" />
+				<InfoCircleSolid class="h-4 w-4 cursor-help text-gray-400" />
 			</span>
 			<Tooltip triggeredBy="#tip-advanced" class="max-w-xs">
-				Abilita la simulazione con pi&ugrave; di 2 asset class (oro, liquidit&agrave;, immobiliare) con matrice di correlazione completa NxN.
+				Abilita la simulazione con pi&ugrave; di 2 asset class (oro, liquidit&agrave;, immobiliare)
+				con matrice di correlazione completa NxN.
 			</Tooltip>
 		</div>
 
 		{#if advancedMode}
-			<div class="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800 space-y-4">
+			<div
+				class="space-y-4 rounded-lg border border-purple-200 bg-purple-50 p-4 dark:border-purple-800 dark:bg-purple-900/20"
+			>
 				<p class="text-sm font-medium text-purple-800 dark:text-purple-300">
 					Asset class aggiuntive
 				</p>
 
 				<!-- Asset toggles + allocations -->
-				<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+				<div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
 					<div class="space-y-2">
 						<Toggle bind:checked={goldEnabled} size="small">Oro</Toggle>
 						{#if goldEnabled}
 							<div>
 								<Label for="gold-alloc" class="mb-1 text-xs">Allocazione (%)</Label>
-								<Input id="gold-alloc" type="number" bind:value={goldAllocation} min={0} max={100} step={5} size="sm" />
+								<Input
+									id="gold-alloc"
+									type="number"
+									bind:value={goldAllocation}
+									min={0}
+									max={100}
+									step={5}
+									size="sm"
+								/>
 							</div>
 						{/if}
 					</div>
@@ -449,7 +493,15 @@
 						{#if cashEnabled}
 							<div>
 								<Label for="cash-alloc" class="mb-1 text-xs">Allocazione (%)</Label>
-								<Input id="cash-alloc" type="number" bind:value={cashAllocation} min={0} max={100} step={5} size="sm" />
+								<Input
+									id="cash-alloc"
+									type="number"
+									bind:value={cashAllocation}
+									min={0}
+									max={100}
+									step={5}
+									size="sm"
+								/>
 							</div>
 						{/if}
 					</div>
@@ -458,7 +510,15 @@
 						{#if realEstateEnabled}
 							<div>
 								<Label for="re-alloc" class="mb-1 text-xs">Allocazione (%)</Label>
-								<Input id="re-alloc" type="number" bind:value={realEstateAllocation} min={0} max={100} step={5} size="sm" />
+								<Input
+									id="re-alloc"
+									type="number"
+									bind:value={realEstateAllocation}
+									min={0}
+									max={100}
+									step={5}
+									size="sm"
+								/>
 							</div>
 						{/if}
 					</div>
@@ -466,7 +526,11 @@
 
 				<!-- Allocation total -->
 				<div class="flex items-center gap-2">
-					<span class="text-sm font-medium" class:text-green-700={allocationValid} class:text-red-600={!allocationValid}>
+					<span
+						class="text-sm font-medium"
+						class:text-green-700={allocationValid}
+						class:text-red-600={!allocationValid}
+					>
 						Totale allocazione: {totalAllocation}%
 					</span>
 					{#if !allocationValid}
@@ -480,7 +544,7 @@
 						<p class="text-xs font-medium text-purple-700 dark:text-purple-400">
 							Parametri distribuzione asset aggiuntivi
 						</p>
-						<div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+						<div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
 							{#if goldEnabled}
 								<div>
 									<Label for="gold-ret" class="mb-1 text-xs">Rendimento oro (%)</Label>
@@ -488,7 +552,13 @@
 								</div>
 								<div>
 									<Label for="gold-std" class="mb-1 text-xs">Volatilit&agrave; oro (%)</Label>
-									<Input id="gold-std" type="number" bind:value={goldStdDevParam} step={0.5} size="sm" />
+									<Input
+										id="gold-std"
+										type="number"
+										bind:value={goldStdDevParam}
+										step={0.5}
+										size="sm"
+									/>
 								</div>
 							{/if}
 							{#if cashEnabled}
@@ -497,18 +567,38 @@
 									<Input id="cash-ret" type="number" bind:value={cashReturn} step={0.5} size="sm" />
 								</div>
 								<div>
-									<Label for="cash-std" class="mb-1 text-xs">Volatilit&agrave; liquidit&agrave; (%)</Label>
-									<Input id="cash-std" type="number" bind:value={cashStdDevParam} step={0.5} size="sm" />
+									<Label for="cash-std" class="mb-1 text-xs"
+										>Volatilit&agrave; liquidit&agrave; (%)</Label
+									>
+									<Input
+										id="cash-std"
+										type="number"
+										bind:value={cashStdDevParam}
+										step={0.5}
+										size="sm"
+									/>
 								</div>
 							{/if}
 							{#if realEstateEnabled}
 								<div>
 									<Label for="re-ret" class="mb-1 text-xs">Rendimento immobiliare (%)</Label>
-									<Input id="re-ret" type="number" bind:value={realEstateReturn} step={0.5} size="sm" />
+									<Input
+										id="re-ret"
+										type="number"
+										bind:value={realEstateReturn}
+										step={0.5}
+										size="sm"
+									/>
 								</div>
 								<div>
 									<Label for="re-std" class="mb-1 text-xs">Volatilit&agrave; immobiliare (%)</Label>
-									<Input id="re-std" type="number" bind:value={realEstateStdDevParam} step={0.5} size="sm" />
+									<Input
+										id="re-std"
+										type="number"
+										bind:value={realEstateStdDevParam}
+										step={0.5}
+										size="sm"
+									/>
 								</div>
 							{/if}
 						</div>
@@ -522,19 +612,23 @@
 							Matrice di correlazione (dati storici 1970-2024)
 						</p>
 						<div class="overflow-x-auto">
-							<table class="text-xs border-collapse">
+							<table class="border-collapse text-xs">
 								<thead>
 									<tr>
 										<th class="p-1.5 text-left"></th>
 										{#each activeAssetKeys as key}
-											<th class="p-1.5 text-center font-medium text-purple-800 dark:text-purple-300">{localLabels[key]}</th>
+											<th class="p-1.5 text-center font-medium text-purple-800 dark:text-purple-300"
+												>{localLabels[key]}</th
+											>
 										{/each}
 									</tr>
 								</thead>
 								<tbody>
 									{#each activeAssetKeys as rowKey}
 										<tr>
-											<td class="p-1.5 font-medium text-purple-800 dark:text-purple-300">{localLabels[rowKey]}</td>
+											<td class="p-1.5 font-medium text-purple-800 dark:text-purple-300"
+												>{localLabels[rowKey]}</td
+											>
 											{#each activeAssetKeys as colKey}
 												{@const val = fullCorrMatrix[assetKeyMap[rowKey]][assetKeyMap[colKey]]}
 												<td
@@ -560,30 +654,18 @@
 		<hr class="border-gray-200 dark:border-gray-700" />
 
 		<!-- Simulation Parameters -->
-		<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+		<div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
 			<div>
 				<Label for="iterations" class="mb-2">Numero di iterazioni</Label>
 				<Select id="iterations" bind:value={iterations} items={iterationOptions} />
 			</div>
 			<div>
 				<Label for="years-to-fire" class="mb-2">Anni di accumulazione</Label>
-				<Input
-					id="years-to-fire"
-					type="number"
-					bind:value={yearsToFire}
-					min={0}
-					max={50}
-				/>
+				<Input id="years-to-fire" type="number" bind:value={yearsToFire} min={0} max={50} />
 			</div>
 			<div>
 				<Label for="years-retire" class="mb-2">Anni in pensione</Label>
-				<Input
-					id="years-retire"
-					type="number"
-					bind:value={yearsToSimulate}
-					min={5}
-					max={60}
-				/>
+				<Input id="years-retire" type="number" bind:value={yearsToSimulate} min={5} max={60} />
 			</div>
 		</div>
 
@@ -592,48 +674,37 @@
 			<Label class="mb-3 block text-sm font-medium">Modalit&agrave; di simulazione</Label>
 			<div class="flex flex-wrap gap-4">
 				<div class="flex items-center gap-2">
-					<Radio
-						name="sim-mode"
-						value="parametric"
-						bind:group={simulationMode}
-					>
-						Parametrica
-					</Radio>
+					<Radio name="sim-mode" value="parametric" bind:group={simulationMode}>Parametrica</Radio>
 					<span id="tip-parametric">
-						<InfoCircleSolid class="w-4 h-4 text-gray-400 cursor-help" />
+						<InfoCircleSolid class="h-4 w-4 cursor-help text-gray-400" />
 					</span>
 					<Tooltip triggeredBy="#tip-parametric" class="max-w-xs">
-						Genera rendimenti casuali da distribuzioni statistiche (log-normale per azioni, normale per obbligazioni). Permette di specificare rendimento medio e volatilit&agrave;.
+						Genera rendimenti casuali da distribuzioni statistiche (log-normale per azioni, normale
+						per obbligazioni). Permette di specificare rendimento medio e volatilit&agrave;.
 					</Tooltip>
 				</div>
 				<div class="flex items-center gap-2">
-					<Radio
-						name="sim-mode"
-						value="historical"
-						bind:group={simulationMode}
-					>
+					<Radio name="sim-mode" value="historical" bind:group={simulationMode}>
 						Bootstrap Storico
 					</Radio>
 					<span id="tip-historical">
-						<InfoCircleSolid class="w-4 h-4 text-gray-400 cursor-help" />
+						<InfoCircleSolid class="h-4 w-4 cursor-help text-gray-400" />
 					</span>
 					<Tooltip triggeredBy="#tip-historical" class="max-w-xs">
-						Campiona casualmente dai rendimenti storici reali (S&P 500 e Treasury Bond dal 1928). Cattura la distribuzione reale dei rendimenti.
+						Campiona casualmente dai rendimenti storici reali (S&P 500 e Treasury Bond dal 1928).
+						Cattura la distribuzione reale dei rendimenti.
 					</Tooltip>
 				</div>
 				<div class="flex items-center gap-2">
-					<Radio
-						name="sim-mode"
-						value="block-bootstrap"
-						bind:group={simulationMode}
-					>
+					<Radio name="sim-mode" value="block-bootstrap" bind:group={simulationMode}>
 						Block Bootstrap
 					</Radio>
 					<span id="tip-block">
-						<InfoCircleSolid class="w-4 h-4 text-gray-400 cursor-help" />
+						<InfoCircleSolid class="h-4 w-4 cursor-help text-gray-400" />
 					</span>
 					<Tooltip triggeredBy="#tip-block" class="max-w-xs">
-						Campiona blocchi consecutivi di 5 anni dai dati storici, preservando le autocorrelazioni temporali e i cicli di mercato.
+						Campiona blocchi consecutivi di 5 anni dai dati storici, preservando le autocorrelazioni
+						temporali e i cicli di mercato.
 					</Tooltip>
 				</div>
 			</div>
@@ -641,11 +712,13 @@
 
 		<!-- Parametric mode inputs -->
 		{#if simulationMode === 'parametric'}
-			<div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-				<p class="text-sm font-medium text-blue-800 dark:text-blue-300 mb-3">
+			<div
+				class="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20"
+			>
+				<p class="mb-3 text-sm font-medium text-blue-800 dark:text-blue-300">
 					Parametri distribuzione
 				</p>
-				<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+				<div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
 					<div>
 						<Label for="stock-ret" class="mb-1 text-xs">Rendimento azioni (%)</Label>
 						<Input id="stock-ret" type="number" bind:value={stockReturn} step={0.5} size="sm" />
@@ -664,23 +737,27 @@
 					</div>
 				</div>
 				<div class="mt-3 flex items-center gap-2">
-					<Toggle bind:checked={useCorrelation} size="small">
-						Rendimenti correlati
-					</Toggle>
+					<Toggle bind:checked={useCorrelation} size="small">Rendimenti correlati</Toggle>
 					<span id="tip-correlation">
-						<InfoCircleSolid class="w-4 h-4 text-gray-400 cursor-help" />
+						<InfoCircleSolid class="h-4 w-4 cursor-help text-gray-400" />
 					</span>
 					<Tooltip triggeredBy="#tip-correlation" class="max-w-xs">
-						Usa la decomposizione di Cholesky per generare rendimenti azionari e obbligazionari correlati (correlazione storica ~0.189). Disattivando questa opzione i rendimenti vengono generati in modo indipendente, sottostimando il rischio reale del portafoglio.
+						Usa la decomposizione di Cholesky per generare rendimenti azionari e obbligazionari
+						correlati (correlazione storica ~0.189). Disattivando questa opzione i rendimenti
+						vengono generati in modo indipendente, sottostimando il rischio reale del portafoglio.
 					</Tooltip>
 				</div>
 			</div>
 		{:else}
-			<div class="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
-				<p class="text-sm font-medium text-emerald-800 dark:text-emerald-300 mb-2">
+			<div
+				class="rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-800 dark:bg-emerald-900/20"
+			>
+				<p class="mb-2 text-sm font-medium text-emerald-800 dark:text-emerald-300">
 					Dati storici utilizzati
 				</p>
-				<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-emerald-700 dark:text-emerald-400">
+				<div
+					class="grid grid-cols-1 gap-3 text-sm text-emerald-700 sm:grid-cols-2 dark:text-emerald-400"
+				>
 					<div>
 						<span class="font-medium">{seriesLabel}</span>
 						{seriesDescription}
@@ -697,7 +774,7 @@
 					{/if}
 				</div>
 				{#if simulationMode === 'block-bootstrap'}
-					<p class="text-xs text-emerald-600 dark:text-emerald-500 mt-2">
+					<p class="mt-2 text-xs text-emerald-600 dark:text-emerald-500">
 						Blocchi di 5 anni consecutivi per preservare le autocorrelazioni.
 					</p>
 				{/if}
@@ -707,13 +784,13 @@
 		<hr class="border-gray-200 dark:border-gray-700" />
 
 		{#if !allocationValid}
-			<Helper class="text-red-600 dark:text-red-400 mb-2">
+			<Helper class="mb-2 text-red-600 dark:text-red-400">
 				Totale allocazione: {totalAllocation}% — deve essere 100% per avviare la simulazione.
 			</Helper>
 		{/if}
 
 		<!-- Run Button + Progress -->
-		<div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+		<div class="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
 			<Button
 				color="primary"
 				size="lg"
@@ -725,24 +802,24 @@
 					<Spinner size="4" class="me-2" />
 					Simulazione in corso...
 				{:else}
-					<PlaySolid class="w-4 h-4 me-2" />
+					<PlaySolid class="me-2 h-4 w-4" />
 					Avvia Simulazione
 				{/if}
 			</Button>
 
 			{#if running}
-				<div class="flex-1 w-full sm:w-auto">
-					<div class="flex items-center justify-between mb-1">
-						<span class="text-sm font-medium text-primary-700 dark:text-primary-400">
+				<div class="w-full flex-1 sm:w-auto">
+					<div class="mb-1 flex items-center justify-between">
+						<span class="text-primary-700 dark:text-primary-400 text-sm font-medium">
 							Progresso: {Math.round(progress)}%
 						</span>
 						<span class="text-xs text-gray-500 dark:text-gray-400">
 							{formattedElapsed}
 						</span>
 					</div>
-					<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+					<div class="h-3 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
 						<div
-							class="h-full rounded-full bg-gradient-to-r from-primary-500 to-primary-600 transition-all duration-300 ease-out"
+							class="from-primary-500 to-primary-600 h-full rounded-full bg-gradient-to-r transition-all duration-300 ease-out"
 							style="width: {progress}%"
 						></div>
 					</div>
@@ -752,7 +829,8 @@
 
 		{#if !running && iterations >= 50000}
 			<Helper class="text-yellow-600 dark:text-yellow-400">
-				Con {iterations.toLocaleString('it-IT')} iterazioni la simulazione potrebbe richiedere qualche secondo.
+				Con {iterations.toLocaleString('it-IT')} iterazioni la simulazione potrebbe richiedere qualche
+				secondo.
 			</Helper>
 		{/if}
 	</div>

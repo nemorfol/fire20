@@ -41,7 +41,12 @@
 			tooltip: {
 				trigger: 'axis',
 				formatter: (params: unknown[]) => {
-					const arr = params as { name: string; marker: string; seriesName: string; value: number }[];
+					const arr = params as {
+						name: string;
+						marker: string;
+						seriesName: string;
+						value: number;
+					}[];
 					let html = `<strong>${arr[0].name}</strong><br/>`;
 					for (const p of arr) {
 						html += `${p.marker} ${p.seriesName}: ${formatCurrency(Math.max(0, p.value))}<br/>`;
@@ -87,17 +92,15 @@
 </script>
 
 <Card class="max-w-none">
-	<div class="flex items-start justify-between mb-4 gap-4">
+	<div class="mb-4 flex items-start justify-between gap-4">
 		<div class="flex-1">
-			<div class="flex items-center gap-2 mb-2">
-				<ExclamationCircleSolid class="w-5 h-5 text-red-600 dark:text-red-400" />
-				<h5 class="text-lg font-semibold text-gray-900 dark:text-white">
-					Scenario Combinato
-				</h5>
+			<div class="mb-2 flex items-center gap-2">
+				<ExclamationCircleSolid class="h-5 w-5 text-red-600 dark:text-red-400" />
+				<h5 class="text-lg font-semibold text-gray-900 dark:text-white">Scenario Combinato</h5>
 			</div>
-			<p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
-				Applicazione simultanea di {events.length} eventi. Gli effetti si sommano e il
-				portafoglio subisce gli shock in sequenza.
+			<p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
+				Applicazione simultanea di {events.length} eventi. Gli effetti si sommano e il portafoglio subisce
+				gli shock in sequenza.
 			</p>
 			<div class="flex flex-wrap gap-2">
 				{#each events as event (event.id)}
@@ -110,7 +113,7 @@
 		</Badge>
 	</div>
 
-	<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+	<div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
 		<StatCard
 			title="Portafoglio Finale"
 			value={formatCurrency(finalCombined)}
@@ -132,7 +135,7 @@
 				? 'Fallimento causato dalla combinazione'
 				: baselineSurvives
 					? 'Piano resiliente alla combinazione'
-					: 'Piano gia\' a rischio'}
+					: "Piano gia' a rischio"}
 			color={combinedSurvives ? 'green' : 'red'}
 		/>
 	</div>

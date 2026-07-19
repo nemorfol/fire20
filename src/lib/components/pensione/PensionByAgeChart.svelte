@@ -24,7 +24,12 @@
 				trigger: 'axis',
 				axisPointer: { type: 'shadow' },
 				formatter: (params: unknown[]) => {
-					const arr = params as { name: string; marker: string; seriesName: string; value: number }[];
+					const arr = params as {
+						name: string;
+						marker: string;
+						seriesName: string;
+						value: number;
+					}[];
 					let html = `<strong>${arr[0].name} anni</strong><br/>`;
 					for (const p of arr) {
 						html += `${p.marker} ${p.seriesName}: ${formatCurrency(p.value)}/mese<br/>`;
@@ -62,17 +67,20 @@
 					type: 'bar',
 					data: filtered.map((p) => Math.round(p.monthlyNet)),
 					itemStyle: { color: '#2563eb' },
-					markLine: fireMonthlyExpenses > 0 ? {
-						silent: true,
-						symbol: 'none',
-						lineStyle: { color: '#dc2626', type: 'dashed', width: 2 },
-						label: {
-							formatter: `Spese FIRE: ${formatCurrency(fireMonthlyExpenses)}/mese`,
-							color: '#dc2626',
-							position: 'insideEndTop'
-						},
-						data: [{ yAxis: Math.round(fireMonthlyExpenses) }]
-					} : undefined
+					markLine:
+						fireMonthlyExpenses > 0
+							? {
+									silent: true,
+									symbol: 'none',
+									lineStyle: { color: '#dc2626', type: 'dashed', width: 2 },
+									label: {
+										formatter: `Spese FIRE: ${formatCurrency(fireMonthlyExpenses)}/mese`,
+										color: '#dc2626',
+										position: 'insideEndTop'
+									},
+									data: [{ yAxis: Math.round(fireMonthlyExpenses) }]
+								}
+							: undefined
 				}
 			]
 		};
@@ -80,12 +88,12 @@
 </script>
 
 <Card class="max-w-none">
-	<h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+	<h5 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
 		Pensione mensile per eta di uscita
 	</h5>
-	<p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-		Confronto della pensione INPS stimata in base all'eta di pensionamento. Aspettare
-		paga: il coefficiente di trasformazione cresce e si accumulano contributi aggiuntivi.
+	<p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+		Confronto della pensione INPS stimata in base all'eta di pensionamento. Aspettare paga: il
+		coefficiente di trasformazione cresce e si accumulano contributi aggiuntivi.
 		{#if fireMonthlyExpenses > 0}
 			La linea rossa mostra le spese FIRE mensili: quanto l'INPS copre da solo.
 		{/if}

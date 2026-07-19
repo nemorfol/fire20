@@ -177,12 +177,13 @@
 	});
 </script>
 
-<div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
-	<h4 class="text-base font-semibold text-gray-900 dark:text-white mb-2">
+<div class="rounded-xl bg-white p-4 shadow-lg dark:bg-gray-800">
+	<h4 class="mb-2 text-base font-semibold text-gray-900 dark:text-white">
 		Proiezione del Portafoglio - Fan Chart
 	</h4>
-	<p class="text-xs text-gray-500 dark:text-gray-400 mb-4">
-		Bande di probabilit&agrave;: P5-P95 (chiara), P10-P90 (media), P25-P75 (scura), P50 mediana (linea)
+	<p class="mb-4 text-xs text-gray-500 dark:text-gray-400">
+		Bande di probabilit&agrave;: P5-P95 (chiara), P10-P90 (media), P25-P75 (scura), P50 mediana
+		(linea)
 	</p>
 	<EChart {options} height="420px" />
 </div>

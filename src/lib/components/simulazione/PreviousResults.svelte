@@ -26,25 +26,23 @@
 
 	function successColor(rate: number): 'green' | 'yellow' | 'red' {
 		if (rate >= 0.95) return 'green';
-		if (rate >= 0.80) return 'yellow';
+		if (rate >= 0.8) return 'yellow';
 		return 'red';
 	}
 </script>
 
 {#if results.length > 0}
 	<Card class="max-w-none">
-		<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-			Risultati Precedenti
-		</h3>
+		<h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Risultati Precedenti</h3>
 		<div class="overflow-x-auto">
 			<Table striped hoverable>
 				<TableHead>
 					<TableHeadCell class="text-xs">Data</TableHeadCell>
-					<TableHeadCell class="text-xs text-center">Iterazioni</TableHeadCell>
-					<TableHeadCell class="text-xs text-center">Anni</TableHeadCell>
-					<TableHeadCell class="text-xs text-center">Successo</TableHeadCell>
-					<TableHeadCell class="text-xs text-right">Mediana Finale</TableHeadCell>
-					<TableHeadCell class="text-xs text-center">Azioni</TableHeadCell>
+					<TableHeadCell class="text-center text-xs">Iterazioni</TableHeadCell>
+					<TableHeadCell class="text-center text-xs">Anni</TableHeadCell>
+					<TableHeadCell class="text-center text-xs">Successo</TableHeadCell>
+					<TableHeadCell class="text-right text-xs">Mediana Finale</TableHeadCell>
+					<TableHeadCell class="text-center text-xs">Azioni</TableHeadCell>
 				</TableHead>
 				<TableBody>
 					{#each results as result}
@@ -68,22 +66,12 @@
 							</TableBodyCell>
 							<TableBodyCell class="text-center">
 								<div class="flex items-center justify-center gap-2">
-									<Button
-										size="xs"
-										color="primary"
-										outline
-										onclick={() => onLoad(result)}
-									>
-										<EyeSolid class="w-3 h-3 me-1" />
+									<Button size="xs" color="primary" outline onclick={() => onLoad(result)}>
+										<EyeSolid class="me-1 h-3 w-3" />
 										Carica
 									</Button>
-									<Button
-										size="xs"
-										color="red"
-										outline
-										onclick={() => onDelete(result.id)}
-									>
-										<TrashBinSolid class="w-3 h-3" />
+									<Button size="xs" color="red" outline onclick={() => onDelete(result.id)}>
+										<TrashBinSolid class="h-3 w-3" />
 									</Button>
 								</div>
 							</TableBodyCell>

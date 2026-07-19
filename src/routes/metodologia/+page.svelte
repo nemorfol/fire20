@@ -3,8 +3,7 @@
 	import { DEFAULT_2026 } from '$lib/engine/assumptions';
 
 	const a = DEFAULT_2026;
-	const pct = (x: number) =>
-		(x * 100).toLocaleString('it-IT', { maximumFractionDigits: 2 }) + '%';
+	const pct = (x: number) => (x * 100).toLocaleString('it-IT', { maximumFractionDigits: 2 }) + '%';
 	const eur = (x: number) => x.toLocaleString('it-IT') + ' €';
 
 	// Ogni voce: valore usato dal motore + fonte normativa. I valori sono letti
@@ -18,7 +17,8 @@
 		{
 			voce: 'Detrazioni lavoro dipendente',
 			valore: 'art.13 TUIR (1.955 fino a 15k, decrescente) + cuneo 2026',
-			fonte: 'Art.13 co.1 TUIR; riduzione cuneo fiscale resa strutturale (Legge di Bilancio 2025/2026)'
+			fonte:
+				'Art.13 co.1 TUIR; riduzione cuneo fiscale resa strutturale (Legge di Bilancio 2025/2026)'
 		},
 		{
 			voce: 'Capital gain',
@@ -79,8 +79,8 @@
 
 <Heading tag="h1" class="mb-2">Metodologia e Fonti</Heading>
 <p class="mb-4 text-gray-600 dark:text-gray-400">
-	FIRE Planner non è una "scatola nera": ogni aliquota, soglia e coefficiente usati dal motore è
-	un numero reale e verificabile. Qui trovi i valori applicati e la relativa fonte normativa.
+	FIRE Planner non è una "scatola nera": ogni aliquota, soglia e coefficiente usati dal motore è un
+	numero reale e verificabile. Qui trovi i valori applicati e la relativa fonte normativa.
 </p>
 
 <Alert color="blue" class="mb-6">
@@ -113,6 +113,6 @@
 </Card>
 
 <p class="mt-6 text-sm text-gray-500 dark:text-gray-400">
-	Puoi personalizzare le ipotesi (aliquote, SWR, rendimenti) nei pannelli del calcolatore: il
-	preset di default riflette la normativa 2026, ma ogni numero è modificabile e ricalcola tutto.
+	Puoi personalizzare le ipotesi (aliquote, SWR, rendimenti) nei pannelli del calcolatore: il preset
+	di default riflette la normativa 2026, ma ogni numero è modificabile e ricalcola tutto.
 </p>

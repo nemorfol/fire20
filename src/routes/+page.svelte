@@ -61,21 +61,16 @@
 	);
 	let yearsToFire = $derived(
 		profile
-			? calculateYearsToFire(
-					netWorth,
-					annualSavings,
-					profile.simulation.expectedReturn,
-					fireNumber
-				)
+			? calculateYearsToFire(netWorth, annualSavings, profile.simulation.expectedReturn, fireNumber)
 			: -1
 	);
 	let savingsRate = $derived(
-		profile ? calculateSavingsRate(profile.annualIncome + profile.otherIncome, profile.annualExpenses) : 0
+		profile
+			? calculateSavingsRate(profile.annualIncome + profile.otherIncome, profile.annualExpenses)
+			: 0
 	);
 	let monthlyFireIncome = $derived(
-		fireNumber > 0 && profile
-			? (fireNumber * profile.simulation.withdrawalRate) / 12
-			: 0
+		fireNumber > 0 && profile ? (fireNumber * profile.simulation.withdrawalRate) / 12 : 0
 	);
 	let currentAge = $derived(profile ? new Date().getFullYear() - profile.birthYear : 0);
 
@@ -133,7 +128,7 @@
 		const labels: Record<string, string> = {
 			stocks: 'Azioni',
 			bonds: 'Obbligazioni',
-			cash: 'Liquidita\'',
+			cash: "Liquidita'",
 			realEstate: 'Immobiliare',
 			gold: 'Oro',
 			crypto: 'Crypto',
@@ -142,8 +137,15 @@
 			other: 'Altro'
 		};
 		const colors = [
-			'#3b82f6', '#10b981', '#f59e0b', '#8b5cf6',
-			'#f97316', '#06b6d4', '#ec4899', '#6366f1', '#94a3b8'
+			'#3b82f6',
+			'#10b981',
+			'#f59e0b',
+			'#8b5cf6',
+			'#f97316',
+			'#06b6d4',
+			'#ec4899',
+			'#6366f1',
+			'#94a3b8'
 		];
 		const data = Object.entries(profile.portfolio)
 			.filter(([, v]) => v > 0)
@@ -229,64 +231,74 @@
 
 {#if loading}
 	<div class="flex items-center justify-center py-20">
-		<div class="text-gray-500 dark:text-gray-400 text-lg">Caricamento...</div>
+		<div class="text-lg text-gray-500 dark:text-gray-400">Caricamento...</div>
 	</div>
 {:else if !profile}
 	<!-- No profile: Getting Started -->
-	<div class="max-w-2xl mx-auto py-12 text-center">
+	<div class="mx-auto max-w-2xl py-12 text-center">
 		<div class="mb-6">
-			<FireSolid class="w-16 h-16 text-primary-500 mx-auto mb-4" />
+			<FireSolid class="text-primary-500 mx-auto mb-4 h-16 w-16" />
 			<Heading tag="h1" class="mb-4">Benvenuto nel FIRE Planner</Heading>
-			<p class="text-lg text-gray-600 dark:text-gray-400 mb-8">
+			<p class="mb-8 text-lg text-gray-600 dark:text-gray-400">
 				Per iniziare, crea il tuo profilo finanziario. Inserisci le tue entrate, spese e patrimonio
 				per calcolare il tuo percorso verso l'indipendenza finanziaria.
 			</p>
 		</div>
 
-		<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+		<div class="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
 			<Card>
 				<div class="text-center">
-					<div class="rounded-full bg-primary-100 dark:bg-primary-900/30 w-12 h-12 flex items-center justify-center mx-auto mb-3">
-						<UserSolid class="w-6 h-6 text-primary-500" />
+					<div
+						class="bg-primary-100 dark:bg-primary-900/30 mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full"
+					>
+						<UserSolid class="text-primary-500 h-6 w-6" />
 					</div>
-					<h5 class="font-semibold text-gray-900 dark:text-white mb-1">1. Profilo</h5>
-					<p class="text-sm text-gray-500 dark:text-gray-400">Configura dati personali e finanziari</p>
+					<h5 class="mb-1 font-semibold text-gray-900 dark:text-white">1. Profilo</h5>
+					<p class="text-sm text-gray-500 dark:text-gray-400">
+						Configura dati personali e finanziari
+					</p>
 				</div>
 			</Card>
 			<Card>
 				<div class="text-center">
-					<div class="rounded-full bg-green-100 dark:bg-green-900/30 w-12 h-12 flex items-center justify-center mx-auto mb-3">
-						<ChartMixedDollarSolid class="w-6 h-6 text-green-500" />
+					<div
+						class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30"
+					>
+						<ChartMixedDollarSolid class="h-6 w-6 text-green-500" />
 					</div>
-					<h5 class="font-semibold text-gray-900 dark:text-white mb-1">2. Calcola</h5>
+					<h5 class="mb-1 font-semibold text-gray-900 dark:text-white">2. Calcola</h5>
 					<p class="text-sm text-gray-500 dark:text-gray-400">Scopri il tuo numero FIRE</p>
 				</div>
 			</Card>
 			<Card>
 				<div class="text-center">
-					<div class="rounded-full bg-red-100 dark:bg-red-900/30 w-12 h-12 flex items-center justify-center mx-auto mb-3">
-						<FireSolid class="w-6 h-6 text-red-500" />
+					<div
+						class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30"
+					>
+						<FireSolid class="h-6 w-6 text-red-500" />
 					</div>
-					<h5 class="font-semibold text-gray-900 dark:text-white mb-1">3. Simula</h5>
+					<h5 class="mb-1 font-semibold text-gray-900 dark:text-white">3. Simula</h5>
 					<p class="text-sm text-gray-500 dark:text-gray-400">Testa la robustezza del piano</p>
 				</div>
 			</Card>
 		</div>
 
 		<Button href="/profilo/" size="lg" class="gap-2">
-			<UserSolid class="w-5 h-5" />
+			<UserSolid class="h-5 w-5" />
 			Crea il tuo Profilo
-			<ArrowRightOutline class="w-4 h-4 ml-1" />
+			<ArrowRightOutline class="ml-1 h-4 w-4" />
 		</Button>
 	</div>
 {:else}
 	<!-- Dashboard con profilo -->
 
 	<!-- Welcome Section -->
-	<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+	<div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
 		<div>
 			<Heading tag="h1" class="mb-1">Ciao, {profile.name}!</Heading>
-			<p class="text-gray-500 dark:text-gray-400">{formatDate(new Date())} &mdash; Il tuo riepilogo FIRE</p>
+			<p class="text-gray-500 dark:text-gray-400">
+				{formatDate(new Date())} &mdash; Il tuo riepilogo FIRE
+			</p>
 		</div>
 		<Badge color="blue" large class="mt-2 sm:mt-0">
 			{currentAge} anni
@@ -300,7 +312,7 @@
 	<RebalanceAlert />
 
 	<!-- Summary Cards Grid -->
-	<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+	<div class="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 		<StatCard
 			title="Patrimonio Netto"
 			value={formatCurrency(netWorth)}
@@ -348,10 +360,12 @@
 	</div>
 
 	<!-- FIRE Progress Bar -->
-	<Card class="max-w-none mb-8">
-		<div class="flex items-center justify-between mb-3">
+	<Card class="mb-8 max-w-none">
+		<div class="mb-3 flex items-center justify-between">
 			<h5 class="text-lg font-semibold text-gray-900 dark:text-white">Progresso verso il FIRE</h5>
-			<span class="text-2xl font-bold text-primary-600 dark:text-primary-400">{fireProgress.toFixed(1)}%</span>
+			<span class="text-primary-600 dark:text-primary-400 text-2xl font-bold"
+				>{fireProgress.toFixed(1)}%</span
+			>
 		</div>
 		<div class="mb-2">
 			<Progressbar
@@ -368,16 +382,16 @@
 	</Card>
 
 	<!-- Charts Row -->
-	<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+	<div class="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
 		<!-- Portfolio Projection Chart -->
 		<Card class="max-w-none">
-			<h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+			<h5 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
 				Proiezione del Portafoglio
 			</h5>
 			{#if projections.length > 0}
 				<EChart options={projectionChartOptions} height="350px" />
 			{:else}
-				<p class="text-gray-500 dark:text-gray-400 py-8 text-center">
+				<p class="py-8 text-center text-gray-500 dark:text-gray-400">
 					Dati insufficienti per la proiezione
 				</p>
 			{/if}
@@ -385,15 +399,13 @@
 
 		<!-- Asset Allocation Pie Chart -->
 		<Card class="max-w-none">
-			<h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+			<h5 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
 				Allocazione del Patrimonio
 			</h5>
 			{#if netWorth > 0}
 				<EChart options={allocationChartOptions} height="350px" />
 			{:else}
-				<p class="text-gray-500 dark:text-gray-400 py-8 text-center">
-					Nessun patrimonio inserito
-				</p>
+				<p class="py-8 text-center text-gray-500 dark:text-gray-400">Nessun patrimonio inserito</p>
 			{/if}
 		</Card>
 	</div>
@@ -408,53 +420,53 @@
 	</div>
 
 	<!-- Quick Actions -->
-	<Heading tag="h2" class="text-xl mb-4">Azioni Rapide</Heading>
-	<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+	<Heading tag="h2" class="mb-4 text-xl">Azioni Rapide</Heading>
+	<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
 		<Card class="max-w-none">
-			<div class="flex items-center gap-3 mb-3">
-				<div class="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
-					<ChartMixedDollarSolid class="w-5 h-5 text-blue-500" />
+			<div class="mb-3 flex items-center gap-3">
+				<div class="rounded-lg bg-blue-100 p-2 dark:bg-blue-900/30">
+					<ChartMixedDollarSolid class="h-5 w-5 text-blue-500" />
 				</div>
 				<h5 class="text-lg font-semibold text-gray-900 dark:text-white">Nuova Simulazione</h5>
 			</div>
-			<p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+			<p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
 				Esegui una simulazione Monte Carlo per testare il tuo piano FIRE.
 			</p>
 			<Button href="/simulazione/" outline size="sm" class="gap-1">
 				Vai alla Simulazione
-				<ArrowRightOutline class="w-3.5 h-3.5" />
+				<ArrowRightOutline class="h-3.5 w-3.5" />
 			</Button>
 		</Card>
 
 		<Card class="max-w-none">
-			<div class="flex items-center gap-3 mb-3">
-				<div class="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
-					<UserSolid class="w-5 h-5 text-green-500" />
+			<div class="mb-3 flex items-center gap-3">
+				<div class="rounded-lg bg-green-100 p-2 dark:bg-green-900/30">
+					<UserSolid class="h-5 w-5 text-green-500" />
 				</div>
 				<h5 class="text-lg font-semibold text-gray-900 dark:text-white">Modifica Profilo</h5>
 			</div>
-			<p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+			<p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
 				Aggiorna i dati finanziari del tuo profilo per risultati piu' accurati.
 			</p>
 			<Button href="/profilo/" outline color="green" size="sm" class="gap-1">
 				Vai al Profilo
-				<ArrowRightOutline class="w-3.5 h-3.5" />
+				<ArrowRightOutline class="h-3.5 w-3.5" />
 			</Button>
 		</Card>
 
 		<Card class="max-w-none">
-			<div class="flex items-center gap-3 mb-3">
-				<div class="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
-					<ClockSolid class="w-5 h-5 text-purple-500" />
+			<div class="mb-3 flex items-center gap-3">
+				<div class="rounded-lg bg-purple-100 p-2 dark:bg-purple-900/30">
+					<ClockSolid class="h-5 w-5 text-purple-500" />
 				</div>
 				<h5 class="text-lg font-semibold text-gray-900 dark:text-white">Guida Rapida</h5>
 			</div>
-			<p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+			<p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
 				Scopri come utilizzare al meglio il FIRE Planner e le sue funzionalita'.
 			</p>
 			<Button href="/guida/" outline color="purple" size="sm" class="gap-1">
 				Vai alla Guida
-				<ArrowRightOutline class="w-3.5 h-3.5" />
+				<ArrowRightOutline class="h-3.5 w-3.5" />
 			</Button>
 		</Card>
 	</div>

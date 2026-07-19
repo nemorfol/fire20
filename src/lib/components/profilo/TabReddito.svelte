@@ -45,8 +45,14 @@
 			id="annualIncome"
 			step={500}
 		/>
-		<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-			Circa <strong>{monthlyIncome.toLocaleString('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}</strong> al mese
+		<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+			Circa <strong
+				>{monthlyIncome.toLocaleString('it-IT', {
+					style: 'currency',
+					currency: 'EUR',
+					maximumFractionDigits: 0
+				})}</strong
+			> al mese
 		</p>
 	</div>
 
@@ -58,7 +64,7 @@
 			min={0}
 			max={20}
 		/>
-		<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+		<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
 			Incremento annuo dello stipendio (inflazione + carriera)
 		</p>
 	</div>
@@ -75,7 +81,9 @@
 		</p>
 
 		{#if otherIncome > 0}
-			<div class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 space-y-3">
+			<div
+				class="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800"
+			>
 				<Label class="text-sm font-semibold">Continuano anche dopo il FIRE?</Label>
 				<div class="flex flex-col gap-2 text-sm">
 					<Radio
@@ -105,7 +113,11 @@
 					<Radio
 						name="otherIncomeDuration"
 						checked={durationPreset === 'custom'}
-						onchange={() => (otherIncomeEndAge = Math.min(lifeExpectancy - 1, Math.max(currentAge + 1, otherIncomeEndAge)))}
+						onchange={() =>
+							(otherIncomeEndAge = Math.min(
+								lifeExpectancy - 1,
+								Math.max(currentAge + 1, otherIncomeEndAge)
+							))}
 					>
 						<span class="ml-1">
 							<strong>Fino a un'eta' specifica</strong>
@@ -118,9 +130,9 @@
 
 				{#if durationPreset === 'custom'}
 					<div class="pt-2">
-						<div class="flex justify-between text-sm mb-2">
+						<div class="mb-2 flex justify-between text-sm">
 							<Label>Eta' finale di percezione</Label>
-							<span class="font-bold text-primary-600 dark:text-primary-400">
+							<span class="text-primary-600 dark:text-primary-400 font-bold">
 								{otherIncomeEndAge} anni
 							</span>
 						</div>

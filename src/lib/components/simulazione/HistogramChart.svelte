@@ -100,9 +100,7 @@
 						lineStyle: { type: 'dashed', width: 2 },
 						data: [
 							{
-								xAxis: bins.findIndex(
-									(b) => b.start <= median && b.start + binWidth >= median
-								),
+								xAxis: bins.findIndex((b) => b.start <= median && b.start + binWidth >= median),
 								label: {
 									formatter: `Mediana: ${formatCompact(median)}`,
 									position: 'end',
@@ -111,9 +109,7 @@
 								lineStyle: { color: '#2563eb' }
 							},
 							{
-								xAxis: bins.findIndex(
-									(b) => b.start <= mean && b.start + binWidth >= mean
-								),
+								xAxis: bins.findIndex((b) => b.start <= mean && b.start + binWidth >= mean),
 								label: {
 									formatter: `Media: ${formatCompact(mean)}`,
 									position: 'end',
@@ -129,11 +125,11 @@
 	});
 </script>
 
-<div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
-	<h4 class="text-base font-semibold text-gray-900 dark:text-white mb-2">
+<div class="rounded-xl bg-white p-4 shadow-lg dark:bg-gray-800">
+	<h4 class="mb-2 text-base font-semibold text-gray-900 dark:text-white">
 		Distribuzione Valore Finale del Portafoglio
 	</h4>
-	<p class="text-xs text-gray-500 dark:text-gray-400 mb-4">
+	<p class="mb-4 text-xs text-gray-500 dark:text-gray-400">
 		Istogramma dei valori finali. La barra blu scura indica il bin della mediana.
 	</p>
 	<EChart {options} height="350px" />

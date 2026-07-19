@@ -9,11 +9,11 @@
 
 /** Motivi ammessi per l'anticipazione TFR */
 export type TFRAnticipationReason =
-	| 'medical'        // spese sanitarie straordinarie
-	| 'firstHome'      // acquisto prima casa (per se' o per i figli)
-	| 'renovation'     // ristrutturazione prima casa
-	| 'parentalLeave'  // congedo parentale
-	| 'education';     // spese formative (training professionale)
+	| 'medical' // spese sanitarie straordinarie
+	| 'firstHome' // acquisto prima casa (per se' o per i figli)
+	| 'renovation' // ristrutturazione prima casa
+	| 'parentalLeave' // congedo parentale
+	| 'education'; // spese formative (training professionale)
 
 /** Requisiti per avere diritto all'anticipazione */
 export interface TFRAnticipationEligibility {
@@ -65,7 +65,8 @@ export function checkTFRAnticipationEligibility(
 			eligible: false,
 			maxPercentage: 0,
 			maxAmount: 0,
-			reason: 'Gia\' richiesta una volta: l\'anticipazione TFR e\' ammessa una sola volta nel corso del rapporto di lavoro.',
+			reason:
+				"Gia' richiesta una volta: l'anticipazione TFR e' ammessa una sola volta nel corso del rapporto di lavoro.",
 			expectedTaxRate: 0
 		};
 	}
@@ -90,7 +91,7 @@ export function checkTFRAnticipationEligibility(
 		};
 	}
 
-	const maxPercentage = 0.70;
+	const maxPercentage = 0.7;
 	const maxAmount = Math.round(tfrAccrued * maxPercentage);
 	const expectedTaxRate = Math.max(0.15, Math.min(0.43, marginalIRPEF * 0.85));
 
@@ -161,7 +162,7 @@ export function compareTFRDestination(
 
 	// --- TFR in fondo pensione ---
 	// Rendimenti tassati al 20% annualmente
-	const fundNetReturn = pensionFundReturn * (1 - 0.20);
+	const fundNetReturn = pensionFundReturn * (1 - 0.2);
 	let fundFV = 0;
 	for (let i = 0; i < years; i++) {
 		fundFV = fundFV * (1 + fundNetReturn) + contributionAnnual;
@@ -177,16 +178,15 @@ export function compareTFRDestination(
 
 	// Rendimenti annualizzati
 	const totalContrib = contributionAnnual * years;
-	const companyAnnualReturn = totalContrib > 0 && years > 0
-		? Math.pow(companyNet / totalContrib, 1 / years) - 1
-		: 0;
-	const pensionFundAnnualReturn = totalContrib > 0 && years > 0
-		? Math.pow(fundNet / totalContrib, 1 / years) - 1
-		: 0;
+	const companyAnnualReturn =
+		totalContrib > 0 && years > 0 ? Math.pow(companyNet / totalContrib, 1 / years) - 1 : 0;
+	const pensionFundAnnualReturn =
+		totalContrib > 0 && years > 0 ? Math.pow(fundNet / totalContrib, 1 / years) - 1 : 0;
 
-	const recommendation = advantagePensionFund > 0
-		? `Fondo pensione preferibile di ${Math.round(advantagePensionFund)} € (ipotesi: rendimento FP ${(pensionFundReturn * 100).toFixed(1)}% vs TFR ${(companyRate * 100).toFixed(1)}%).`
-		: `TFR in azienda preferibile di ${Math.round(-advantagePensionFund)} € (rendimento FP atteso non sufficiente a compensare il rischio).`;
+	const recommendation =
+		advantagePensionFund > 0
+			? `Fondo pensione preferibile di ${Math.round(advantagePensionFund)} € (ipotesi: rendimento FP ${(pensionFundReturn * 100).toFixed(1)}% vs TFR ${(companyRate * 100).toFixed(1)}%).`
+			: `TFR in azienda preferibile di ${Math.round(-advantagePensionFund)} € (rendimento FP atteso non sufficiente a compensare il rischio).`;
 
 	return {
 		inCompanyNet: Math.round(companyNet),

@@ -1,16 +1,16 @@
 <script lang="ts">
 	import { Button, Input, Label, Card, Alert, Toggle, Badge } from 'flowbite-svelte';
 	import {
-		PlusOutline, TrashBinOutline, InfoCircleSolid,
-		UserOutline, HomeOutline
+		PlusOutline,
+		TrashBinOutline,
+		InfoCircleSolid,
+		UserOutline,
+		HomeOutline
 	} from 'flowbite-svelte-icons';
 	import CurrencyInput from '$lib/components/shared/CurrencyInput.svelte';
 	import PercentInput from '$lib/components/shared/PercentInput.svelte';
 	import type { Child, Mortgage } from '$lib/db/index';
-	import {
-		childTotalRemainingCost,
-		calculateMortgageMonthlyPayment
-	} from '$lib/engine/family';
+	import { childTotalRemainingCost, calculateMortgageMonthlyPayment } from '$lib/engine/family';
 	import { formatCurrency } from '$lib/utils/format';
 
 	let {
@@ -76,9 +76,7 @@
 		return childTotalRemainingCost(c, currentYear);
 	}
 
-	let totalChildrenCost = $derived(
-		children.reduce((sum, c) => sum + childCost(c), 0)
-	);
+	let totalChildrenCost = $derived(children.reduce((sum, c) => sum + childCost(c), 0));
 
 	// === Mutuo ===
 	let hasMortgage = $state(false);
@@ -130,23 +128,23 @@
 <div class="space-y-8">
 	<!-- === Sezione Figli === -->
 	<section>
-		<div class="flex items-center gap-2 mb-3">
-			<UserOutline class="w-5 h-5 text-primary-600 dark:text-primary-400" />
+		<div class="mb-3 flex items-center gap-2">
+			<UserOutline class="text-primary-600 dark:text-primary-400 h-5 w-5" />
 			<h4 class="text-lg font-semibold text-gray-900 dark:text-white">Figli a carico</h4>
 			{#if children.length > 0}
 				<Badge color="primary">{children.length}</Badge>
 			{/if}
 		</div>
-		<p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-			Aggiungi i figli a carico per includere le spese ricorrenti (cibo, scuola, sport) e
-			il costo universitario nel calcolo del FIRE Number. Le spese sono considerate in
-			euro di oggi e inflazionate ogni anno.
+		<p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+			Aggiungi i figli a carico per includere le spese ricorrenti (cibo, scuola, sport) e il costo
+			universitario nel calcolo del FIRE Number. Le spese sono considerate in euro di oggi e
+			inflazionate ogni anno.
 		</p>
 
 		{#if children.length === 0}
 			<Alert color="blue" class="mb-4">
 				{#snippet icon()}
-					<InfoCircleSolid class="w-4 h-4" />
+					<InfoCircleSolid class="h-4 w-4" />
 				{/snippet}
 				Nessun figlio inserito. Se hai figli a carico, aggiungili qui per una stima realistica.
 			</Alert>
@@ -157,7 +155,7 @@
 				{@const age = childAge(child)}
 				{@const hasUni = child.universityStartAge !== undefined && (child.universityYears ?? 0) > 0}
 				<Card class="max-w-none">
-					<div class="flex items-center justify-between mb-3">
+					<div class="mb-3 flex items-center justify-between">
 						<div class="flex items-center gap-2">
 							<h5 class="text-base font-semibold text-gray-900 dark:text-white">
 								{child.name || `Figlio ${index + 1}`}
@@ -167,11 +165,11 @@
 							{/if}
 						</div>
 						<Button color="red" outline size="sm" onclick={() => removeChild(index)}>
-							<TrashBinOutline class="w-4 h-4" />
+							<TrashBinOutline class="h-4 w-4" />
 						</Button>
 					</div>
 
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+					<div class="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
 						<div>
 							<Label for="child-name-{index}" class="mb-1">Nome</Label>
 							<Input
@@ -209,14 +207,16 @@
 						</div>
 					</div>
 
-					<div class="flex items-center gap-3 mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
+					<div
+						class="mb-3 flex items-center gap-3 border-b border-gray-200 pb-3 dark:border-gray-700"
+					>
 						<Toggle checked={hasUni} onchange={() => toggleUniversity(index)}>
 							<span class="font-medium text-gray-900 dark:text-white">Universita</span>
 						</Toggle>
 					</div>
 
 					{#if hasUni}
-						<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+						<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
 							<div>
 								<Label for="child-unistart-{index}" class="mb-1">Eta inizio</Label>
 								<Input
@@ -246,16 +246,18 @@
 						</div>
 					{/if}
 
-					<p class="text-xs text-gray-500 dark:text-gray-400 mt-3">
-						Costo totale stimato fino all'indipendenza: <strong>{formatCurrency(childCost(child))}</strong> (euro di oggi)
+					<p class="mt-3 text-xs text-gray-500 dark:text-gray-400">
+						Costo totale stimato fino all'indipendenza: <strong
+							>{formatCurrency(childCost(child))}</strong
+						> (euro di oggi)
 					</p>
 				</Card>
 			{/each}
 		</div>
 
-		<div class="flex justify-center mt-4">
+		<div class="mt-4 flex justify-center">
 			<Button color="alternative" onclick={addChild}>
-				<PlusOutline class="w-4 h-4 me-2" />
+				<PlusOutline class="me-2 h-4 w-4" />
 				Aggiungi figlio
 			</Button>
 		</div>
@@ -270,32 +272,30 @@
 
 	<!-- === Sezione Mutuo === -->
 	<section>
-		<div class="flex items-center gap-2 mb-3">
-			<HomeOutline class="w-5 h-5 text-primary-600 dark:text-primary-400" />
+		<div class="mb-3 flex items-center gap-2">
+			<HomeOutline class="text-primary-600 dark:text-primary-400 h-5 w-5" />
 			<h4 class="text-lg font-semibold text-gray-900 dark:text-white">Mutuo prima casa</h4>
 			{#if hasMortgage}
 				<Badge color="green">Attivo</Badge>
 			{/if}
 		</div>
-		<p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-			Se hai un mutuo attivo, le rate residue vengono incluse nel calcolo del FIRE Number.
-			Se il mutuo si estingue dopo il pensionamento FIRE, le rate post-FIRE aumentano il
-			capitale necessario.
+		<p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+			Se hai un mutuo attivo, le rate residue vengono incluse nel calcolo del FIRE Number. Se il
+			mutuo si estingue dopo il pensionamento FIRE, le rate post-FIRE aumentano il capitale
+			necessario.
 		</p>
 
 		{#if !hasMortgage}
-			<div class="text-center py-6">
-				<p class="text-gray-500 dark:text-gray-400 mb-4">
-					Nessun mutuo configurato.
-				</p>
+			<div class="py-6 text-center">
+				<p class="mb-4 text-gray-500 dark:text-gray-400">Nessun mutuo configurato.</p>
 				<Button color="alternative" onclick={enableMortgage}>
-					<PlusOutline class="w-4 h-4 me-2" />
+					<PlusOutline class="me-2 h-4 w-4" />
 					Aggiungi mutuo
 				</Button>
 			</div>
 		{:else if mortgage}
 			<Card class="max-w-none">
-				<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+				<div class="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
 					<CurrencyInput
 						bind:value={mortgage.balance}
 						label="Capitale residuo"
@@ -319,7 +319,7 @@
 							max={480}
 							bind:value={mortgage.remainingMonths}
 						/>
-						<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+						<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
 							{#if mortgageEndYear > 0}
 								Ultima rata: {mortgageEndYear}
 							{/if}
@@ -338,13 +338,17 @@
 					</div>
 				</div>
 
-				<div class="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700">
+				<div
+					class="flex items-center justify-between border-t border-gray-200 pt-3 dark:border-gray-700"
+				>
 					<div class="text-sm">
 						<span class="text-gray-500 dark:text-gray-400">Esborso residuo totale: </span>
-						<strong class="text-gray-900 dark:text-white">{formatCurrency(mortgageTotalRemainingPayments)}</strong>
+						<strong class="text-gray-900 dark:text-white"
+							>{formatCurrency(mortgageTotalRemainingPayments)}</strong
+						>
 					</div>
 					<Button color="red" outline size="sm" onclick={disableMortgage}>
-						<TrashBinOutline class="w-4 h-4 me-1" />
+						<TrashBinOutline class="me-1 h-4 w-4" />
 						Rimuovi mutuo
 					</Button>
 				</div>

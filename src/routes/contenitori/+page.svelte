@@ -142,15 +142,15 @@
 </Breadcrumb>
 
 <Heading tag="h1" class="mb-2">Contenitori fiscali</Heading>
-<p class="text-gray-600 dark:text-gray-400 mb-6">
+<p class="mb-6 text-gray-600 dark:text-gray-400">
 	Confronta ETF, fondo pensione, TFR e BTP a parita' di contributo mensile per vedere quale
 	strumento rende di piu' dopo le tasse nel tuo profilo fiscale.
 </p>
 
 <!-- Parametri -->
-<Card class="max-w-none mb-6">
-	<Heading tag="h4" class="text-lg mb-4">Parametri</Heading>
-	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-5">
+<Card class="mb-6 max-w-none">
+	<Heading tag="h4" class="mb-4 text-lg">Parametri</Heading>
+	<div class="grid grid-cols-1 gap-x-4 gap-y-5 md:grid-cols-2 lg:grid-cols-3">
 		<CurrencyInput
 			bind:value={monthlyContribution}
 			label="Contributo mensile"
@@ -161,14 +161,7 @@
 		/>
 		<div>
 			<Label for="years" class="mb-2">Anni di accumulo</Label>
-			<Input
-				id="years"
-				type="number"
-				bind:value={years}
-				min={1}
-				max={60}
-				step={1}
-			/>
+			<Input id="years" type="number" bind:value={years} min={1} max={60} step={1} />
 		</div>
 		<PercentInput
 			bind:value={expectedReturnPct}
@@ -188,14 +181,7 @@
 		/>
 		<div>
 			<Label for="retAge" class="mb-2">Eta' al pensionamento</Label>
-			<Input
-				id="retAge"
-				type="number"
-				bind:value={retirementAge}
-				min={50}
-				max={80}
-				step={1}
-			/>
+			<Input id="retAge" type="number" bind:value={retirementAge} min={50} max={80} step={1} />
 		</div>
 		<PercentInput
 			bind:value={inflationPct}
@@ -209,17 +195,17 @@
 
 	<Alert color="blue" class="mt-4">
 		{#snippet icon()}
-			<InfoCircleSolid class="w-4 h-4" />
+			<InfoCircleSolid class="h-4 w-4" />
 		{/snippet}
 		Contributo totale: <strong>{formatCurrency(monthlyContribution * 12 * years)}</strong>
-		in {years} anni ({formatCurrency(monthlyContribution)}/mese).
-		Il confronto usa le stesse cifre lorde per tutti i contenitori.
+		in {years} anni ({formatCurrency(monthlyContribution)}/mese). Il confronto usa le stesse cifre
+		lorde per tutti i contenitori.
 	</Alert>
 </Card>
 
 <!-- Risultati: tabella + grafico -->
-<Card class="max-w-none mb-6">
-	<Heading tag="h4" class="text-lg mb-4">Risultati</Heading>
+<Card class="mb-6 max-w-none">
+	<Heading tag="h4" class="mb-4 text-lg">Risultati</Heading>
 
 	<div class="overflow-x-auto">
 		<Table striped>
@@ -237,13 +223,13 @@
 						<TableBodyCell>
 							<div class="flex items-center gap-2">
 								<span
-									class="inline-block w-3 h-3 rounded-full"
+									class="inline-block h-3 w-3 rounded-full"
 									style="background-color: {containerColors[r.id]}"
 								></span>
 								<span class="font-medium">{r.label}</span>
 								{#if r.id === winnerId}
 									<Badge color="green" class="ml-1">
-										<CheckCircleSolid class="w-3 h-3 mr-1" />
+										<CheckCircleSolid class="mr-1 h-3 w-3" />
 										Vincente
 									</Badge>
 								{/if}
@@ -279,21 +265,21 @@
 </Card>
 
 <!-- Dettaglio espandibile per ogni contenitore -->
-<Card class="max-w-none mb-6">
-	<Heading tag="h4" class="text-lg mb-4">Dettaglio per contenitore</Heading>
+<Card class="mb-6 max-w-none">
+	<Heading tag="h4" class="mb-4 text-lg">Dettaglio per contenitore</Heading>
 	<div class="space-y-3">
 		{#each results as r (r.id)}
 			{@const isOpen = openDetailId === r.id}
-			<div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+			<div class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
 				<button
 					type="button"
-					class="w-full flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+					class="flex w-full items-center justify-between bg-gray-50 px-4 py-3 transition-colors hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
 					onclick={() => toggleDetail(r.id)}
 					aria-expanded={isOpen}
 				>
 					<div class="flex items-center gap-3">
 						<span
-							class="inline-block w-4 h-4 rounded-full"
+							class="inline-block h-4 w-4 rounded-full"
 							style="background-color: {containerColors[r.id]}"
 						></span>
 						<span class="font-semibold text-gray-900 dark:text-white">{r.label}</span>
@@ -306,44 +292,46 @@
 							{formatCurrency(r.netFinal)}
 						</span>
 						{#if isOpen}
-							<ChevronUpOutline class="w-4 h-4 text-gray-500" />
+							<ChevronUpOutline class="h-4 w-4 text-gray-500" />
 						{:else}
-							<ChevronDownOutline class="w-4 h-4 text-gray-500" />
+							<ChevronDownOutline class="h-4 w-4 text-gray-500" />
 						{/if}
 					</div>
 				</button>
 
 				{#if isOpen}
-					<div class="px-4 py-4 bg-white dark:bg-gray-900">
-						<div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
-							<div class="flex justify-between border-b border-gray-100 dark:border-gray-800 py-1">
+					<div class="bg-white px-4 py-4 dark:bg-gray-900">
+						<div class="grid grid-cols-1 gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+							<div class="flex justify-between border-b border-gray-100 py-1 dark:border-gray-800">
 								<span class="text-gray-500 dark:text-gray-400">Contributi versati</span>
 								<span class="font-medium">{formatCurrency(r.contributionsTotal)}</span>
 							</div>
-							<div class="flex justify-between border-b border-gray-100 dark:border-gray-800 py-1">
+							<div class="flex justify-between border-b border-gray-100 py-1 dark:border-gray-800">
 								<span class="text-gray-500 dark:text-gray-400">Rendimenti lordi</span>
 								<span class="font-medium">{formatCurrency(r.grossReturns)}</span>
 							</div>
-							<div class="flex justify-between border-b border-gray-100 dark:border-gray-800 py-1">
+							<div class="flex justify-between border-b border-gray-100 py-1 dark:border-gray-800">
 								<span class="text-gray-500 dark:text-gray-400">Tasse durante accumulo</span>
 								<span class="font-medium text-red-600 dark:text-red-400">
-									{r.taxesDuringAccumulation > 0 ? formatCurrency(r.taxesDuringAccumulation) : 'â€”'}
+									{r.taxesDuringAccumulation > 0
+										? formatCurrency(r.taxesDuringAccumulation)
+										: 'â€”'}
 								</span>
 							</div>
-							<div class="flex justify-between border-b border-gray-100 dark:border-gray-800 py-1">
+							<div class="flex justify-between border-b border-gray-100 py-1 dark:border-gray-800">
 								<span class="text-gray-500 dark:text-gray-400">Tasse all'uscita</span>
 								<span class="font-medium text-red-600 dark:text-red-400">
 									{r.taxesOnExit > 0 ? formatCurrency(r.taxesOnExit) : 'â€”'}
 								</span>
 							</div>
-							<div class="flex justify-between border-b border-gray-100 dark:border-gray-800 py-1">
+							<div class="flex justify-between border-b border-gray-100 py-1 dark:border-gray-800">
 								<span class="text-gray-500 dark:text-gray-400">Beneficio deduzione</span>
 								<span class="font-medium text-emerald-600 dark:text-emerald-400">
 									{r.taxBenefitDeduction > 0 ? formatCurrency(r.taxBenefitDeduction) : 'â€”'}
 								</span>
 							</div>
 							<div class="flex justify-between py-1">
-								<span class="text-gray-900 dark:text-white font-semibold">Netto finale</span>
+								<span class="font-semibold text-gray-900 dark:text-white">Netto finale</span>
 								<span class="font-bold text-emerald-700 dark:text-emerald-300">
 									{formatCurrency(r.netFinal)}
 								</span>
@@ -351,7 +339,7 @@
 						</div>
 						<Alert color="gray" class="mt-4">
 							{#snippet icon()}
-								<InfoCircleSolid class="w-4 h-4" />
+								<InfoCircleSolid class="h-4 w-4" />
 							{/snippet}
 							<span class="text-sm">{r.notes}</span>
 						</Alert>
@@ -363,14 +351,14 @@
 
 	<Alert color="yellow" class="mt-4">
 		{#snippet icon()}
-			<InfoCircleSolid class="w-4 h-4" />
+			<InfoCircleSolid class="h-4 w-4" />
 		{/snippet}
 		<span class="text-sm">
-			<strong>Note metodologiche:</strong> il beneficio della deduzione del fondo pensione
-			(fino a 5.300â‚¬/anno Ã— aliquota marginale) non e' sommato al netto finale perche'
-			arriva in busta paga anno per anno e puo' essere reinvestito separatamente
-			(attuale effettivo ~{formatPercent(marginalIrpefPct)} del versato).
-			Il confronto assume stesso rendimento lordo atteso per ETF, Fondo Pensione e BTP;
+			<strong>Note metodologiche:</strong> il beneficio della deduzione del fondo pensione (fino a
+			5.300â‚¬/anno Ã— aliquota marginale) non e' sommato al netto finale perche' arriva in busta
+			paga anno per anno e puo' essere reinvestito separatamente (attuale effettivo ~{formatPercent(
+				marginalIrpefPct
+			)} del versato). Il confronto assume stesso rendimento lordo atteso per ETF, Fondo Pensione e BTP;
 			in pratica ETF/Fondo investono in azioni/obbligazioni miste mentre i BTP rendono meno.
 		</span>
 	</Alert>

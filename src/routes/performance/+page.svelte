@@ -114,9 +114,9 @@
 </Breadcrumb>
 
 <Heading tag="h1" class="mb-2">Performance del Portafoglio</Heading>
-<p class="text-gray-600 dark:text-gray-400 mb-6">
-	Traccia il rendimento reale del tuo portafoglio con il metodo TWR (Time-Weighted Return)
-	e confrontalo con il benchmark S&P 500.
+<p class="mb-6 text-gray-600 dark:text-gray-400">
+	Traccia il rendimento reale del tuo portafoglio con il metodo TWR (Time-Weighted Return) e
+	confrontalo con il benchmark S&P 500.
 </p>
 
 <!-- Metriche di Performance -->
@@ -125,8 +125,8 @@
 </div>
 
 <!-- Selettore periodo + Grafico -->
-<Card class="max-w-none mb-6">
-	<div class="flex items-center justify-between mb-4">
+<Card class="mb-6 max-w-none">
+	<div class="mb-4 flex items-center justify-between">
 		<Heading tag="h3">Confronto con Benchmark</Heading>
 		<ButtonGroup>
 			{#each periods as p}
@@ -144,7 +144,7 @@
 </Card>
 
 <!-- Input sections side by side on larger screens -->
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 	<Card class="max-w-none">
 		<SnapshotForm {profileId} onsnapshotsChanged={handleDataChanged} />
 	</Card>

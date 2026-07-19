@@ -1,10 +1,19 @@
 <script lang="ts">
 	import {
-		Card, Table, TableHead, TableHeadCell, TableBody, TableBodyRow, TableBodyCell, Badge
+		Card,
+		Table,
+		TableHead,
+		TableHeadCell,
+		TableBody,
+		TableBodyRow,
+		TableBodyCell,
+		Badge
 	} from 'flowbite-svelte';
 	import {
-		simulateINPSPension, calculateRiscattoLaureaCost,
-		type INPSSimulatorParams, type INPSSimulatorResult
+		simulateINPSPension,
+		calculateRiscattoLaureaCost,
+		type INPSSimulatorParams,
+		type INPSSimulatorResult
 	} from '$lib/engine/inps-simulator';
 	import { formatCurrency, formatPercent } from '$lib/utils/format';
 
@@ -30,12 +39,14 @@
 		const lateAgeRaw = baseAge + 5;
 		const lateAge = Math.min(MAX_RETIREMENT_AGE, lateAgeRaw);
 		const extraYears = lateAge - baseAge;
-		const lateLabel = extraYears > 0
-			? `+ ${extraYears} ${extraYears === 1 ? 'anno' : 'anni'} di lavoro`
-			: 'Pensionamento posticipato';
-		const lateDescription = lateAge === MAX_RETIREMENT_AGE && lateAgeRaw > MAX_RETIREMENT_AGE
-			? `Posticipare fino a ${lateAge} anni (massimo supportato dai coefficienti INPS)`
-			: `Posticipare il pensionamento di ${extraYears} ${extraYears === 1 ? 'anno' : 'anni'}`;
+		const lateLabel =
+			extraYears > 0
+				? `+ ${extraYears} ${extraYears === 1 ? 'anno' : 'anni'} di lavoro`
+				: 'Pensionamento posticipato';
+		const lateDescription =
+			lateAge === MAX_RETIREMENT_AGE && lateAgeRaw > MAX_RETIREMENT_AGE
+				? `Posticipare fino a ${lateAge} anni (massimo supportato dai coefficienti INPS)`
+				: `Posticipare il pensionamento di ${extraYears} ${extraYears === 1 ? 'anno' : 'anni'}`;
 
 		const items: Variant[] = [
 			{
@@ -71,7 +82,8 @@
 			{
 				id: 'salary-growth',
 				label: '+ Crescita stipendio (4%/anno)',
-				description: 'Ipotesi ottimistica: crescita salariale al 4% annuo invece del valore attuale',
+				description:
+					'Ipotesi ottimistica: crescita salariale al 4% annuo invece del valore attuale',
 				params: {
 					...baseParams,
 					salaryGrowthRate: 4
@@ -117,12 +129,12 @@
 </script>
 
 <Card class="max-w-none">
-	<h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+	<h5 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
 		Confronto scenari pensionistici
 	</h5>
-	<p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-		Varia uno parametro alla volta per vedere quanto cambia la pensione mensile netta
-		stimata all'eta di uscita. Utile per capire quale leva ha l'impatto maggiore.
+	<p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+		Varia uno parametro alla volta per vedere quanto cambia la pensione mensile netta stimata
+		all'eta di uscita. Utile per capire quale leva ha l'impatto maggiore.
 	</p>
 
 	<div class="overflow-x-auto">
@@ -150,7 +162,7 @@
 								-
 							{/if}
 						</TableBodyCell>
-						<TableBodyCell class="text-right tabular-nums font-medium">
+						<TableBodyCell class="text-right font-medium tabular-nums">
 							{formatCurrency(pensionAtOptimal(v))}
 						</TableBodyCell>
 						<TableBodyCell class="text-right tabular-nums">
@@ -178,8 +190,8 @@
 	</div>
 
 	<p class="mt-4 text-xs text-gray-500 dark:text-gray-400">
-		Nota: i risultati sono stime basate sui coefficienti di trasformazione 2025-2026 e
-		una rivalutazione del montante pari al PIL nominale medio (1,5%/anno). Variazioni
-		normative possono alterare questi valori.
+		Nota: i risultati sono stime basate sui coefficienti di trasformazione 2025-2026 e una
+		rivalutazione del montante pari al PIL nominale medio (1,5%/anno). Variazioni normative possono
+		alterare questi valori.
 	</p>
 </Card>

@@ -14,7 +14,16 @@
 		scenarios: { event: RiskEvent; data: YearlyProjection[] }[];
 	} = $props();
 
-	const colors = ['#3b82f6', '#ef4444', '#f59e0b', '#10b981', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'];
+	const colors = [
+		'#3b82f6',
+		'#ef4444',
+		'#f59e0b',
+		'#10b981',
+		'#8b5cf6',
+		'#ec4899',
+		'#06b6d4',
+		'#f97316'
+	];
 
 	let chartOptions = $derived.by(() => {
 		if (baseline.length === 0 || scenarios.length === 0) return {};
@@ -35,7 +44,11 @@
 				type: 'line',
 				data: s.data.map((p: YearlyProjection) => Math.round(Math.max(0, p.portfolio))),
 				smooth: true,
-				lineStyle: { width: 2, color: colors[(i + 1) % colors.length], type: i > 2 ? 'dashed' as const : 'solid' as const },
+				lineStyle: {
+					width: 2,
+					color: colors[(i + 1) % colors.length],
+					type: i > 2 ? ('dashed' as const) : ('solid' as const)
+				},
 				itemStyle: { color: colors[(i + 1) % colors.length] }
 			}))
 		];
@@ -67,7 +80,7 @@
 </script>
 
 <Card class="max-w-none">
-	<h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+	<h5 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
 		Confronto Scenari ({scenarios.length} selezionati)
 	</h5>
 	<EChart options={chartOptions} height="450px" />

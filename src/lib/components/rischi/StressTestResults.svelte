@@ -36,7 +36,8 @@
 	let yearsDelayed = $derived.by(() => {
 		if (stressedZeroYear === -1 && baselineZeroYear === -1) return 0;
 		if (stressedZeroYear === -1) return 0;
-		if (baselineZeroYear === -1) return stressedZeroYear - (baseline[baseline.length - 1]?.year ?? 0);
+		if (baselineZeroYear === -1)
+			return stressedZeroYear - (baseline[baseline.length - 1]?.year ?? 0);
 		return stressedZeroYear - baselineZeroYear;
 	});
 
@@ -95,7 +96,7 @@
 </script>
 
 <Card class="max-w-none">
-	<div class="flex items-center justify-between mb-4">
+	<div class="mb-4 flex items-center justify-between">
 		<h5 class="text-lg font-semibold text-gray-900 dark:text-white">
 			Risultato Stress Test: {event.name}
 		</h5>
@@ -105,7 +106,7 @@
 	</div>
 
 	<!-- Impact Summary Cards -->
-	<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+	<div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
 		<StatCard
 			title="Portafoglio Finale"
 			value={formatCurrency(finalStressed)}
@@ -123,7 +124,11 @@
 		<StatCard
 			title="Sostenibilita'"
 			value={stressedSurvives ? 'OK' : `Esaurito nel ${stressedZeroYear}`}
-			subtitle={baselineSurvives && !stressedSurvives ? 'Fallimento causato dallo stress' : baselineSurvives ? 'Piano resiliente' : 'Piano gia\' a rischio'}
+			subtitle={baselineSurvives && !stressedSurvives
+				? 'Fallimento causato dallo stress'
+				: baselineSurvives
+					? 'Piano resiliente'
+					: "Piano gia' a rischio"}
 			color={stressedSurvives ? 'green' : 'red'}
 		/>
 	</div>

@@ -1,8 +1,22 @@
 ﻿<script lang="ts">
-	import { Card, Badge, Button, Table, TableHead, TableHeadCell, TableBody, TableBodyRow, TableBodyCell } from 'flowbite-svelte';
+	import {
+		Card,
+		Badge,
+		Button,
+		Table,
+		TableHead,
+		TableHeadCell,
+		TableBody,
+		TableBodyRow,
+		TableBodyCell
+	} from 'flowbite-svelte';
 	import { ArrowLeftOutline } from 'flowbite-svelte-icons';
 	import type { Profile, Scenario, SimulationResult } from '$lib/db/index';
-	import { calculateFireNumber, calculateYearsToFire, calculateNetWorth } from '$lib/engine/fire-calculator';
+	import {
+		calculateFireNumber,
+		calculateYearsToFire,
+		calculateNetWorth
+	} from '$lib/engine/fire-calculator';
 	import { formatCurrency, formatPercent } from '$lib/utils/format';
 	import EChart from '$lib/components/shared/EChart.svelte';
 
@@ -39,10 +53,16 @@
 		const o = scenario.overrides ?? {};
 		const simO = (o as any).simulation ?? {};
 		return {
-			withdrawalRate: simO.withdrawalRate != null ? simO.withdrawalRate / 100 : profile.simulation.withdrawalRate,
-			stockAllocation: simO.stockAllocation != null ? simO.stockAllocation / 100 : profile.simulation.stockAllocation,
-			inflationRate: simO.inflationRate != null ? simO.inflationRate / 100 : profile.simulation.inflationRate,
-			expectedReturn: simO.expectedReturn != null ? simO.expectedReturn / 100 : profile.simulation.expectedReturn,
+			withdrawalRate:
+				simO.withdrawalRate != null ? simO.withdrawalRate / 100 : profile.simulation.withdrawalRate,
+			stockAllocation:
+				simO.stockAllocation != null
+					? simO.stockAllocation / 100
+					: profile.simulation.stockAllocation,
+			inflationRate:
+				simO.inflationRate != null ? simO.inflationRate / 100 : profile.simulation.inflationRate,
+			expectedReturn:
+				simO.expectedReturn != null ? simO.expectedReturn / 100 : profile.simulation.expectedReturn,
 			annualExpenses: o.annualExpenses ?? profile.annualExpenses,
 			fireExpenses: o.fireExpenses ?? profile.fireExpenses,
 			retirementAge: o.retirementAge ?? profile.retirementAge
@@ -51,41 +71,55 @@
 
 	// Build comparison data
 	let comparisonData = $derived(
-		scenarios.map((sc, idx) => {
-			const profile = getProfile(sc.profileId);
-			const result = getResult(sc.id);
-			if (!profile) return null;
-			const eff = getEffective(sc, profile);
-			const fireNumber = calculateFireNumber(eff.fireExpenses, eff.withdrawalRate);
-			const netWorth = calculateNetWorth(profile.portfolio as unknown as Record<string, number>);
-			const annualSavings = (profile.annualIncome || 0) + (profile.otherIncome || 0) - eff.annualExpenses;
-			const yearsToFire = calculateYearsToFire(netWorth, annualSavings, eff.expectedReturn, fireNumber);
-			return {
-				scenario: sc,
-				profile,
-				result,
-				eff,
-				fireNumber,
-				yearsToFire,
-				successRate: result?.successRate ?? null,
-				color: COLORS[idx % COLORS.length]
-			};
-		}).filter(Boolean) as NonNullable<ReturnType<typeof getEffective> & {
-			scenario: Scenario;
-			profile: Profile;
-			result: SimulationResult | undefined;
-			eff: ReturnType<typeof getEffective>;
-			fireNumber: number;
-			yearsToFire: number;
-			successRate: number | null;
-			color: string;
-		}>[]
+		scenarios
+			.map((sc, idx) => {
+				const profile = getProfile(sc.profileId);
+				const result = getResult(sc.id);
+				if (!profile) return null;
+				const eff = getEffective(sc, profile);
+				const fireNumber = calculateFireNumber(eff.fireExpenses, eff.withdrawalRate);
+				const netWorth = calculateNetWorth(profile.portfolio as unknown as Record<string, number>);
+				const annualSavings =
+					(profile.annualIncome || 0) + (profile.otherIncome || 0) - eff.annualExpenses;
+				const yearsToFire = calculateYearsToFire(
+					netWorth,
+					annualSavings,
+					eff.expectedReturn,
+					fireNumber
+				);
+				return {
+					scenario: sc,
+					profile,
+					result,
+					eff,
+					fireNumber,
+					yearsToFire,
+					successRate: result?.successRate ?? null,
+					color: COLORS[idx % COLORS.length]
+				};
+			})
+			.filter(Boolean) as NonNullable<
+			ReturnType<typeof getEffective> & {
+				scenario: Scenario;
+				profile: Profile;
+				result: SimulationResult | undefined;
+				eff: ReturnType<typeof getEffective>;
+				fireNumber: number;
+				yearsToFire: number;
+				successRate: number | null;
+				color: string;
+			}
+		>[]
 	);
 
 	// Parameter comparison rows
 	const PARAM_ROWS = [
 		{ key: 'withdrawalRate', label: 'Tasso di prelievo (%)', fmt: (v: number) => formatPercent(v) },
-		{ key: 'stockAllocation', label: 'Allocazione azioni (%)', fmt: (v: number) => formatPercent(v) },
+		{
+			key: 'stockAllocation',
+			label: 'Allocazione azioni (%)',
+			fmt: (v: number) => formatPercent(v)
+		},
 		{ key: 'inflationRate', label: 'Inflazione (%)', fmt: (v: number) => formatPercent(v) },
 		{ key: 'expectedReturn', label: 'Rendimento atteso (%)', fmt: (v: number) => formatPercent(v) },
 		{ key: 'annualExpenses', label: 'Spese annuali', fmt: (v: number) => formatCurrency(v) },
@@ -101,7 +135,9 @@
 
 	// Chart: overlay projection from simulation results (yearlyData medians)
 	let chartOptions = $derived.by(() => {
-		const scenariosWithResults = comparisonData.filter((d) => d.result && d.result.yearlyData.length > 0);
+		const scenariosWithResults = comparisonData.filter(
+			(d) => d.result && d.result.yearlyData.length > 0
+		);
 		if (scenariosWithResults.length === 0) return null;
 
 		const maxYears = Math.max(...scenariosWithResults.map((d) => d.result!.yearlyData.length));
@@ -146,7 +182,7 @@
 <div class="space-y-6">
 	<div class="flex items-center gap-4">
 		<Button color="alternative" size="sm" onclick={onClose}>
-			<ArrowLeftOutline class="w-4 h-4 me-1" />
+			<ArrowLeftOutline class="me-1 h-4 w-4" />
 			Torna alla lista
 		</Button>
 		<h2 class="text-xl font-bold text-gray-900 dark:text-white">
@@ -156,7 +192,7 @@
 
 	<!-- Summary comparison table -->
 	<Card class="max-w-none">
-		<h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Riepilogo</h3>
+		<h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Riepilogo</h3>
 		<Table striped>
 			<TableHead>
 				<TableHeadCell>Metrica</TableHeadCell>
@@ -171,7 +207,15 @@
 					<TableBodyCell>Tipo</TableBodyCell>
 					{#each comparisonData as d}
 						<TableBodyCell>
-							<Badge color={d.scenario.type === 'optimistic' ? 'green' : d.scenario.type === 'pessimistic' ? 'red' : d.scenario.type === 'historical' ? 'blue' : 'yellow'}>
+							<Badge
+								color={d.scenario.type === 'optimistic'
+									? 'green'
+									: d.scenario.type === 'pessimistic'
+										? 'red'
+										: d.scenario.type === 'historical'
+											? 'blue'
+											: 'yellow'}
+							>
 								{TYPE_LABELS[d.scenario.type]}
 							</Badge>
 						</TableBodyCell>
@@ -194,7 +238,13 @@
 					{#each comparisonData as d}
 						<TableBodyCell>
 							{#if d.successRate !== null}
-								<span class={d.successRate >= 0.9 ? 'text-green-600 font-semibold' : d.successRate >= 0.7 ? 'text-yellow-600 font-semibold' : 'text-red-600 font-semibold'}>
+								<span
+									class={d.successRate >= 0.9
+										? 'font-semibold text-green-600'
+										: d.successRate >= 0.7
+											? 'font-semibold text-yellow-600'
+											: 'font-semibold text-red-600'}
+								>
 									{formatPercent(d.successRate * 100)}
 								</span>
 							{:else}
@@ -209,7 +259,7 @@
 
 	<!-- Parameter comparison table with differences highlighted -->
 	<Card class="max-w-none">
-		<h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Confronto Parametri</h3>
+		<h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Confronto Parametri</h3>
 		<Table striped>
 			<TableHead>
 				<TableHeadCell>Parametro</TableHeadCell>
@@ -240,13 +290,16 @@
 	<!-- Overlay projection chart -->
 	{#if chartOptions}
 		<Card class="max-w-none">
-			<h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Proiezione Portafoglio (Mediana)</h3>
+			<h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+				Proiezione Portafoglio (Mediana)
+			</h3>
 			<EChart options={chartOptions} height="420px" />
 		</Card>
 	{:else}
 		<Card class="max-w-none">
-			<p class="text-gray-500 dark:text-gray-400 text-center py-6">
-				Nessuno degli scenari selezionati ha risultati di simulazione. Esegui almeno una simulazione per visualizzare il grafico comparativo.
+			<p class="py-6 text-center text-gray-500 dark:text-gray-400">
+				Nessuno degli scenari selezionati ha risultati di simulazione. Esegui almeno una simulazione
+				per visualizzare il grafico comparativo.
 			</p>
 		</Card>
 	{/if}

@@ -1,12 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import {
-		Heading,
-		Breadcrumb,
-		BreadcrumbItem,
-		Alert,
-		Button
-	} from 'flowbite-svelte';
+	import { Heading, Breadcrumb, BreadcrumbItem, Alert, Button } from 'flowbite-svelte';
 	import {
 		ExclamationCircleOutline,
 		ArrowRightOutline,
@@ -20,7 +14,12 @@
 		type ProjectionParams,
 		type YearlyProjection
 	} from '$lib/engine/fire-calculator';
-	import { PREDEFINED_RISK_EVENTS, applyRiskEvent, applyRiskEvents, type RiskEvent } from '$lib/engine/risk-scenarios';
+	import {
+		PREDEFINED_RISK_EVENTS,
+		applyRiskEvent,
+		applyRiskEvents,
+		type RiskEvent
+	} from '$lib/engine/risk-scenarios';
 	import { blendedCapitalGainsRate } from '$lib/engine/tax-italy';
 	import { getPreset } from '$lib/engine/assumptions';
 	import RiskScenarioCard from '$lib/components/rischi/RiskScenarioCard.svelte';
@@ -160,29 +159,33 @@
 </Breadcrumb>
 
 <Heading tag="h1" class="mb-2">Scenari di Rischio</Heading>
-<p class="text-gray-600 dark:text-gray-400 mb-8">
-	Analizza come eventi avversi potrebbero impattare il tuo piano FIRE:
-	crolli di mercato, inflazione elevata, spese impreviste e altro.
+<p class="mb-8 text-gray-600 dark:text-gray-400">
+	Analizza come eventi avversi potrebbero impattare il tuo piano FIRE: crolli di mercato, inflazione
+	elevata, spese impreviste e altro.
 </p>
 
 {#if loading}
 	<div class="flex items-center justify-center py-20">
-		<div class="text-gray-500 dark:text-gray-400 text-lg">Caricamento...</div>
+		<div class="text-lg text-gray-500 dark:text-gray-400">Caricamento...</div>
 	</div>
 {:else if !hasProfile}
 	<Alert color="yellow" class="mb-6">
 		{#snippet icon()}
-			<ExclamationCircleOutline class="w-5 h-5" />
+			<ExclamationCircleOutline class="h-5 w-5" />
 		{/snippet}
-		<span class="font-medium">Profilo non trovato.</span> Per eseguire gli stress test devi prima creare un profilo finanziario.
-		<a href="/profilo/" class="ml-2 inline-flex items-center gap-1 text-yellow-800 dark:text-yellow-300 underline font-medium">
-			Crea Profilo <ArrowRightOutline class="w-3 h-3" />
+		<span class="font-medium">Profilo non trovato.</span> Per eseguire gli stress test devi prima
+		creare un profilo finanziario.
+		<a
+			href="/profilo/"
+			class="ml-2 inline-flex items-center gap-1 font-medium text-yellow-800 underline dark:text-yellow-300"
+		>
+			Crea Profilo <ArrowRightOutline class="h-3 w-3" />
 		</a>
 	</Alert>
 {:else}
 	<!-- Predefined Scenarios Grid -->
-	<Heading tag="h2" class="text-xl mb-4">Scenari Predefiniti</Heading>
-	<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-10">
+	<Heading tag="h2" class="mb-4 text-xl">Scenari Predefiniti</Heading>
+	<div class="mb-10 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
 		{#each PREDEFINED_RISK_EVENTS as event (event.id)}
 			<RiskScenarioCard
 				{event}
@@ -195,9 +198,11 @@
 
 	<!-- Combine Action Bar -->
 	{#if canCombine || hasCombined}
-		<div class="mb-6 p-4 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+		<div
+			class="mb-6 flex flex-col gap-3 rounded-xl border border-red-200 bg-red-50 p-4 sm:flex-row sm:items-center sm:justify-between dark:border-red-800 dark:bg-red-900/20"
+		>
 			<div class="flex items-start gap-2">
-				<LayersOutline class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" />
+				<LayersOutline class="mt-0.5 h-5 w-5 text-red-600 dark:text-red-400" />
 				<div>
 					<p class="font-semibold text-gray-900 dark:text-white">
 						Hai selezionato {selectedEventIds.size} scenari
@@ -209,12 +214,10 @@
 			</div>
 			<div class="flex gap-2">
 				{#if hasCombined}
-					<Button color="alternative" size="sm" onclick={resetCombined}>
-						Reset
-					</Button>
+					<Button color="alternative" size="sm" onclick={resetCombined}>Reset</Button>
 				{/if}
 				<Button color="red" size="sm" disabled={!canCombine} onclick={combineSelected}>
-					<LayersOutline class="w-4 h-4 me-1" />
+					<LayersOutline class="me-1 h-4 w-4" />
 					Combina selezionati
 				</Button>
 			</div>
@@ -224,7 +227,7 @@
 	<!-- Combined Scenario Panel -->
 	{#if hasCombined}
 		<div id="combined-scenario" class="mb-10">
-			<Heading tag="h2" class="text-xl mb-4">Scenario Combinato</Heading>
+			<Heading tag="h2" class="mb-4 text-xl">Scenario Combinato</Heading>
 			<CombinedScenarioPanel {baseline} combined={combinedData} events={combinedEvents} />
 		</div>
 	{/if}
@@ -232,7 +235,7 @@
 	<!-- Scenario Comparison -->
 	{#if hasComparison}
 		<div class="mb-10">
-			<Heading tag="h2" class="text-xl mb-4">Confronto Scenari (side-by-side)</Heading>
+			<Heading tag="h2" class="mb-4 text-xl">Confronto Scenari (side-by-side)</Heading>
 			<RiskScenarioComparison {baseline} scenarios={comparisonScenarios} />
 		</div>
 	{/if}
@@ -240,14 +243,14 @@
 	<!-- Stress Test Results -->
 	{#if hasResults && activeEvent}
 		<div id="stress-results" class="mb-10">
-			<Heading tag="h2" class="text-xl mb-4">Risultati Stress Test</Heading>
+			<Heading tag="h2" class="mb-4 text-xl">Risultati Stress Test</Heading>
 			<StressTestResults {baseline} stressed={stressedData} event={activeEvent} />
 		</div>
 	{/if}
 
 	<!-- Custom Scenario Creator -->
 	<div class="mb-10">
-		<Heading tag="h2" class="text-xl mb-4">Scenario Personalizzato</Heading>
+		<Heading tag="h2" class="mb-4 text-xl">Scenario Personalizzato</Heading>
 		<CustomScenarioForm onSubmit={handleCustomScenario} />
 	</div>
 {/if}

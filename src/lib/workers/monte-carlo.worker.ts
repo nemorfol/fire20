@@ -49,7 +49,8 @@ self.onmessage = function (event: MessageEvent<WorkerInMessage>) {
 		const msg: WorkerOutMessage = { type: 'result', data: result };
 		self.postMessage(msg);
 	} catch (error) {
-		const message = error instanceof Error ? error.message : 'Errore sconosciuto durante la simulazione';
+		const message =
+			error instanceof Error ? error.message : 'Errore sconosciuto durante la simulazione';
 		const msg: WorkerOutMessage = { type: 'error', message };
 		self.postMessage(msg);
 	}

@@ -5,11 +5,7 @@
  */
 
 import { calculateWithdrawal } from './withdrawal';
-import {
-	calculateNetSalary,
-	invertNetSalary,
-	calculatePortfolioStampDuties
-} from './tax-italy';
+import { calculateNetSalary, invertNetSalary, calculatePortfolioStampDuties } from './tax-italy';
 import { DEFAULT_2026, type AssumptionSet } from './assumptions';
 import { totalFamilyExpenses, totalUniversityExpenses } from './family';
 import { computeYearlyImpact, type LifeEvent } from './life-events';
@@ -321,7 +317,8 @@ export function calculateFireNumberWithPension(params: {
 		}
 		// PV dell'ultimo anno frazionario
 		if (residualMonths > 0) {
-			pvFamilyPostFire += (mortgage.monthlyPayment * residualMonths) / Math.pow(1 + r, fullYearsAfter);
+			pvFamilyPostFire +=
+				(mortgage.monthlyPayment * residualMonths) / Math.pow(1 + r, fullYearsAfter);
 		}
 	}
 
@@ -417,7 +414,15 @@ export function calculateNetWorth(portfolio: Record<string, number>): number {
  * del FIRE Number e della proiezione con SWR (regola del 4%).
  */
 export const LIQUID_ASSET_KEYS = [
-	'stocks', 'bonds', 'bfp', 'cd', 'cash', 'gold', 'crypto', 'pensionFund', 'other'
+	'stocks',
+	'bonds',
+	'bfp',
+	'cd',
+	'cash',
+	'gold',
+	'crypto',
+	'pensionFund',
+	'other'
 ] as const;
 
 /**
@@ -524,7 +529,7 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 	const goalEvents = (lifeEvents ?? []).filter(
 		(e) => e.enabled && e.type === 'inheritance' && e.allocation === 'goal'
 	);
-	const goalBucketReturn = goalEvents.length > 0 ? goalEvents[0].goalAnnualReturn ?? 0.02 : 0.02;
+	const goalBucketReturn = goalEvents.length > 0 ? (goalEvents[0].goalAnnualReturn ?? 0.02) : 0.02;
 	const goalUniversityMode = goalEvents.some((e) => e.goalPurpose === 'university');
 	let goalBucket = 0;
 
@@ -547,9 +552,8 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 
 		// "Altri redditi" attivi in questo anno (se l'eta' non ha ancora superato
 		// otherIncomeEndAge). Vengono inflazionati come gli altri flussi.
-		const otherIncomeActive = otherIncome > 0 && age <= otherIncomeEndAge
-			? otherIncome * inflationCumulative
-			: 0;
+		const otherIncomeActive =
+			otherIncome > 0 && age <= otherIncomeEndAge ? otherIncome * inflationCumulative : 0;
 
 		// Spese familiari (figli + mutuo) dell'anno: in euro dell'anno (gia'
 		// inflazionate per i figli; mutuo nominale perche' la rata e' fissa).
@@ -566,7 +570,7 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 					useSurtaxes.regional,
 					useSurtaxes.municipal,
 					assumptions
-			  )
+				)
 			: null;
 		const spouseTotalNet = spouseCF ? spouseCF.netSalary + spouseCF.pensionNet : 0;
 
@@ -594,11 +598,11 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 		// e dagli eventi di vita. incomeMultiplier modula il reddito (0 = disoccupato).
 		// Il bonus si aggiunge ai contributi, le spese una-tantum li riducono.
 		// Se la pensione INPS arriva DURANTE l'accumulazione, viene aggiunta.
-		const accumPensionIncome = !isRetired && age >= pensionAge
-			? annualPension * inflationCumulative
-			: 0;
+		const accumPensionIncome =
+			!isRetired && age >= pensionAge ? annualPension * inflationCumulative : 0;
 		const nominalContribution = annualContribution * inflationCumulative;
-		const incomeAdjusted = nominalContribution * lifeImpact.incomeMultiplier + lifeIncomeDeltaNominal;
+		const incomeAdjusted =
+			nominalContribution * lifeImpact.incomeMultiplier + lifeIncomeDeltaNominal;
 		// Contributi e prelievi: calcolo unificato che gestisce pre-FIRE
 		// (accumulazione) e post-FIRE (decumulo con surplus reinvestito).
 		let contributions = 0;
@@ -647,14 +651,17 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 					lifeExpectancy,
 					realReturn: (1 + expectedReturn) / (1 + inflationRate) - 1,
 					targetBequest,
-					guytonKlinger: withdrawalStrategy === 'guyton-klinger' ? {
-						portfolio,
-						initialWithdrawal: retirementPortfolio * withdrawalRate,
-						initialRate: withdrawalRate,
-						inflationRate,
-						year: yearsSinceRetirement,
-						previousWithdrawal: previousWithdrawal || retirementPortfolio * withdrawalRate
-					} : undefined
+					guytonKlinger:
+						withdrawalStrategy === 'guyton-klinger'
+							? {
+									portfolio,
+									initialWithdrawal: retirementPortfolio * withdrawalRate,
+									initialRate: withdrawalRate,
+									inflationRate,
+									year: yearsSinceRetirement,
+									previousWithdrawal: previousWithdrawal || retirementPortfolio * withdrawalRate
+								}
+							: undefined
 				});
 			}
 
@@ -705,7 +712,8 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 		// (cioe' sul portafoglio risultante dopo contributi/prelievi/rendimenti
 		// netti). Per semplicita' di calcolo applichiamo le aliquote sul
 		// portafoglio "lavorato" (portfolio + contributions + netReturns).
-		const portfolioPreStamp = portfolio + contributions + (grossReturns - taxes) - actualWithdrawals;
+		const portfolioPreStamp =
+			portfolio + contributions + (grossReturns - taxes) - actualWithdrawals;
 		const stampBase = Math.max(0, portfolioPreStamp);
 		const italianShare = Math.max(0, Math.min(1, 1 - foreignBrokerShare));
 		// La quota esente (BFP) non concorre alla base del bollo titoli italiano.
@@ -721,7 +729,8 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 		const netReturns = grossReturns - taxes - stampDuties.total;
 
 		// Aggiorna portafoglio
-		portfolio = portfolio + contributions + (grossReturns - taxes) - actualWithdrawals - stampDuties.total;
+		portfolio =
+			portfolio + contributions + (grossReturns - taxes) - actualWithdrawals - stampDuties.total;
 
 		// Il portafoglio non può essere negativo (si è esaurito)
 		if (portfolio < 0) portfolio = 0;
@@ -805,7 +814,7 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 										Math.max(0, (age - currentAge) / Math.max(1, lifeExpectancy - currentAge))
 									)
 						)
-				  )
+					)
 				: undefined,
 			spouseNetIncome: spouseCF ? Math.round(spouseTotalNet) : undefined
 		});
@@ -908,7 +917,8 @@ export function calculateFireVariants(params: FireVariantsParams): FireVariant[]
 			label: 'BaristaFIRE',
 			annualExpenses: Math.round(e),
 			fireNumber: Math.round(fn(baristaPortfolioNeed)),
-			description: 'FIRE parziale: un lavoro leggero copre parte delle spese, il portafoglio il resto.'
+			description:
+				'FIRE parziale: un lavoro leggero copre parte delle spese, il portafoglio il resto.'
 		},
 		{
 			key: 'chubby',

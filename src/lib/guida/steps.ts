@@ -31,7 +31,7 @@ export const guideSteps: GuideStep[] = [
 		category: 'Fondamenti',
 		icon: '🔥',
 		summary:
-			"Introduzione al movimento FIRE: Financial Independence, Retire Early. Scopri la filosofia, la storia e le diverse varianti.",
+			'Introduzione al movimento FIRE: Financial Independence, Retire Early. Scopri la filosofia, la storia e le diverse varianti.',
 		content: `
 <h3>Il Movimento FIRE: Libertà Finanziaria</h3>
 <p>FIRE è l'acronimo di <strong>Financial Independence, Retire Early</strong> (Indipendenza Finanziaria, Pensionamento Anticipato). Non si tratta semplicemente di smettere di lavorare il prima possibile, ma di raggiungere un livello di patrimonio tale da rendere il lavoro una <strong>scelta</strong>, non un obbligo.</p>
@@ -101,7 +101,7 @@ export const guideSteps: GuideStep[] = [
 		category: 'Fondamenti',
 		icon: '👤',
 		summary:
-			"Come valutare la tua situazione finanziaria attuale: redditi, spese, patrimonio netto e obiettivi.",
+			'Come valutare la tua situazione finanziaria attuale: redditi, spese, patrimonio netto e obiettivi.',
 		appLink: '/profilo/',
 		appLinkLabel: 'Vai al Profilo Finanziario',
 		content: `
@@ -358,7 +358,7 @@ Se il numero ti sembra troppo basso o troppo alto, verifica <em>Profilo → Pens
 		category: 'Fondamenti',
 		icon: '💰',
 		summary:
-			"La leva più potente per il FIRE: come il tasso di risparmio determina il tempo necessario per raggiungerlo.",
+			'La leva più potente per il FIRE: come il tasso di risparmio determina il tempo necessario per raggiungerlo.',
 		content: `
 <h3>La Variabile Che Conta Più di Tutte</h3>
 <p>Il <strong>tasso di risparmio</strong> è la percentuale del tuo reddito netto che investi ogni mese. È la singola variabile più importante nel percorso FIRE, molto più dei rendimenti di mercato o della scelta degli strumenti finanziari.</p>
@@ -438,7 +438,7 @@ La differenza? Il FIRE Number è sceso di 342.000€ E il risparmio mensile è p
 		category: 'Calcoli e Simulazioni',
 		icon: '📊',
 		summary:
-			"Come distribuire il patrimonio tra azioni, obbligazioni e altri asset. Prospettiva italiana con ETF, BTP e fondi.",
+			'Come distribuire il patrimonio tra azioni, obbligazioni e altri asset. Prospettiva italiana con ETF, BTP e fondi.',
 		content: `
 <h3>La Distribuzione del Patrimonio</h3>
 <p>L'<strong>asset allocation</strong> è la suddivisione del tuo patrimonio tra diverse classi di investimento. È responsabile di oltre il 90% della variabilità dei rendimenti a lungo termine, secondo lo studio classico di Brinson, Hood e Beebower. In altre parole, conta molto di più come dividi il portafoglio che quali singoli titoli scegli.</p>
@@ -538,7 +538,7 @@ La differenza? Il FIRE Number è sceso di 342.000€ E il risparmio mensile è p
 		category: 'Calcoli e Simulazioni',
 		icon: '📐',
 		summary:
-			"Il Trinity Study spiegato: origini, funzionamento, limiti e adattamento al contesto fiscale italiano.",
+			'Il Trinity Study spiegato: origini, funzionamento, limiti e adattamento al contesto fiscale italiano.',
 		appLink: '/calcolatore/',
 		appLinkLabel: 'Usa il Calcolatore FIRE',
 		content: `
@@ -627,7 +627,7 @@ Per avere 24.000€ netti, serve prelevare circa 26.400€ lordi → tasso effet
 		category: 'Calcoli e Simulazioni',
 		icon: '🔄',
 		summary:
-			"Oltre la regola del 4%: VPW, Guyton-Klinger, CAPE-based. Pro e contro di ogni strategia.",
+			'Oltre la regola del 4%: VPW, Guyton-Klinger, CAPE-based. Pro e contro di ogni strategia.',
 		appLink: '/calcolatore/',
 		appLinkLabel: 'Confronta le Strategie',
 		content: `
@@ -738,7 +738,7 @@ Dopo un anno negativo con inflazione al 3%: NON adegui per l'inflazione. Resti a
 		category: 'Calcoli e Simulazioni',
 		icon: '🎲',
 		summary:
-			"Come funzionano le simulazioni Monte Carlo, come leggerle e quale tasso di successo puntare.",
+			'Come funzionano le simulazioni Monte Carlo, come leggerle e quale tasso di successo puntare.',
 		appLink: '/simulazione/',
 		appLinkLabel: 'Esegui una Simulazione',
 		content: `
@@ -889,7 +889,7 @@ Questo significa che nella maggior parte dei casi il piano funziona, ma c'è un 
 		category: 'Calcoli e Simulazioni',
 		icon: '📉',
 		summary:
-			"Il rischio numero uno per chi va in FIRE: come i rendimenti dei primi anni possono fare o rompere il tuo piano.",
+			'Il rischio numero uno per chi va in FIRE: come i rendimenti dei primi anni possono fare o rompere il tuo piano.',
 		content: `
 <h3>Il Rischio Più Insidioso</h3>
 <p>Il <strong>rischio sequenza dei rendimenti</strong> (Sequence of Returns Risk) è il fatto che l'<strong>ordine</strong> in cui si verificano i rendimenti conta enormemente quando stai prelevando dal portafoglio. Due persone con lo stesso rendimento medio su 30 anni possono avere risultati radicalmente diversi se una ha rendimenti negativi all'inizio e l'altra alla fine.</p>
@@ -1139,7 +1139,7 @@ Sposta lo slider <strong>Inflazione</strong> da 2% a 6% per vedere chiaramente l
 		category: 'Fiscalità Italiana',
 		icon: '🏛️',
 		summary:
-			"Tutto sulla tassazione degli investimenti in Italia: regime amministrato vs dichiarativo, ETF, BTP, minus e plusvalenze.",
+			'Tutto sulla tassazione degli investimenti in Italia: regime amministrato vs dichiarativo, ETF, BTP, minus e plusvalenze.',
 		appLink: '/calcolatore/',
 		appLinkLabel: 'Calcola con le Tasse Italiane',
 		content: `
@@ -1275,7 +1275,7 @@ Per compensare, dovresti vendere un'azione o un'obbligazione singola con 5.000�
 		category: 'Fiscalità Italiana',
 		icon: '🏦',
 		summary:
-			"I vantaggi fiscali dei fondi pensione, le 5 nuove strategie di erogazione 2026 (rendita vitalizia, durata definita, prelievi liberi, frazionata, capitale 60%), TFR, RITA e extradeducibilità.",
+			'I vantaggi fiscali dei fondi pensione, le 5 nuove strategie di erogazione 2026 (rendita vitalizia, durata definita, prelievi liberi, frazionata, capitale 60%), TFR, RITA e extradeducibilità.',
 		appLink: '/fondo-pensione/',
 		appLinkLabel: 'Vai al Simulatore Fondo Pensione',
 		content: `
@@ -1517,7 +1517,7 @@ Se muori dopo 10 anni con 120.000€ residui → <strong>eredi ricevono 120.000�
 		category: 'Fiscalità Italiana',
 		icon: '🏛️',
 		summary:
-			"Come funziona il sistema contributivo italiano, coefficienti di trasformazione e come pianificare il gap pensionistico.",
+			'Come funziona il sistema contributivo italiano, coefficienti di trasformazione e come pianificare il gap pensionistico.',
 		appLink: '/profilo/',
 		appLinkLabel: 'Inserisci i Dati Pensionistici',
 		content: `
@@ -1624,7 +1624,7 @@ La pensione INPS "vale" circa 120.000-150.000€ di patrimonio in meno da accumu
 		category: 'Fiscalità Italiana',
 		icon: '🌉',
 		summary:
-			"Gli anni tra il pensionamento anticipato e la pensione INPS: strategie per coprire il gap.",
+			'Gli anni tra il pensionamento anticipato e la pensione INPS: strategie per coprire il gap.',
 		content: `
 <h3>Il Problema del Gap</h3>
 <p>Il <strong>gap pensionistico</strong> è il periodo tra il momento in cui smetti di lavorare (FIRE) e il momento in cui inizi a ricevere la pensione INPS. Se vai in FIRE a 50 anni e la pensione INPS arriva a 67, hai <strong>17 anni di gap</strong> da finanziare interamente con il tuo patrimonio.</p>
@@ -1720,7 +1720,7 @@ Se le tue spese sono 2.000€/mese, la RITA copre il 67%! Il portafoglio deve co
 		category: 'Strategie Avanzate',
 		icon: '⚠️',
 		summary:
-			"Salute, crolli di mercato, inflazione, rischi geopolitici: come testare la solidità del tuo piano FIRE.",
+			'Salute, crolli di mercato, inflazione, rischi geopolitici: come testare la solidità del tuo piano FIRE.',
 		appLink: '/rischi/',
 		appLinkLabel: 'Analizza i Rischi',
 		content: `
@@ -1897,7 +1897,7 @@ Risparmio: 8.000€ × 12,5% = <strong>1.000€</strong> di tasse in meno (se BT
 		category: 'Strategie Avanzate',
 		icon: '🏠',
 		summary:
-			"Pro e contro degli immobili in Italia: prima casa, affitti, IMU, cedolare secca e confronto con investimenti finanziari.",
+			'Pro e contro degli immobili in Italia: prima casa, affitti, IMU, cedolare secca e confronto con investimenti finanziari.',
 		content: `
 <h3>L'Italia e il Mattone</h3>
 <p>Gli italiani sono tra i popoli con il più alto tasso di proprietà immobiliare in Europa (~73%). Il "mattone" è culturalmente considerato l'investimento più sicuro. Ma è vero? E come si inserisce nel piano FIRE?</p>
@@ -1984,7 +1984,7 @@ Differenza: <strong>240.000€</strong> in meno da accumulare!
 		category: 'Strategie Avanzate',
 		icon: '💳',
 		summary:
-			"Strategia debiti per il FIRE: quando estinguere il mutuo anticipatamente e quando investire, detrazioni fiscali.",
+			'Strategia debiti per il FIRE: quando estinguere il mutuo anticipatamente e quando investire, detrazioni fiscali.',
 		content: `
 <h3>Debiti Buoni e Debiti Cattivi</h3>
 <p>Non tutti i debiti sono uguali. Nell'ottica FIRE, la domanda fondamentale è: <strong>il rendimento atteso dei tuoi investimenti supera il tasso di interesse del debito?</strong> Se sì, conviene investire anziché ripagare il debito anticipatamente.</p>
@@ -2074,7 +2074,7 @@ Ma il rendimento del 5% non è garantito. In scenari sfavorevoli, l'Opzione A po
 		category: 'Strategie Avanzate',
 		icon: '⚖️',
 		summary:
-			"Come e quando ribilanciare il portafoglio, checklist annuale e consigli di finanza comportamentale.",
+			'Come e quando ribilanciare il portafoglio, checklist annuale e consigli di finanza comportamentale.',
 		content: `
 <h3>Il Pilota Automatico Non Basta</h3>
 <p>Anche il miglior piano FIRE richiede manutenzione periodica. Il ribilanciamento è il processo di riportare l'asset allocation al target originale quando i movimenti di mercato l'hanno spostata. È una delle poche strategie di investimento che è allo stesso tempo prudente e potenzialmente redditizia.</p>
@@ -2167,7 +2167,7 @@ Ma il rendimento del 5% non è garantito. In scenari sfavorevoli, l'Opzione A po
 		category: 'Strategie Avanzate',
 		icon: '🤖',
 		summary:
-			"Un assistente AI opzionale, disattivato di default, che gira sul tuo dispositivo: zero costi, nessun dato inviato a server esterni. Spiega i tuoi numeri, non li inventa.",
+			'Un assistente AI opzionale, disattivato di default, che gira sul tuo dispositivo: zero costi, nessun dato inviato a server esterni. Spiega i tuoi numeri, non li inventa.',
 		content: `
 <h3>Un assistente che rispetta la privacy (e non costa nulla)</h3>
 <p>FIRE Planner puo' affiancarti un <strong>assistente AI opzionale</strong> che spiega in parole semplici i risultati gia' calcolati dal motore (FIRE number, tasso di successo Monte Carlo, fisco). E' <strong>disattivato di default</strong>: lo abiliti tu, quando vuoi, da <em>Impostazioni</em>.</p>
@@ -2210,7 +2210,7 @@ Ma il rendimento del 5% non è garantito. In scenari sfavorevoli, l'Opzione A po
 		category: 'Preparazione Finale',
 		icon: '🤝',
 		summary:
-			"Confronta il tuo percorso con altri utenti in forma anonima, via link. Nessun server: i dati lasciano il dispositivo solo se lo decidi tu.",
+			'Confronta il tuo percorso con altri utenti in forma anonima, via link. Nessun server: i dati lasciano il dispositivo solo se lo decidi tu.',
 		appLink: '/community/',
 		appLinkLabel: 'Vai alla Community',
 		content: `
@@ -2254,7 +2254,7 @@ Ma il rendimento del 5% non è garantito. In scenari sfavorevoli, l'Opzione A po
 		category: 'Preparazione Finale',
 		icon: '✅',
 		summary:
-			"La checklist completa pre-FIRE: fondo emergenza, assicurazioni, pianificazione successoria, salute e aspetti sociali.",
+			'La checklist completa pre-FIRE: fondo emergenza, assicurazioni, pianificazione successoria, salute e aspetti sociali.',
 		content: `
 <h3>Sei Pronto per il FIRE?</h3>
 <p>Hai accumulato il patrimonio necessario, le simulazioni sono positive, hai un piano di prelievo. Ma prima di lasciare il lavoro, verifica ogni punto di questa checklist completa. Saltare anche solo uno di questi aspetti potrebbe compromettere il tuo FIRE.</p>

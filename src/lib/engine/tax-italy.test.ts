@@ -101,7 +101,7 @@ describe('Compensazione minusvalenze (TUIR art. 67/68)', () => {
 		expect(r.taxDue).toBeCloseTo(3000 * 0.26, 2); // 780
 	});
 
-	it('ETF armonizzato: la plusvalenza e\' reddito di capitale, NON compensabile', () => {
+	it("ETF armonizzato: la plusvalenza e' reddito di capitale, NON compensabile", () => {
 		const stock = addCapitalLoss([], 2022, 5000);
 		const r = applyCapitalLossOffset(8000, 2024, stock, 'etf');
 		expect(r.lossUsed).toBe(0);
@@ -112,7 +112,7 @@ describe('Compensazione minusvalenze (TUIR art. 67/68)', () => {
 		expect(residua).toBeCloseTo(5000, 2);
 	});
 
-	it('minusvalenza scaduta (oltre 4 anni) non e\' utilizzabile', () => {
+	it("minusvalenza scaduta (oltre 4 anni) non e' utilizzabile", () => {
 		const stock = addCapitalLoss([], 2018, 5000);
 		const r = applyCapitalLossOffset(8000, 2024, stock, 'stocks');
 		expect(r.lossUsed).toBe(0);
@@ -127,7 +127,10 @@ describe('Detrazioni lavoro dipendente 2026 (art.13 + cuneo)', () => {
 
 	it('art.13: fascia 28-50k con +65 a 35.000', () => {
 		// 1910*(50000-35000)/22000 + 65 = 1302.27 + 65
-		expect(calculateEmployeeRelief(35000, 35000).detrazioneLavoroDipendente).toBeCloseTo(1367.27, 1);
+		expect(calculateEmployeeRelief(35000, 35000).detrazioneLavoroDipendente).toBeCloseTo(
+			1367.27,
+			1
+		);
 	});
 
 	it('art.13: oltre 50.000 -> 0', () => {
@@ -156,7 +159,7 @@ describe('Netto in busta paga 2026 (con detrazioni)', () => {
 		expect(r.irpef).toBeLessThan(r.irpefLorda ?? Infinity);
 	});
 
-	it('no-tax area: a RAL 9.000 l\'IRPEF netta e\' 0 e c\'e\' il bonus cuneo', () => {
+	it("no-tax area: a RAL 9.000 l'IRPEF netta e' 0 e c'e' il bonus cuneo", () => {
 		const r = calculateNetSalary(9000);
 		expect(r.irpef).toBe(0);
 		expect(r.bonusCuneo ?? 0).toBeGreaterThan(0);
@@ -211,7 +214,7 @@ describe('Imposta di successione (D.Lgs. 346/1990)', () => {
 	it('coniuge/linea retta: 0 sotto la franchigia di 1M', () => {
 		expect(calculateSuccessionTax(500_000, 'spouse-direct')).toBe(0);
 	});
-	it('coniuge/linea retta: 4% sull\'eccedenza oltre 1M', () => {
+	it("coniuge/linea retta: 4% sull'eccedenza oltre 1M", () => {
 		// (1.5M - 1M) * 4% = 20.000
 		expect(calculateSuccessionTax(1_500_000, 'spouse-direct')).toBeCloseTo(20_000, 2);
 	});
@@ -250,7 +253,10 @@ describe('blendedCapitalGainsRate', () => {
 	it('il fondo pensione e gli illiquidi sono ESCLUSI dalla base', () => {
 		// pensionFund/realEstate/tfr non concorrono: resta l aliquota delle azioni
 		expect(
-			blendedCapitalGainsRate({ stocks: 100000, pensionFund: 999999, realEstate: 999999, tfr: 999999 }, cap)
+			blendedCapitalGainsRate(
+				{ stocks: 100000, pensionFund: 999999, realEstate: 999999, tfr: 999999 },
+				cap
+			)
 		).toBeCloseTo(0.26, 5);
 	});
 });

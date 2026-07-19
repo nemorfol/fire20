@@ -22,7 +22,7 @@ const baseParams: MonteCarloParams = {
 	seed: 12345
 };
 
-describe('Monte Carlo - riproducibilita\' (seed)', () => {
+describe("Monte Carlo - riproducibilita' (seed)", () => {
 	it('stesso seed -> risultati identici', () => {
 		const a = runMonteCarloSimulation(baseParams);
 		const b = runMonteCarloSimulation(baseParams);
@@ -48,7 +48,7 @@ describe('Monte Carlo - errore standard e IC del successRate', () => {
 		expect(r.successRateStdError).toBeCloseTo(expectedSE, 4);
 	});
 
-	it('IC ~95% contiene il successRate ed e\' dentro [0,1]', () => {
+	it("IC ~95% contiene il successRate ed e' dentro [0,1]", () => {
 		const r = runMonteCarloSimulation(baseParams);
 		expect(r.successRateCI95.lower).toBeGreaterThanOrEqual(0);
 		expect(r.successRateCI95.upper).toBeLessThanOrEqual(1);
@@ -92,7 +92,11 @@ describe('Monte Carlo - coerenza fiscale col deterministico (#1)', () => {
 
 	it('default retrocompatibile: senza i nuovi parametri il MC non tassa i rendimenti', () => {
 		const a = runMonteCarloSimulation(baseParams);
-		const b = runMonteCarloSimulation({ ...baseParams, capitalGainsTaxRate: 0, bolloExemptShare: 0 });
+		const b = runMonteCarloSimulation({
+			...baseParams,
+			capitalGainsTaxRate: 0,
+			bolloExemptShare: 0
+		});
 		expect(a.medianFinalValue).toBe(b.medianFinalValue);
 	});
 });

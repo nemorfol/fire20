@@ -1,11 +1,30 @@
 <script lang="ts">
 	import {
-		Card, Label, Input, Select, Button, Badge, Alert,
-		Table, TableHead, TableHeadCell, TableBody, TableBodyRow, TableBodyCell
+		Card,
+		Label,
+		Input,
+		Select,
+		Button,
+		Badge,
+		Alert,
+		Table,
+		TableHead,
+		TableHeadCell,
+		TableBody,
+		TableBodyRow,
+		TableBodyCell
 	} from 'flowbite-svelte';
-	import { InfoCircleSolid, CheckCircleSolid, ExclamationCircleOutline } from 'flowbite-svelte-icons';
+	import {
+		InfoCircleSolid,
+		CheckCircleSolid,
+		ExclamationCircleOutline
+	} from 'flowbite-svelte-icons';
 	import { formatCurrency } from '$lib/utils/format';
-	import { calculateRiscattoLaurea, type RiscattoLaureaParams, type RiscattoLaureaResult } from '$lib/engine/pension-fund';
+	import {
+		calculateRiscattoLaurea,
+		type RiscattoLaureaParams,
+		type RiscattoLaureaResult
+	} from '$lib/engine/pension-fund';
 
 	let yearsToRedeem = $state(4);
 	let annualSalary = $state(35000);
@@ -38,22 +57,18 @@
 		{ value: 'standard', name: 'Standard (33% dello stipendio)' }
 	];
 
-	let selectedResult = $derived(
-		riscattoType === 'agevolato' ? resultAgevolato : resultStandard
-	);
+	let selectedResult = $derived(riscattoType === 'agevolato' ? resultAgevolato : resultStandard);
 </script>
 
-<div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
-	<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-		Riscatto Laurea
-	</h3>
-	<p class="text-sm text-gray-500 dark:text-gray-400 mb-5">
-		Il riscatto della laurea permette di "comprare" anni di contributi previdenziali
-		corrispondenti alla durata del corso di studi. Con la Legge di Bilancio 2024/2026,
-		la deduzione fiscale e' del 50% del costo.
+<div class="mb-6 rounded-xl bg-white p-6 shadow-lg dark:bg-gray-800">
+	<h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">Riscatto Laurea</h3>
+	<p class="mb-5 text-sm text-gray-500 dark:text-gray-400">
+		Il riscatto della laurea permette di "comprare" anni di contributi previdenziali corrispondenti
+		alla durata del corso di studi. Con la Legge di Bilancio 2024/2026, la deduzione fiscale e' del
+		50% del costo.
 	</p>
 
-	<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4 mb-6">
+	<div class="mb-6 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
 		<div>
 			<Label for="rl-years" class="mb-1.5">Anni da riscattare (1-5)</Label>
 			<Input id="rl-years" type="number" bind:value={yearsToRedeem} min={1} max={5} />
@@ -80,15 +95,13 @@
 		</div>
 	</div>
 
-	<Button color="primary" size="lg" onclick={calculate}>
-		Calcola Costo e Convenienza
-	</Button>
+	<Button color="primary" size="lg" onclick={calculate}>Calcola Costo e Convenienza</Button>
 </div>
 
 {#if computed && resultStandard && resultAgevolato}
 	<!-- Confronto Standard vs Agevolato -->
-	<div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
-		<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+	<div class="mb-6 rounded-xl bg-white p-6 shadow-lg dark:bg-gray-800">
+		<h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
 			Confronto: Riscatto Standard vs Agevolato
 		</h3>
 
@@ -102,7 +115,9 @@
 				<TableBodyRow>
 					<TableBodyCell class="font-semibold">Costo totale</TableBodyCell>
 					<TableBodyCell>{formatCurrency(resultStandard.totalCost)}</TableBodyCell>
-					<TableBodyCell class="text-green-600 dark:text-green-400">{formatCurrency(resultAgevolato.totalCost)}</TableBodyCell>
+					<TableBodyCell class="text-green-600 dark:text-green-400"
+						>{formatCurrency(resultAgevolato.totalCost)}</TableBodyCell
+					>
 				</TableBodyRow>
 				<TableBodyRow>
 					<TableBodyCell class="font-semibold">Costo annuo</TableBodyCell>
@@ -111,13 +126,19 @@
 				</TableBodyRow>
 				<TableBodyRow>
 					<TableBodyCell class="font-semibold">Deduzione fiscale (50%)</TableBodyCell>
-					<TableBodyCell class="text-blue-600 dark:text-blue-400">{formatCurrency(resultStandard.taxDeduction)}</TableBodyCell>
-					<TableBodyCell class="text-blue-600 dark:text-blue-400">{formatCurrency(resultAgevolato.taxDeduction)}</TableBodyCell>
+					<TableBodyCell class="text-blue-600 dark:text-blue-400"
+						>{formatCurrency(resultStandard.taxDeduction)}</TableBodyCell
+					>
+					<TableBodyCell class="text-blue-600 dark:text-blue-400"
+						>{formatCurrency(resultAgevolato.taxDeduction)}</TableBodyCell
+					>
 				</TableBodyRow>
 				<TableBodyRow>
 					<TableBodyCell class="font-semibold">Costo netto effettivo</TableBodyCell>
 					<TableBodyCell>{formatCurrency(resultStandard.netCost)}</TableBodyCell>
-					<TableBodyCell class="text-green-600 dark:text-green-400 font-bold">{formatCurrency(resultAgevolato.netCost)}</TableBodyCell>
+					<TableBodyCell class="font-bold text-green-600 dark:text-green-400"
+						>{formatCurrency(resultAgevolato.netCost)}</TableBodyCell
+					>
 				</TableBodyRow>
 				<TableBodyRow>
 					<TableBodyCell class="font-semibold">Pensione aggiuntiva/mese</TableBodyCell>
@@ -131,9 +152,19 @@
 				</TableBodyRow>
 				<TableBodyRow>
 					<TableBodyCell class="font-semibold">Break-even</TableBodyCell>
-					<TableBodyCell>{resultStandard.breakEvenYears < 99 ? `${resultStandard.breakEvenYears} anni` : 'Non raggiungibile'}</TableBodyCell>
-					<TableBodyCell class="font-bold {resultAgevolato.breakEvenYears < 15 ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}">
-						{resultAgevolato.breakEvenYears < 99 ? `${resultAgevolato.breakEvenYears} anni` : 'Non raggiungibile'}
+					<TableBodyCell
+						>{resultStandard.breakEvenYears < 99
+							? `${resultStandard.breakEvenYears} anni`
+							: 'Non raggiungibile'}</TableBodyCell
+					>
+					<TableBodyCell
+						class="font-bold {resultAgevolato.breakEvenYears < 15
+							? 'text-green-600 dark:text-green-400'
+							: 'text-yellow-600 dark:text-yellow-400'}"
+					>
+						{resultAgevolato.breakEvenYears < 99
+							? `${resultAgevolato.breakEvenYears} anni`
+							: 'Non raggiungibile'}
 					</TableBodyCell>
 				</TableBodyRow>
 			</TableBody>
@@ -141,34 +172,35 @@
 	</div>
 
 	<!-- Verdetto -->
-	{@const best = resultAgevolato.netCost < resultStandard.netCost ? resultAgevolato : resultStandard}
+	{@const best =
+		resultAgevolato.netCost < resultStandard.netCost ? resultAgevolato : resultStandard}
 	{@const bestType = resultAgevolato.netCost < resultStandard.netCost ? 'agevolato' : 'standard'}
 	<Alert color={best.recommended ? 'green' : 'yellow'} class="mb-6">
 		{#snippet icon()}
 			{#if best.recommended}
-				<CheckCircleSolid class="w-5 h-5" />
+				<CheckCircleSolid class="h-5 w-5" />
 			{:else}
-				<ExclamationCircleOutline class="w-5 h-5" />
+				<ExclamationCircleOutline class="h-5 w-5" />
 			{/if}
 		{/snippet}
-		<span class="font-semibold text-lg">
+		<span class="text-lg font-semibold">
 			{best.recommended ? 'Conviene!' : 'Valutazione necessaria'}
 		</span>
 		<p class="mt-2">{best.explanation}</p>
 		{#if bestType === 'agevolato'}
 			<p class="mt-2 text-sm">
-				Il <strong>riscatto agevolato</strong> costa {formatCurrency(resultAgevolato.netCost)} netti
-				(vs {formatCurrency(resultStandard.netCost)} del riscatto standard) ed e' generalmente la scelta migliore.
+				Il <strong>riscatto agevolato</strong> costa {formatCurrency(resultAgevolato.netCost)} netti (vs
+				{formatCurrency(resultStandard.netCost)} del riscatto standard) ed e' generalmente la scelta migliore.
 			</p>
 		{/if}
 	</Alert>
 
 	<!-- Info per FIRE -->
 	<Alert color="blue" class="mb-6">
-		{#snippet icon()}<InfoCircleSolid class="w-5 h-5" />{/snippet}
+		{#snippet icon()}<InfoCircleSolid class="h-5 w-5" />{/snippet}
 		<span class="font-semibold">Nota per FIRE:</span>
 		Il riscatto laurea anticipa l'accesso alla pensione di <strong>{yearsToRedeem} anni</strong>,
-		riducendo il periodo in cui devi vivere solo del portafoglio. Con {yearsToRedeem} anni
-		in meno di gap FIRE-pensione, puoi raggiungere il FIRE Number con un patrimonio inferiore.
+		riducendo il periodo in cui devi vivere solo del portafoglio. Con {yearsToRedeem} anni in meno di
+		gap FIRE-pensione, puoi raggiungere il FIRE Number con un patrimonio inferiore.
 	</Alert>
 {/if}

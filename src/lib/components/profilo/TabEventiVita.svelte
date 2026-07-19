@@ -1,15 +1,19 @@
 <script lang="ts">
+	import { Card, Button, Input, Label, Select, Toggle, Badge, Alert } from 'flowbite-svelte';
 	import {
-		Card, Button, Input, Label, Select, Toggle, Badge, Alert
-	} from 'flowbite-svelte';
-	import {
-		PlusOutline, TrashBinOutline, InfoCircleSolid,
+		PlusOutline,
+		TrashBinOutline,
+		InfoCircleSolid,
 		CalendarEditOutline
 	} from 'flowbite-svelte-icons';
 	import CurrencyInput from '$lib/components/shared/CurrencyInput.svelte';
 	import PercentInput from '$lib/components/shared/PercentInput.svelte';
 	import { formatCurrency } from '$lib/utils/format';
-	import { createDefaultLifeEvent, type LifeEvent, type LifeEventType } from '$lib/engine/life-events';
+	import {
+		createDefaultLifeEvent,
+		type LifeEvent,
+		type LifeEventType
+	} from '$lib/engine/life-events';
 	import { calculatePropertyCapitalGainsTax } from '$lib/engine/tax-italy';
 	import type { SuccessionRelationship } from '$lib/engine/tax-italy';
 
@@ -109,36 +113,37 @@
 
 <div class="space-y-6">
 	<section>
-		<div class="flex items-center gap-2 mb-3">
-			<CalendarEditOutline class="w-5 h-5 text-primary-600 dark:text-primary-400" />
-			<h4 class="text-lg font-semibold text-gray-900 dark:text-white">Eventi di vita parametrici</h4>
+		<div class="mb-3 flex items-center gap-2">
+			<CalendarEditOutline class="text-primary-600 dark:text-primary-400 h-5 w-5" />
+			<h4 class="text-lg font-semibold text-gray-900 dark:text-white">
+				Eventi di vita parametrici
+			</h4>
 			{#if activeCount > 0}
 				<Badge color="primary">{activeCount} attivi</Badge>
 			{/if}
 		</div>
-		<p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-			Aggiungi eventi "una-tantum" o periodi particolari che alterano il piano
-			FIRE: bonus, spese straordinarie (matrimonio, auto, ristrutturazione),
-			periodi di disoccupazione, part-time, variazioni permanenti di stipendio,
-			eredità e la vendita di un immobile (con plusvalenza e regola dei 5 anni).
-			Ogni evento impatta il cash flow e la proiezione del portafoglio.
+		<p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+			Aggiungi eventi "una-tantum" o periodi particolari che alterano il piano FIRE: bonus, spese
+			straordinarie (matrimonio, auto, ristrutturazione), periodi di disoccupazione, part-time,
+			variazioni permanenti di stipendio, eredità e la vendita di un immobile (con plusvalenza e
+			regola dei 5 anni). Ogni evento impatta il cash flow e la proiezione del portafoglio.
 		</p>
 
 		{#if lifeEvents.length === 0}
 			<Alert color="blue" class="mb-4">
 				{#snippet icon()}
-					<InfoCircleSolid class="w-4 h-4" />
+					<InfoCircleSolid class="h-4 w-4" />
 				{/snippet}
-				Nessun evento configurato. Il modello usa ipotesi di accumulo costante.
-				Aggiungi eventi per una proiezione piu' realistica.
+				Nessun evento configurato. Il modello usa ipotesi di accumulo costante. Aggiungi eventi per una
+				proiezione piu' realistica.
 			</Alert>
 		{/if}
 
 		<div class="space-y-3">
 			{#each lifeEvents as event (event.id)}
 				<Card class="max-w-none">
-					<div class="flex items-start justify-between gap-2 mb-3">
-						<div class="flex items-center gap-2 flex-wrap">
+					<div class="mb-3 flex items-start justify-between gap-2">
+						<div class="flex flex-wrap items-center gap-2">
 							<Badge color={typeColors[event.type]}>{typeLabels[event.type]}</Badge>
 							{#if !event.enabled}
 								<Badge color="gray">Disattivato</Badge>
@@ -147,12 +152,12 @@
 						<div class="flex items-center gap-2">
 							<Toggle bind:checked={event.enabled} />
 							<Button color="red" outline size="xs" onclick={() => removeEvent(event.id)}>
-								<TrashBinOutline class="w-3 h-3" />
+								<TrashBinOutline class="h-3 w-3" />
 							</Button>
 						</div>
 					</div>
 
-					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-3">
+					<div class="grid grid-cols-1 gap-x-4 gap-y-3 md:grid-cols-2 lg:grid-cols-4">
 						<div>
 							<Label for="evt-label-{event.id}" class="mb-2">Etichetta</Label>
 							<Input id="evt-label-{event.id}" bind:value={event.label} />
@@ -163,7 +168,8 @@
 								id="evt-type-{event.id}"
 								items={typeOptions}
 								value={event.type}
-								onchange={(e) => toggleEventType(event, (e.target as HTMLSelectElement).value as LifeEventType)}
+								onchange={(e) =>
+									toggleEventType(event, (e.target as HTMLSelectElement).value as LifeEventType)}
 							/>
 						</div>
 						<div>
@@ -341,8 +347,8 @@
 										{#if event.durationYears > 0}
 											incasso rateale (la liquidita' entra anno per anno).
 										{:else}
-											la vendita immette il netto come liquidita' nell'anno indicato
-											(immobile illiquido monetizzato).
+											la vendita immette il netto come liquidita' nell'anno indicato (immobile
+											illiquido monetizzato).
 										{/if}
 									</span>
 								</Alert>
@@ -354,9 +360,9 @@
 											Rateale: ~{formatCurrency(propertySaleAnnuity(event))}/anno per
 											{event.durationYears} anni (totale ~{formatCurrency(
 												propertySaleAnnuity(event) * event.durationYears
-											)}). TIR implicito {(event.percentage * 100).toFixed(1)}%: il rateale
-											conviene rispetto all'incasso unico solo se questo tasso supera il
-											rendimento atteso dei tuoi investimenti.
+											)}). TIR implicito {(event.percentage * 100).toFixed(1)}%: il rateale conviene
+											rispetto all'incasso unico solo se questo tasso supera il rendimento atteso
+											dei tuoi investimenti.
 										</span>
 									</Alert>
 								</div>
@@ -367,27 +373,27 @@
 			{/each}
 		</div>
 
-		<div class="flex flex-wrap gap-2 mt-4">
+		<div class="mt-4 flex flex-wrap gap-2">
 			<Button color="alternative" size="sm" onclick={() => addEvent('bonus')}>
-				<PlusOutline class="w-3 h-3 me-1" /> Bonus
+				<PlusOutline class="me-1 h-3 w-3" /> Bonus
 			</Button>
 			<Button color="alternative" size="sm" onclick={() => addEvent('oneTimeExpense')}>
-				<PlusOutline class="w-3 h-3 me-1" /> Spesa una-tantum
+				<PlusOutline class="me-1 h-3 w-3" /> Spesa una-tantum
 			</Button>
 			<Button color="alternative" size="sm" onclick={() => addEvent('unemployment')}>
-				<PlusOutline class="w-3 h-3 me-1" /> Disoccupazione
+				<PlusOutline class="me-1 h-3 w-3" /> Disoccupazione
 			</Button>
 			<Button color="alternative" size="sm" onclick={() => addEvent('partTime')}>
-				<PlusOutline class="w-3 h-3 me-1" /> Part-time
+				<PlusOutline class="me-1 h-3 w-3" /> Part-time
 			</Button>
 			<Button color="alternative" size="sm" onclick={() => addEvent('incomeChange')}>
-				<PlusOutline class="w-3 h-3 me-1" /> Variazione stipendio
+				<PlusOutline class="me-1 h-3 w-3" /> Variazione stipendio
 			</Button>
 			<Button color="alternative" size="sm" onclick={() => addEvent('inheritance')}>
-				<PlusOutline class="w-3 h-3 me-1" /> Eredità
+				<PlusOutline class="me-1 h-3 w-3" /> Eredità
 			</Button>
 			<Button color="alternative" size="sm" onclick={() => addEvent('propertySale')}>
-				<PlusOutline class="w-3 h-3 me-1" /> Vendita immobile
+				<PlusOutline class="me-1 h-3 w-3" /> Vendita immobile
 			</Button>
 		</div>
 	</section>

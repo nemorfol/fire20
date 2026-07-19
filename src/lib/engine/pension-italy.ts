@@ -240,7 +240,8 @@ export function getPensionRequirements(referenceYear: number = 2026): PensionReq
 			minContributionYears: 20,
 			minPensionMultiple: 3,
 			socialAllowanceMonthly: 534.41,
-			description: 'Pensione anticipata contributiva: 64 anni, 20 anni di contributi, pensione >= 3 volte l\'assegno sociale (534,41 €/mese nel 2026)'
+			description:
+				"Pensione anticipata contributiva: 64 anni, 20 anni di contributi, pensione >= 3 volte l'assegno sociale (534,41 €/mese nel 2026)"
 		}
 	};
 }
@@ -273,9 +274,10 @@ export function estimatePensionAge(
 	const oldAgeAge = oldAgeEligible ? oldAgeThreshold : Infinity;
 
 	// Canale 2: Pensione anticipata (42a 10m uomini, 41a 10m donne)
-	const requiredMonths = gender === 'M'
-		? requirements.early.menYears * 12 + requirements.early.menMonths
-		: requirements.early.womenYears * 12 + requirements.early.womenMonths;
+	const requiredMonths =
+		gender === 'M'
+			? requirements.early.menYears * 12 + requirements.early.menMonths
+			: requirements.early.womenYears * 12 + requirements.early.womenMonths;
 	const earlyAge = contributionStartAge + requiredMonths / 12;
 
 	// Canale 3: Pensione anticipata contributiva (64 anni, 20 anni contributi)
@@ -283,7 +285,8 @@ export function estimatePensionAge(
 	const isFullContributive = birthYear + contributionStartAge >= 1996;
 	const contributionYearsAt64 = 64 - contributionStartAge;
 	const earlyContributiveAge =
-		isFullContributive && contributionYearsAt64 >= requirements.earlyContributive.minContributionYears
+		isFullContributive &&
+		contributionYearsAt64 >= requirements.earlyContributive.minContributionYears
 			? 64
 			: Infinity;
 

@@ -31,23 +31,17 @@
 	} = $props();
 
 	let yearsLabel = $derived(
-		yearsToFire === 0
-			? 'Raggiunto!'
-			: yearsToFire < 0
-				? 'Irraggiungibile'
-				: `${yearsToFire} anni`
+		yearsToFire === 0 ? 'Raggiunto!' : yearsToFire < 0 ? 'Irraggiungibile' : `${yearsToFire} anni`
 	);
 
 	let yearsTrend = $derived<'up' | 'down' | 'neutral'>(
 		yearsToFire === 0 ? 'up' : yearsToFire < 0 ? 'down' : 'neutral'
 	);
 
-	let gapTrend = $derived<'up' | 'down' | 'neutral'>(
-		gap <= 0 ? 'up' : 'down'
-	);
+	let gapTrend = $derived<'up' | 'down' | 'neutral'>(gap <= 0 ? 'up' : 'down');
 </script>
 
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 	<StatCard
 		title="FIRE Number"
 		value={formatCurrency(fireNumber)}
@@ -83,7 +77,9 @@
 	<StatCard
 		title="Coast FIRE Number"
 		value={formatCurrency(coastFireNumber)}
-		subtitle={(liquidNetWorth || netWorth) >= coastFireNumber ? 'Coast FIRE raggiunto!' : 'Soglia per smettere di contribuire'}
+		subtitle={(liquidNetWorth || netWorth) >= coastFireNumber
+			? 'Coast FIRE raggiunto!'
+			: 'Soglia per smettere di contribuire'}
 		icon={ShieldCheckSolid}
 		trend={(liquidNetWorth || netWorth) >= coastFireNumber ? 'up' : 'neutral'}
 		color="yellow"

@@ -18,10 +18,7 @@ import { projectPortfolio, type ProjectionParams, type YearlyProjection } from '
 
 /** Una metrica calcolata da una proiezione */
 export type ProjectionMetric =
-	| 'finalPortfolio'
-	| 'depletionAge'
-	| 'cumulativeWithdrawals'
-	| 'minPortfolio';
+	'finalPortfolio' | 'depletionAge' | 'cumulativeWithdrawals' | 'minPortfolio';
 
 /** Risultato sensitivity per una singola variabile */
 export interface SensitivityResult {
@@ -117,7 +114,7 @@ export const DEFAULT_FIRE_VARIABLES: SensitivityVariable[] = [
 	},
 	{
 		id: 'retirementAge',
-		label: 'Eta\' pensione FIRE',
+		label: "Eta' pensione FIRE",
 		baseline: (p) => p.retirementAge,
 		apply: (p, m) => ({ ...p, retirementAge: Math.round(p.retirementAge * (1 + m)) }),
 		positiveImpact: true

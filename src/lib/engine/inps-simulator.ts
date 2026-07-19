@@ -7,58 +7,58 @@ import { getTransformationCoefficient } from './assumptions.js';
 import { getPensionRequirements } from './pension-italy';
 
 export interface INPSSimulatorParams {
-  birthYear: number;
-  gender: 'M' | 'F';
-  firstEmploymentYear: number;
-  currentGrossSalary: number;
-  salaryGrowthRate: number; // annual % growth (e.g. 2 for 2%)
-  contractType: 'dipendente' | 'autonomo' | 'parasubordinato';
-  partTime: boolean;
-  partTimePercentage: number; // 50-100
-  existingContributionYears: number;
-  existingMontante: number; // if known from INPS extract
-  targetRetirementAge?: number;
-  careerGaps?: { fromYear: number; toYear: number; reason: string }[];
-  riscattoLaurea?: { years: number; cost: number };
-  /** Età di fine contribuzione (fine lavoro/FIRE): oltre questa età il montante
-   *  si rivaluta senza nuovi versamenti. Default: nessuno stop (fino a pensione). #37 */
-  contributionEndAge?: number;
+	birthYear: number;
+	gender: 'M' | 'F';
+	firstEmploymentYear: number;
+	currentGrossSalary: number;
+	salaryGrowthRate: number; // annual % growth (e.g. 2 for 2%)
+	contractType: 'dipendente' | 'autonomo' | 'parasubordinato';
+	partTime: boolean;
+	partTimePercentage: number; // 50-100
+	existingContributionYears: number;
+	existingMontante: number; // if known from INPS extract
+	targetRetirementAge?: number;
+	careerGaps?: { fromYear: number; toYear: number; reason: string }[];
+	riscattoLaurea?: { years: number; cost: number };
+	/** Età di fine contribuzione (fine lavoro/FIRE): oltre questa età il montante
+	 *  si rivaluta senza nuovi versamenti. Default: nessuno stop (fino a pensione). #37 */
+	contributionEndAge?: number;
 }
 
 export interface PensionAtAge {
-  age: number;
-  monthlyGross: number;
-  monthlyNet: number;
-  replacementRate: number;
+	age: number;
+	monthlyGross: number;
+	monthlyNet: number;
+	replacementRate: number;
 }
 
 export interface RiscattoLaureaROI {
-  costTotal: number;
-  taxSaving: number;
-  additionalPension: number;
-  breakEvenYears: number;
+	costTotal: number;
+	taxSaving: number;
+	additionalPension: number;
+	breakEvenYears: number;
 }
 
 export interface INPSSimulatorResult {
-  pensionAtAge: PensionAtAge[];
-  earliestRetirementAge: number;
-  oldAgePensionAge: number;
-  optimalRetirementAge: number;
-  projectedMontante: number;
-  totalContributionYears: number;
-  riscattoLaureaROI?: RiscattoLaureaROI;
-  fireGapYears: number;
-  fireGapCost: number;
-  ritaEligible: boolean;
-  ritaEarliestAge: number;
-  ritaMaxAmount: number;
+	pensionAtAge: PensionAtAge[];
+	earliestRetirementAge: number;
+	oldAgePensionAge: number;
+	optimalRetirementAge: number;
+	projectedMontante: number;
+	totalContributionYears: number;
+	riscattoLaureaROI?: RiscattoLaureaROI;
+	fireGapYears: number;
+	fireGapCost: number;
+	ritaEligible: boolean;
+	ritaEarliestAge: number;
+	ritaMaxAmount: number;
 }
 
 /** Aliquote contributive per tipo contratto */
 const CONTRIBUTION_RATES: Record<string, number> = {
-  dipendente: 0.33,
-  autonomo: 0.2623,
-  parasubordinato: 0.3372,
+	dipendente: 0.33,
+	autonomo: 0.2623,
+	parasubordinato: 0.3372
 };
 
 /** Tasso medio di rivalutazione del montante (crescita PIL nominale) */
@@ -72,268 +72,258 @@ const SOCIAL_ALLOWANCE_MONTHLY = 534.41;
  * Scaglioni 2026.
  */
 function calculateNetFromGross(grossAnnual: number): number {
-  if (grossAnnual <= 0) return 0;
+	if (grossAnnual <= 0) return 0;
 
-  // Scaglioni IRPEF 2026: 23% fino a 28k, 33% 28-50k (taglio L. Bilancio 2026,
-  // 2o scaglione 35%->33%), 43% oltre 50k. Allineato a pension-fund.ts/assumptions.
-  let tax = 0;
-  if (grossAnnual <= 28000) {
-    tax = grossAnnual * 0.23;
-  } else if (grossAnnual <= 50000) {
-    tax = 28000 * 0.23 + (grossAnnual - 28000) * 0.33;
-  } else {
-    tax = 28000 * 0.23 + 22000 * 0.33 + (grossAnnual - 50000) * 0.43;
-  }
-  // Addizionali regionali/comunali ~2%
-  tax += grossAnnual * 0.02;
+	// Scaglioni IRPEF 2026: 23% fino a 28k, 33% 28-50k (taglio L. Bilancio 2026,
+	// 2o scaglione 35%->33%), 43% oltre 50k. Allineato a pension-fund.ts/assumptions.
+	let tax = 0;
+	if (grossAnnual <= 28000) {
+		tax = grossAnnual * 0.23;
+	} else if (grossAnnual <= 50000) {
+		tax = 28000 * 0.23 + (grossAnnual - 28000) * 0.33;
+	} else {
+		tax = 28000 * 0.23 + 22000 * 0.33 + (grossAnnual - 50000) * 0.43;
+	}
+	// Addizionali regionali/comunali ~2%
+	tax += grossAnnual * 0.02;
 
-  return Math.max(0, grossAnnual - tax);
+	return Math.max(0, grossAnnual - tax);
 }
 
 /**
  * Aliquota marginale IRPEF per il reddito dato.
  */
 function getMarginalTaxRate(grossAnnual: number): number {
-  if (grossAnnual <= 28000) return 0.23;
-  if (grossAnnual <= 50000) return 0.33;
-  return 0.43;
+	if (grossAnnual <= 28000) return 0.23;
+	if (grossAnnual <= 50000) return 0.33;
+	return 0.43;
 }
 
 /**
  * Calcola il numero di anni di gap nella carriera.
  */
-function calculateGapYears(
-  gaps: { fromYear: number; toYear: number }[] | undefined
-): number {
-  if (!gaps || gaps.length === 0) return 0;
-  return gaps.reduce((total, gap) => total + Math.max(0, gap.toYear - gap.fromYear), 0);
+function calculateGapYears(gaps: { fromYear: number; toYear: number }[] | undefined): number {
+	if (!gaps || gaps.length === 0) return 0;
+	return gaps.reduce((total, gap) => total + Math.max(0, gap.toYear - gap.fromYear), 0);
 }
 
 /**
  * Verifica se un anno cade in un gap di carriera.
  */
-function isInGap(
-  year: number,
-  gaps: { fromYear: number; toYear: number }[] | undefined
-): boolean {
-  if (!gaps) return false;
-  return gaps.some((g) => year >= g.fromYear && year < g.toYear);
+function isInGap(year: number, gaps: { fromYear: number; toYear: number }[] | undefined): boolean {
+	if (!gaps) return false;
+	return gaps.some((g) => year >= g.fromYear && year < g.toYear);
 }
 
 /**
  * Proietta il montante contributivo anno per anno.
  */
-function projectMontante(params: INPSSimulatorParams, retirementAge: number): {
-  montante: number;
-  contributionYears: number;
-  lastSalary: number;
+function projectMontante(
+	params: INPSSimulatorParams,
+	retirementAge: number
+): {
+	montante: number;
+	contributionYears: number;
+	lastSalary: number;
 } {
-  const currentYear = new Date().getFullYear();
-  const currentAge = currentYear - params.birthYear;
-  const retirementYear = params.birthYear + retirementAge;
-  const contributionRate = CONTRIBUTION_RATES[params.contractType] || 0.33;
-  const growthRate = params.salaryGrowthRate / 100;
-  const partTimeFactor = params.partTime ? params.partTimePercentage / 100 : 1;
+	const currentYear = new Date().getFullYear();
+	const currentAge = currentYear - params.birthYear;
+	const retirementYear = params.birthYear + retirementAge;
+	const contributionRate = CONTRIBUTION_RATES[params.contractType] || 0.33;
+	const growthRate = params.salaryGrowthRate / 100;
+	const partTimeFactor = params.partTime ? params.partTimePercentage / 100 : 1;
 
-  // Se abbiamo un montante esistente, lo usiamo come base
-  let montante = params.existingMontante || 0;
+	// Se abbiamo un montante esistente, lo usiamo come base
+	let montante = params.existingMontante || 0;
 
-  // Se non abbiamo montante esistente, calcoliamo quello passato
-  if (montante === 0 && params.existingContributionYears > 0) {
-    const startYear = currentYear - params.existingContributionYears;
-    for (let year = startYear; year < currentYear; year++) {
-      if (isInGap(year, params.careerGaps)) continue;
-      const yearsFromNow = currentYear - year;
-      const pastSalary = params.currentGrossSalary / Math.pow(1 + growthRate, yearsFromNow);
-      const contribution = pastSalary * contributionRate * partTimeFactor;
-      // Rivaluta fino ad oggi
-      montante += contribution * Math.pow(1 + DEFAULT_GDP_REVALUATION, yearsFromNow);
-    }
-  }
+	// Se non abbiamo montante esistente, calcoliamo quello passato
+	if (montante === 0 && params.existingContributionYears > 0) {
+		const startYear = currentYear - params.existingContributionYears;
+		for (let year = startYear; year < currentYear; year++) {
+			if (isInGap(year, params.careerGaps)) continue;
+			const yearsFromNow = currentYear - year;
+			const pastSalary = params.currentGrossSalary / Math.pow(1 + growthRate, yearsFromNow);
+			const contribution = pastSalary * contributionRate * partTimeFactor;
+			// Rivaluta fino ad oggi
+			montante += contribution * Math.pow(1 + DEFAULT_GDP_REVALUATION, yearsFromNow);
+		}
+	}
 
-  // Proiezione futura
-  let contributionYears = params.existingContributionYears;
-  let lastSalary = params.currentGrossSalary;
+	// Proiezione futura
+	let contributionYears = params.existingContributionYears;
+	let lastSalary = params.currentGrossSalary;
 
-  for (let year = currentYear; year < retirementYear; year++) {
-    // Stop contribuzione alla fine lavoro / FIRE: oltre contributionEndAge il
-    // montante si rivaluta ma non si versano nuovi contributi. (#37)
-    const ageThisYear = year - params.birthYear;
-    const contribStopped =
-      params.contributionEndAge != null && ageThisYear >= params.contributionEndAge;
-    if (isInGap(year, params.careerGaps) || contribStopped) {
-      // Rivaluta il montante esistente ma non aggiungi contributi
-      montante *= 1 + DEFAULT_GDP_REVALUATION;
-      continue;
-    }
-    const yearsFromNow = year - currentYear;
-    const futureSalary = params.currentGrossSalary * Math.pow(1 + growthRate, yearsFromNow);
-    lastSalary = futureSalary;
-    const contribution = futureSalary * contributionRate * partTimeFactor;
-    // Rivaluta dal versamento alla pensione
-    const yearsToGrow = retirementYear - year - 1;
-    montante += contribution * Math.pow(1 + DEFAULT_GDP_REVALUATION, Math.max(0, yearsToGrow));
-    contributionYears++;
-  }
+	for (let year = currentYear; year < retirementYear; year++) {
+		// Stop contribuzione alla fine lavoro / FIRE: oltre contributionEndAge il
+		// montante si rivaluta ma non si versano nuovi contributi. (#37)
+		const ageThisYear = year - params.birthYear;
+		const contribStopped =
+			params.contributionEndAge != null && ageThisYear >= params.contributionEndAge;
+		if (isInGap(year, params.careerGaps) || contribStopped) {
+			// Rivaluta il montante esistente ma non aggiungi contributi
+			montante *= 1 + DEFAULT_GDP_REVALUATION;
+			continue;
+		}
+		const yearsFromNow = year - currentYear;
+		const futureSalary = params.currentGrossSalary * Math.pow(1 + growthRate, yearsFromNow);
+		lastSalary = futureSalary;
+		const contribution = futureSalary * contributionRate * partTimeFactor;
+		// Rivaluta dal versamento alla pensione
+		const yearsToGrow = retirementYear - year - 1;
+		montante += contribution * Math.pow(1 + DEFAULT_GDP_REVALUATION, Math.max(0, yearsToGrow));
+		contributionYears++;
+	}
 
-  // Aggiungi riscatto laurea
-  if (params.riscattoLaurea && params.riscattoLaurea.years > 0) {
-    // Riscatto laurea aggiunge anni al montante come se fossero contributi
-    const avgContribution = params.currentGrossSalary * contributionRate;
-    const additionalMontante = avgContribution * params.riscattoLaurea.years;
-    montante += additionalMontante;
-    contributionYears += params.riscattoLaurea.years;
-  }
+	// Aggiungi riscatto laurea
+	if (params.riscattoLaurea && params.riscattoLaurea.years > 0) {
+		// Riscatto laurea aggiunge anni al montante come se fossero contributi
+		const avgContribution = params.currentGrossSalary * contributionRate;
+		const additionalMontante = avgContribution * params.riscattoLaurea.years;
+		montante += additionalMontante;
+		contributionYears += params.riscattoLaurea.years;
+	}
 
-  return { montante, contributionYears, lastSalary };
+	return { montante, contributionYears, lastSalary };
 }
 
 /**
  * Calcola l'eta minima di pensionamento.
  */
 function calculateEarliestRetirementAge(params: INPSSimulatorParams): {
-  earliest: number;
-  oldAge: number;
+	earliest: number;
+	oldAge: number;
 } {
-  const contributionStartAge = params.firstEmploymentYear - params.birthYear;
-  const gapYears = calculateGapYears(params.careerGaps);
-  const riscattoYears = params.riscattoLaurea?.years || 0;
+	const contributionStartAge = params.firstEmploymentYear - params.birthYear;
+	const gapYears = calculateGapYears(params.careerGaps);
+	const riscattoYears = params.riscattoLaurea?.years || 0;
 
-  // Requisiti con adeguamento alla speranza di vita per l'anno di decorrenza
-  // (approssimato all'anno in cui si compiono i 67).
-  const req = getPensionRequirements(params.birthYear + 67);
+	// Requisiti con adeguamento alla speranza di vita per l'anno di decorrenza
+	// (approssimato all'anno in cui si compiono i 67).
+	const req = getPensionRequirements(params.birthYear + 67);
 
-  // Canale 1: Pensione di vecchiaia (67 anni + adeguamento, 20 anni contributi)
-  const oldAge = req.oldAge.age;
-  const totalContribYearsAtOldAge = oldAge - contributionStartAge - gapYears + riscattoYears;
-  const oldAgeEligible = totalContribYearsAtOldAge >= req.oldAge.minContributionYears;
+	// Canale 1: Pensione di vecchiaia (67 anni + adeguamento, 20 anni contributi)
+	const oldAge = req.oldAge.age;
+	const totalContribYearsAtOldAge = oldAge - contributionStartAge - gapYears + riscattoYears;
+	const oldAgeEligible = totalContribYearsAtOldAge >= req.oldAge.minContributionYears;
 
-  // Canale 2: Pensione anticipata (42a 10m uomini / 41a 10m donne + adeguamento)
-  const requiredMonths =
-    params.gender === 'M'
-      ? req.early.menYears * 12 + req.early.menMonths
-      : req.early.womenYears * 12 + req.early.womenMonths;
-  const effectiveContribMonths = (params.existingContributionYears + riscattoYears) * 12;
-  const currentAge = new Date().getFullYear() - params.birthYear;
-  const remainingMonths = Math.max(0, requiredMonths - effectiveContribMonths);
-  const earlyAge = currentAge + remainingMonths / 12;
+	// Canale 2: Pensione anticipata (42a 10m uomini / 41a 10m donne + adeguamento)
+	const requiredMonths =
+		params.gender === 'M'
+			? req.early.menYears * 12 + req.early.menMonths
+			: req.early.womenYears * 12 + req.early.womenMonths;
+	const effectiveContribMonths = (params.existingContributionYears + riscattoYears) * 12;
+	const currentAge = new Date().getFullYear() - params.birthYear;
+	const remainingMonths = Math.max(0, requiredMonths - effectiveContribMonths);
+	const earlyAge = currentAge + remainingMonths / 12;
 
-  // Canale 3: Pensione anticipata contributiva (64 anni, 20 anni contributi, requisito importo)
-  const isFullContributive = params.firstEmploymentYear >= 1996;
-  const contributionYearsAt64 = 64 - contributionStartAge - gapYears + riscattoYears;
-  const earlyContributiveAge =
-    isFullContributive && contributionYearsAt64 >= 20 ? 64 : Infinity;
+	// Canale 3: Pensione anticipata contributiva (64 anni, 20 anni contributi, requisito importo)
+	const isFullContributive = params.firstEmploymentYear >= 1996;
+	const contributionYearsAt64 = 64 - contributionStartAge - gapYears + riscattoYears;
+	const earlyContributiveAge = isFullContributive && contributionYearsAt64 >= 20 ? 64 : Infinity;
 
-  const earliest = Math.min(
-    oldAgeEligible ? oldAge : Infinity,
-    earlyAge,
-    earlyContributiveAge
-  );
+	const earliest = Math.min(oldAgeEligible ? oldAge : Infinity, earlyAge, earlyContributiveAge);
 
-  return {
-    earliest: earliest === Infinity ? 67 : Math.ceil(earliest),
-    oldAge,
-  };
+	return {
+		earliest: earliest === Infinity ? 67 : Math.ceil(earliest),
+		oldAge
+	};
 }
 
 /**
  * Simula la pensione INPS con parametri dettagliati.
  */
 export function simulateINPSPension(params: INPSSimulatorParams): INPSSimulatorResult {
-  const currentYear = new Date().getFullYear();
-  const currentAge = currentYear - params.birthYear;
-  const { earliest, oldAge } = calculateEarliestRetirementAge(params);
+	const currentYear = new Date().getFullYear();
+	const currentAge = currentYear - params.birthYear;
+	const { earliest, oldAge } = calculateEarliestRetirementAge(params);
 
-  // Calcola pensione per ogni eta da 57 a 71
-  const pensionAtAge: PensionAtAge[] = [];
-  let bestAge = earliest;
-  let bestNetMonthly = 0;
+	// Calcola pensione per ogni eta da 57 a 71
+	const pensionAtAge: PensionAtAge[] = [];
+	let bestAge = earliest;
+	let bestNetMonthly = 0;
 
-  for (let age = 57; age <= 71; age++) {
-    if (age < currentAge) continue; // Non puo andare in pensione nel passato
+	for (let age = 57; age <= 71; age++) {
+		if (age < currentAge) continue; // Non puo andare in pensione nel passato
 
-    const { montante, contributionYears, lastSalary } = projectMontante(params, age);
-    const coefficient = getTransformationCoefficient(age);
-    const grossAnnual = montante * coefficient;
-    const grossMonthly = Math.round((grossAnnual / 13) * 100) / 100;
-    const netAnnual = calculateNetFromGross(grossAnnual);
-    const netMonthly = Math.round((netAnnual / 13) * 100) / 100;
-    const replacementRate = lastSalary > 0 ? grossAnnual / lastSalary : 0;
+		const { montante, contributionYears, lastSalary } = projectMontante(params, age);
+		const coefficient = getTransformationCoefficient(age);
+		const grossAnnual = montante * coefficient;
+		const grossMonthly = Math.round((grossAnnual / 13) * 100) / 100;
+		const netAnnual = calculateNetFromGross(grossAnnual);
+		const netMonthly = Math.round((netAnnual / 13) * 100) / 100;
+		const replacementRate = lastSalary > 0 ? grossAnnual / lastSalary : 0;
 
-    pensionAtAge.push({
-      age,
-      monthlyGross: grossMonthly,
-      monthlyNet: netMonthly,
-      replacementRate: Math.round(replacementRate * 10000) / 10000,
-    });
+		pensionAtAge.push({
+			age,
+			monthlyGross: grossMonthly,
+			monthlyNet: netMonthly,
+			replacementRate: Math.round(replacementRate * 10000) / 10000
+		});
 
-    // Trova l'eta ottimale (miglior rapporto netto)
-    if (age >= earliest && netMonthly > bestNetMonthly) {
-      bestNetMonthly = netMonthly;
-      bestAge = age;
-    }
-  }
+		// Trova l'eta ottimale (miglior rapporto netto)
+		if (age >= earliest && netMonthly > bestNetMonthly) {
+			bestNetMonthly = netMonthly;
+			bestAge = age;
+		}
+	}
 
-  // Montante proiettato all'eta piu bassa di pensionamento
-  const projectionAtEarliest = projectMontante(params, earliest);
+	// Montante proiettato all'eta piu bassa di pensionamento
+	const projectionAtEarliest = projectMontante(params, earliest);
 
-  // Riscatto laurea ROI
-  let riscattoLaureaROI: RiscattoLaureaROI | undefined;
-  if (params.riscattoLaurea && params.riscattoLaurea.years > 0) {
-    const costTotal = params.riscattoLaurea.cost;
-    // Risparmio fiscale: il costo e deducibile dall'IRPEF
-    const marginalRate = getMarginalTaxRate(params.currentGrossSalary);
-    const taxSaving = Math.round(costTotal * marginalRate);
+	// Riscatto laurea ROI
+	let riscattoLaureaROI: RiscattoLaureaROI | undefined;
+	if (params.riscattoLaurea && params.riscattoLaurea.years > 0) {
+		const costTotal = params.riscattoLaurea.cost;
+		// Risparmio fiscale: il costo e deducibile dall'IRPEF
+		const marginalRate = getMarginalTaxRate(params.currentGrossSalary);
+		const taxSaving = Math.round(costTotal * marginalRate);
 
-    // Pensione aggiuntiva: confronto con/senza riscatto
-    const paramsWithout = { ...params, riscattoLaurea: undefined };
-    const withRiscatto = projectMontante(params, oldAge);
-    const withoutRiscatto = projectMontante(paramsWithout, oldAge);
-    const coeffAtOldAge = getTransformationCoefficient(oldAge);
-    const additionalAnnual =
-      (withRiscatto.montante - withoutRiscatto.montante) * coeffAtOldAge;
-    const additionalPension = Math.round(additionalAnnual / 13);
+		// Pensione aggiuntiva: confronto con/senza riscatto
+		const paramsWithout = { ...params, riscattoLaurea: undefined };
+		const withRiscatto = projectMontante(params, oldAge);
+		const withoutRiscatto = projectMontante(paramsWithout, oldAge);
+		const coeffAtOldAge = getTransformationCoefficient(oldAge);
+		const additionalAnnual = (withRiscatto.montante - withoutRiscatto.montante) * coeffAtOldAge;
+		const additionalPension = Math.round(additionalAnnual / 13);
 
-    // Break-even: quanti anni di pensione per recuperare il costo netto
-    const netCost = costTotal - taxSaving;
-    const breakEvenYears =
-      additionalPension > 0
-        ? Math.ceil(netCost / (additionalPension * 13))
-        : 999;
+		// Break-even: quanti anni di pensione per recuperare il costo netto
+		const netCost = costTotal - taxSaving;
+		const breakEvenYears =
+			additionalPension > 0 ? Math.ceil(netCost / (additionalPension * 13)) : 999;
 
-    riscattoLaureaROI = {
-      costTotal,
-      taxSaving,
-      additionalPension,
-      breakEvenYears,
-    };
-  }
+		riscattoLaureaROI = {
+			costTotal,
+			taxSaving,
+			additionalPension,
+			breakEvenYears
+		};
+	}
 
-  // FIRE gap
-  const targetAge = params.targetRetirementAge || earliest;
-  const fireGapYears = Math.max(0, earliest - targetAge);
-  const fireGapCost = fireGapYears * params.currentGrossSalary * 0.6; // Stima spese = 60% stipendio
+	// FIRE gap
+	const targetAge = params.targetRetirementAge || earliest;
+	const fireGapYears = Math.max(0, earliest - targetAge);
+	const fireGapCost = fireGapYears * params.currentGrossSalary * 0.6; // Stima spese = 60% stipendio
 
-  // RITA
-  const ritaEarliestAge = Math.max(57, oldAge - 10);
-  const ritaEligible = currentAge <= oldAge && targetAge !== undefined;
-  // RITA max: intero fondo pensione complementare (stima)
-  const ritaMaxAmount = 0; // Dipende dal fondo complementare, non calcolabile qui
+	// RITA
+	const ritaEarliestAge = Math.max(57, oldAge - 10);
+	const ritaEligible = currentAge <= oldAge && targetAge !== undefined;
+	// RITA max: intero fondo pensione complementare (stima)
+	const ritaMaxAmount = 0; // Dipende dal fondo complementare, non calcolabile qui
 
-  return {
-    pensionAtAge,
-    earliestRetirementAge: earliest,
-    oldAgePensionAge: oldAge,
-    optimalRetirementAge: bestAge,
-    projectedMontante: Math.round(projectionAtEarliest.montante),
-    totalContributionYears: projectionAtEarliest.contributionYears,
-    riscattoLaureaROI,
-    fireGapYears,
-    fireGapCost: Math.round(fireGapCost),
-    ritaEligible,
-    ritaEarliestAge,
-    ritaMaxAmount,
-  };
+	return {
+		pensionAtAge,
+		earliestRetirementAge: earliest,
+		oldAgePensionAge: oldAge,
+		optimalRetirementAge: bestAge,
+		projectedMontante: Math.round(projectionAtEarliest.montante),
+		totalContributionYears: projectionAtEarliest.contributionYears,
+		riscattoLaureaROI,
+		fireGapYears,
+		fireGapCost: Math.round(fireGapCost),
+		ritaEligible,
+		ritaEarliestAge,
+		ritaMaxAmount
+	};
 }
 
 /**
@@ -341,11 +331,11 @@ export function simulateINPSPension(params: INPSSimulatorParams): INPSSimulatorR
  * Metodo agevolato: aliquota IVS * reddito minimo * anni da riscattare.
  */
 export function calculateRiscattoLaureaCost(
-  years: number,
-  contractType: 'dipendente' | 'autonomo' | 'parasubordinato'
+	years: number,
+	contractType: 'dipendente' | 'autonomo' | 'parasubordinato'
 ): number {
-  // Minimale INPS 2026 (approssimato)
-  const INPS_MINIMUM_INCOME = 18415;
-  const rate = CONTRIBUTION_RATES[contractType] || 0.33;
-  return Math.round(INPS_MINIMUM_INCOME * rate * years);
+	// Minimale INPS 2026 (approssimato)
+	const INPS_MINIMUM_INCOME = 18415;
+	const rate = CONTRIBUTION_RATES[contractType] || 0.33;
+	return Math.round(INPS_MINIMUM_INCOME * rate * years);
 }

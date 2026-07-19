@@ -41,9 +41,7 @@
 		{ value: 'historical', name: 'Storico' }
 	];
 
-	let profileOptions = $derived(
-		profiles.map((p) => ({ value: p.id, name: p.name }))
-	);
+	let profileOptions = $derived(profiles.map((p) => ({ value: p.id, name: p.name })));
 
 	let selectedProfile = $derived(profiles.find((p) => p.id === profileId));
 
@@ -105,7 +103,7 @@
 
 <Modal bind:open size="lg" {title}>
 	<div class="space-y-4">
-		<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+		<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 			<div>
 				<Label for="sc-name" class="mb-1">Nome</Label>
 				<Input id="sc-name" bind:value={name} placeholder="Nome scenario" required />
@@ -118,7 +116,12 @@
 
 		<div>
 			<Label for="sc-desc" class="mb-1">Descrizione</Label>
-			<Textarea id="sc-desc" bind:value={description} rows={2} placeholder="Descrizione opzionale" />
+			<Textarea
+				id="sc-desc"
+				bind:value={description}
+				rows={2}
+				placeholder="Descrizione opzionale"
+			/>
 		</div>
 
 		<div>
@@ -127,52 +130,106 @@
 		</div>
 
 		{#if selectedProfile}
-			<div class="border-t border-gray-200 dark:border-gray-700 pt-4">
-				<h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+			<div class="border-t border-gray-200 pt-4 dark:border-gray-700">
+				<h4 class="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
 					Parametri personalizzati (lascia vuoto per usare i valori del profilo)
 				</h4>
-				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+				<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
 					<div>
 						<Label for="sc-wr" class="mb-1 text-xs">
-							Tasso di prelievo (%) <span class="text-gray-400">Profilo: {selectedProfile.simulation.withdrawalRate}%</span>
+							Tasso di prelievo (%) <span class="text-gray-400"
+								>Profilo: {selectedProfile.simulation.withdrawalRate}%</span
+							>
 						</Label>
-						<Input id="sc-wr" type="number" step="0.1" bind:value={withdrawalRate} placeholder={String(selectedProfile.simulation.withdrawalRate)} />
+						<Input
+							id="sc-wr"
+							type="number"
+							step="0.1"
+							bind:value={withdrawalRate}
+							placeholder={String(selectedProfile.simulation.withdrawalRate)}
+						/>
 					</div>
 					<div>
 						<Label for="sc-stock" class="mb-1 text-xs">
-							Allocazione azioni (%) <span class="text-gray-400">Profilo: {selectedProfile.simulation.stockAllocation}%</span>
+							Allocazione azioni (%) <span class="text-gray-400"
+								>Profilo: {selectedProfile.simulation.stockAllocation}%</span
+							>
 						</Label>
-						<Input id="sc-stock" type="number" step="1" bind:value={stockAllocation} placeholder={String(selectedProfile.simulation.stockAllocation)} />
+						<Input
+							id="sc-stock"
+							type="number"
+							step="1"
+							bind:value={stockAllocation}
+							placeholder={String(selectedProfile.simulation.stockAllocation)}
+						/>
 					</div>
 					<div>
 						<Label for="sc-infl" class="mb-1 text-xs">
-							Inflazione (%) <span class="text-gray-400">Profilo: {selectedProfile.simulation.inflationRate}%</span>
+							Inflazione (%) <span class="text-gray-400"
+								>Profilo: {selectedProfile.simulation.inflationRate}%</span
+							>
 						</Label>
-						<Input id="sc-infl" type="number" step="0.1" bind:value={inflationRate} placeholder={String(selectedProfile.simulation.inflationRate)} />
+						<Input
+							id="sc-infl"
+							type="number"
+							step="0.1"
+							bind:value={inflationRate}
+							placeholder={String(selectedProfile.simulation.inflationRate)}
+						/>
 					</div>
 					<div>
 						<Label for="sc-ret" class="mb-1 text-xs">
-							Rendimento atteso (%) <span class="text-gray-400">Profilo: {selectedProfile.simulation.expectedReturn}%</span>
+							Rendimento atteso (%) <span class="text-gray-400"
+								>Profilo: {selectedProfile.simulation.expectedReturn}%</span
+							>
 						</Label>
-						<Input id="sc-ret" type="number" step="0.1" bind:value={expectedReturn} placeholder={String(selectedProfile.simulation.expectedReturn)} />
+						<Input
+							id="sc-ret"
+							type="number"
+							step="0.1"
+							bind:value={expectedReturn}
+							placeholder={String(selectedProfile.simulation.expectedReturn)}
+						/>
 					</div>
 					<div>
 						<Label for="sc-exp" class="mb-1 text-xs">
-							Spese annuali <span class="text-gray-400">Profilo: {selectedProfile.annualExpenses}</span>
+							Spese annuali <span class="text-gray-400"
+								>Profilo: {selectedProfile.annualExpenses}</span
+							>
 						</Label>
-						<Input id="sc-exp" type="number" step="100" bind:value={annualExpenses} placeholder={String(selectedProfile.annualExpenses)} />
+						<Input
+							id="sc-exp"
+							type="number"
+							step="100"
+							bind:value={annualExpenses}
+							placeholder={String(selectedProfile.annualExpenses)}
+						/>
 					</div>
 					<div>
 						<Label for="sc-fexp" class="mb-1 text-xs">
 							Spese FIRE <span class="text-gray-400">Profilo: {selectedProfile.fireExpenses}</span>
 						</Label>
-						<Input id="sc-fexp" type="number" step="100" bind:value={fireExpenses} placeholder={String(selectedProfile.fireExpenses)} />
+						<Input
+							id="sc-fexp"
+							type="number"
+							step="100"
+							bind:value={fireExpenses}
+							placeholder={String(selectedProfile.fireExpenses)}
+						/>
 					</div>
 					<div>
 						<Label for="sc-rage" class="mb-1 text-xs">
-							Eta FIRE target <span class="text-gray-400">Profilo: {selectedProfile.retirementAge}</span>
+							Eta FIRE target <span class="text-gray-400"
+								>Profilo: {selectedProfile.retirementAge}</span
+							>
 						</Label>
-						<Input id="sc-rage" type="number" step="1" bind:value={retirementAge} placeholder={String(selectedProfile.retirementAge)} />
+						<Input
+							id="sc-rage"
+							type="number"
+							step="1"
+							bind:value={retirementAge}
+							placeholder={String(selectedProfile.retirementAge)}
+						/>
 					</div>
 				</div>
 			</div>

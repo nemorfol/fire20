@@ -7,17 +7,20 @@ Tutti i calcoli avvengono nel browser. I dati finanziari restano sul dispositivo
 ## Funzionalita'
 
 ### Profilo Finanziario
+
 - Gestione multi-profilo con form a 6 sezioni (dati personali, reddito, spese, patrimonio, debiti, pensione)
 - 9 classi di asset (azioni, obbligazioni, liquidita', immobili, oro, crypto, fondo pensione, TFR, altro)
 - Salvataggio automatico in IndexedDB
 
 ### Calcolatore FIRE
+
 - Calcolo FIRE Number, Coast FIRE, anni al FIRE, tasso di risparmio
 - 4 strategie di prelievo: Regola del 4%, VPW, Guyton-Klinger Guardrails, CAPE-Based
 - Proiezione anno per anno con grafico interattivo
 - Ottimizzazione fiscale dell'ordine di prelievo
 
 ### Simulazione Monte Carlo
+
 - Fino a 100.000 iterazioni via Web Worker (UI non si blocca)
 - 3 modalita': parametrica (log-normale), bootstrap storico, block bootstrap
 - Fan chart con bande di confidenza (P5-P95)
@@ -25,21 +28,25 @@ Tutti i calcoli avvengono nel browser. I dati finanziari restano sul dispositivo
 - Salvataggio e confronto risultati
 
 ### Scenari di Rischio
+
 - 8 scenari predefiniti: crash di mercato, inflazione elevata, crisi sanitaria, shock geopolitico, sequenza rendimenti negativi, perdita lavoro, divorzio, longevita' estrema
 - Scenari personalizzati
 - Stress test con confronto before/after su grafici sovrapposti
 
 ### Gestione Scenari
+
 - Salvataggio, duplicazione e confronto side-by-side fino a 4 scenari
 - Override parametri per scenario (spese, allocazione, rendimento atteso)
 
 ### Dati Storici
+
 - 10 dataset integrati (S&P 500 dal 1928, obbligazioni USA, oro, inflazione USA/Italia, MSCI World, CAPE Shiller)
 - Grafici rendimenti annuali, rendimenti rolling (1/5/10/20 anni)
 - Heatmap matrice di correlazione tra asset
 - Istogramma distribuzione rendimenti
 
 ### Fiscalita' Italiana
+
 - IRPEF 2026 (23% / 33% / 43%)
 - Capital gains: 26% azioni/ETF, 12.5% titoli di stato
 - Fondi pensione: deducibilita' 5.300 EUR, rendimenti al 20%, prestazioni 9-15%
@@ -48,12 +55,14 @@ Tutti i calcoli avvengono nel browser. I dati finanziari restano sul dispositivo
 - Gap pensionistico (da FIRE a eta' pensionabile)
 
 ### Guida Interattiva
+
 - 20 capitoli dalla A alla Z del FIRE, con focus su fiscalita' e previdenza italiana
 - Esempi pratici con numeri reali (stipendi italiani, aliquote, ETF)
 - Tracciamento progresso con segnalibri
 - Ricerca e filtro per categoria
 
 ### Import/Export
+
 - Export profili e scenari in JSON
 - Export risultati in CSV
 - Backup completo e ripristino
@@ -61,16 +70,16 @@ Tutti i calcoli avvengono nel browser. I dati finanziari restano sul dispositivo
 
 ## Tech Stack
 
-| Tecnologia | Versione | Ruolo |
-|---|---|---|
-| [SvelteKit](https://svelte.dev/docs/kit) | 2.57 | Framework |
-| [Svelte 5](https://svelte.dev) | 5.55 | UI (runes mode) |
-| [Tailwind CSS](https://tailwindcss.com) | 4.2 | Styling |
-| [Flowbite-Svelte](https://flowbite-svelte.com) | 1.33 | Componenti UI |
-| [Apache ECharts](https://echarts.apache.org) | 6.0 | Grafici |
-| [Dexie.js](https://dexie.org) | 4.4 | Database locale (IndexedDB) |
-| [jStat](https://jstat.github.io) | 1.9 | Distribuzioni statistiche |
-| [PapaParse](https://www.papaparse.com) | 5.5 | Parsing CSV |
+| Tecnologia                                     | Versione | Ruolo                       |
+| ---------------------------------------------- | -------- | --------------------------- |
+| [SvelteKit](https://svelte.dev/docs/kit)       | 2.57     | Framework                   |
+| [Svelte 5](https://svelte.dev)                 | 5.55     | UI (runes mode)             |
+| [Tailwind CSS](https://tailwindcss.com)        | 4.2      | Styling                     |
+| [Flowbite-Svelte](https://flowbite-svelte.com) | 1.33     | Componenti UI               |
+| [Apache ECharts](https://echarts.apache.org)   | 6.0      | Grafici                     |
+| [Dexie.js](https://dexie.org)                  | 4.4      | Database locale (IndexedDB) |
+| [jStat](https://jstat.github.io)               | 1.9      | Distribuzioni statistiche   |
+| [PapaParse](https://www.papaparse.com)         | 5.5      | Parsing CSV                 |
 
 ## Avvio rapido
 
@@ -154,4 +163,4 @@ Distribuito con licenza [MIT](LICENSE): sei libero di usare, modificare e distri
 
 ---
 
-*Disclaimer: Questa applicazione e' uno strumento educativo e di simulazione. Non costituisce consulenza finanziaria. Consulta un professionista qualificato prima di prendere decisioni di investimento.*
+_Disclaimer: Questa applicazione e' uno strumento educativo e di simulazione. Non costituisce consulenza finanziaria. Consulta un professionista qualificato prima di prendere decisioni di investimento._

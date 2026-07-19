@@ -25,11 +25,13 @@ Giro di manutenzione: allineamento della documentazione allo stato reale del pro
 pulizia delle dipendenze.
 
 ### Aggiunto
+
 - `CHANGELOG.md` (questo file), `docs/ASSUNZIONI-FISCALI.md` (registro navigabile delle
   assunzioni fiscali), `CONTRIBUTING.md` e i template GitHub (issue bug/feature, pull request).
 - `docs/PIANO-INTERVENTI-2026-07.md` versionato come backlog corrente (fasi A–D).
 
 ### Modificato
+
 - `CLAUDE.md` allineato a test e CI reali (Vitest fa parte del gate, non solo `npm run check`);
   aggiunte le sezioni «Invarianti da non rompere», «Fonti normative» e i moduli finora non
   documentati (`src/lib/llm/`, `src/lib/i18n/`, pagina `/metodologia`).
@@ -37,6 +39,7 @@ pulizia delle dipendenze.
 - `puppeteer-core` spostato tra le `devDependencies`.
 
 ### Rimosso
+
 - Dipendenze dichiarate ma mai importate: `jstat` e `simple-statistics` (le statistiche sono
   implementate in casa in `src/lib/engine/statistics.ts`).
 - Bozze dei post per i forum escluse dal versioning.
@@ -49,6 +52,7 @@ Ondata di evoluzione del prodotto sul lato patrimonio/decumulo, con due issue se
 (#37, #38) e il relativo fix di retrocompatibilità profili.
 
 ### Aggiunto
+
 - **BFP (Buoni Fruttiferi Postali)** e **Conti Deposito** come classi di asset dedicate, con
   fiscalità propria (BFP 12,5% ed esenti bollo; CD 26% + bollo). Migrazione Dexie v6 additiva
   con normalizzazione anti-crash.
@@ -63,6 +67,7 @@ Ondata di evoluzione del prodotto sul lato patrimonio/decumulo, con due issue se
   portafoglio ETF, con copertura automatica dei costi universitari dei figli.
 
 ### Modificato
+
 - **Aliquota capital gain «blended»** derivata dalla composizione reale del portafoglio: rimosso
   il 26% hard-coded da dashboard, confronto profili, rischi, export PDF e calcolatore.
 - **Cripto 33% dal 2026** (verificata) e adeguamento INPS alla speranza di vita 2027/2028.
@@ -73,11 +78,13 @@ Ondata di evoluzione del prodotto sul lato patrimonio/decumulo, con due issue se
 - Claim della guida sulla «compensazione minusvalenze» allineato alla realtà normativa.
 
 ### Corretto
+
 - **#33-bis / props_invalid_value su profili legacy**: campi nuovi (`stopContributionsAtFire`,
   allocazione/obiettivo eredità) `undefined` mandavano in errore il primo render della sezione
   Profilo. Normalizzati in `loadProfileIntoState`, stato iniziale e default.
 
 ### Qualità
+
 - +33 test (149 totali) su previdenza, fiscalità, migrazioni DB (`fake-indexeddb`) e coerenza
   Monte Carlo. Guida aggiornata per ogni feature.
 
@@ -89,6 +96,7 @@ Giro guidato dal feedback: patrimonio del coniuge, gestione delle eredità e str
 consumo del capitale.
 
 ### Aggiunto
+
 - **#29 — investimenti e patrimonio propri del coniuge** nel tab _Profilo → Coniuge_: il
   capitale del partner si somma al patrimonio del nucleo nel calcolo FIRE (number, gap, anni).
 - **#30 — evento «Eredità» dedicato** con imposta di successione per grado di parentela
@@ -99,6 +107,7 @@ consumo del capitale.
   di vita, ricalcolando ogni anno sul portafoglio corrente.
 
 ### Corretto
+
 - **#32 — sidebar scrollabile** a viewport bassi (le ultime voci non finiscono più sotto lo
   schermo).
 - **#33 — crash della sezione Coniuge su profili pre-update**: i profili salvati prima di #29 non
@@ -113,6 +122,7 @@ Ondata su tre fronti: basi di affidabilità (test/CI), assistente AI locale e ve
 puntuale dei numeri fiscali.
 
 ### Aggiunto
+
 - **Fondazione qualità**: suite di test **Vitest**, **PRNG seedabile** (Monte Carlo
   riproducibile), **golden test** sul motore e **CI** GitHub Actions (`check` + `test` +
   `build` su ogni push/PR).
@@ -131,6 +141,7 @@ puntuale dei numeri fiscali.
 - **SEO**: meta OG/Twitter, title per-pagina, sitemap e robots.
 
 ### Modificato
+
 - **IRPEF 2026** confermata a 23% / 33% / 43% (la Legge di Bilancio 2026 riduce la 2ª aliquota
   dal 35% al 33%).
 - **Coefficienti di trasformazione INPS 2025-2026** aggiornati al DM 20/11/2024 (es. 5,608% a
@@ -141,6 +152,7 @@ puntuale dei numeri fiscali.
   «88% ± 1pp»).
 
 ### Corretto
+
 - **Detrazioni da lavoro dipendente + no-tax area + cuneo 2026**: prima il netto in busta
   ignorava le detrazioni e sovrastimava l'IRPEF; ora il netto stimato è realistico.
 - **Compensazione minusvalenze** bloccata correttamente sulle plusvalenze da ETF/fondi
@@ -154,6 +166,7 @@ puntuale dei numeri fiscali.
 ## Realismo del motore e QA — 2026-06-07 → 2026-06-21
 
 ### Aggiunto
+
 - **Calcolatore FIRE personalizzabile**: possibilità di escludere pensione/altri redditi e di
   derivare il rendimento atteso dall'allocazione.
 - Il **Monte Carlo considera la pensione INPS e gli altri redditi**, allineato al calcolatore
@@ -161,6 +174,7 @@ puntuale dei numeri fiscali.
 - Licenza **MIT**, `CLAUDE.md` e sezione «Contributi» nel README.
 
 ### Modificato / Corretto
+
 - **Simulazione Monte Carlo e calcolatore FIRE più realistici** (commit `fa86c13`, invarianti da
   non rompere): prelievo calcolato sulle spese reali; floor dei rendimenti > −100%; fondo
   pensione conteggiato tra i liquidi (RITA, intenzionale); bande di percentile nei grafici.
@@ -176,6 +190,7 @@ Ondata «trasparenza»: rendere ispezionabile ogni ipotesi fiscale, introdurre l
 pianificazione di coppia e chiudere i buchi della copertura fiscale patrimoniale.
 
 ### Aggiunto
+
 - **Pannello «Ipotesi attive»** (assumptions panel) sopra al calcolatore: mostra tutte le
   aliquote/parametri applicati, con preset selezionabili (Normativa 2026, Pre-riforma 2023,
   Ipotesi flat 23/33) e modalità **custom**.
@@ -202,6 +217,7 @@ pianificazione di coppia e chiudere i buchi della copertura fiscale patrimoniale
 ## Planner familiare, contenitori fiscali e strumenti avanzati — 2026-04-22
 
 ### Aggiunto
+
 - **Planner familiare** e **cash flow dettagliato** anno per anno.
 - **Pagina Pensione INPS** dedicata e **stress test combinabili**.
 - **Confronto contenitori fiscali**, **confronto profili**, **eventi di vita** (bonus e spese una
@@ -210,6 +226,7 @@ pianificazione di coppia e chiudere i buchi della copertura fiscale patrimoniale
 - Tasso di rivalutazione della rendita vitalizia configurabile.
 
 ### Modificato / Corretto
+
 - Calcolatore FIRE riorganizzato in 4 tab (Panoramica, Simulazione, Cash flow, Prelievi).
 - Surplus post-FIRE (bonus, altri redditi) ora reinvestito nel portafoglio.
 - Fondo pensione: tassazione solo sui contributi e rendita vitalizia rivalutata.
@@ -224,6 +241,7 @@ pianificazione di coppia e chiudere i buchi della copertura fiscale patrimoniale
 Prima release pubblica di FIRE Planner e completamento della roadmap iniziale.
 
 ### Aggiunto
+
 - **Applicazione completa** per la pianificazione FIRE nel contesto italiano: dashboard,
   profilo multi-sezione, calcolatore FIRE, simulazione Monte Carlo, scenari di rischio, gestione
   scenari, dati storici, guida interattiva, impostazioni.

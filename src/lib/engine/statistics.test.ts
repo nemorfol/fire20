@@ -14,7 +14,7 @@ import {
 afterEach(() => resetRandom());
 
 describe('PRNG seedabile (mulberry32)', () => {
-	it('stesso seed -> stessa sequenza (riproducibilita\')', () => {
+	it("stesso seed -> stessa sequenza (riproducibilita')", () => {
 		seedRandom(42);
 		const a = [nextRandom(), nextRandom(), nextRandom()];
 		seedRandom(42);
@@ -47,7 +47,7 @@ describe('PRNG seedabile (mulberry32)', () => {
 		expect(isSeeded()).toBe(false);
 	});
 
-	it('gaussianRandom e\' deterministico quando seedato', () => {
+	it("gaussianRandom e' deterministico quando seedato", () => {
 		seedRandom(7);
 		const a = gaussianRandom(0, 1);
 		seedRandom(7);

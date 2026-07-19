@@ -36,7 +36,11 @@
 		calculateCoastFireNumber,
 		type YearlyProjection
 	} from '$lib/engine/fire-calculator';
-	import { optimizeWithdrawalOrder, blendedCapitalGainsRate, type WithdrawalPlan } from '$lib/engine/tax-italy';
+	import {
+		optimizeWithdrawalOrder,
+		blendedCapitalGainsRate,
+		type WithdrawalPlan
+	} from '$lib/engine/tax-italy';
 	import { DEFAULT_2026, getPreset, type AssumptionSet } from '$lib/engine/assumptions';
 
 	import FireHero from '$lib/components/calcolatore/FireHero.svelte';
@@ -172,18 +176,36 @@
 	let hasPensionBridge = $derived(effPension > 0 && bridgeYears > 0);
 
 	// Patrimonio totale (info), liquido (usato per FIRE) e illiquido (immobili/TFR)
-	let netWorth = $derived(profile ? calculateNetWorth(profile.portfolio as unknown as Record<string, number>) + (profile.spouse?.initialPortfolio || 0) : 0);
-	let liquidNetWorth = $derived(profile ? calculateLiquidNetWorth(profile.portfolio as unknown as Record<string, number>) + (profile.spouse?.initialPortfolio || 0) : 0);
+	let netWorth = $derived(
+		profile
+			? calculateNetWorth(profile.portfolio as unknown as Record<string, number>) +
+					(profile.spouse?.initialPortfolio || 0)
+			: 0
+	);
+	let liquidNetWorth = $derived(
+		profile
+			? calculateLiquidNetWorth(profile.portfolio as unknown as Record<string, number>) +
+					(profile.spouse?.initialPortfolio || 0)
+			: 0
+	);
 	// Quota BFP (esente da bollo titoli) sul liquido, per il calcolo patrimoniale.
 	let bolloExemptShare = $derived(
 		liquidNetWorth > 0 ? (profile?.portfolio?.bfp ?? 0) / liquidNetWorth : 0
 	);
-	let illiquidNetWorth = $derived(profile ? calculateIlliquidNetWorth(profile.portfolio as unknown as Record<string, number>) : 0);
+	let illiquidNetWorth = $derived(
+		profile ? calculateIlliquidNetWorth(profile.portfolio as unknown as Record<string, number>) : 0
+	);
 
 	let annualSavings = $derived(wiAnnualContribution);
 
 	let yearsToFire = $derived(
-		calculateYearsToFire(wiInitialPortfolio, annualSavings, effectiveReturn / 100, fireNumber, inflationRate / 100)
+		calculateYearsToFire(
+			wiInitialPortfolio,
+			annualSavings,
+			effectiveReturn / 100,
+			fireNumber,
+			inflationRate / 100
+		)
 	);
 
 	let savingsRate = $derived(
@@ -195,9 +217,7 @@
 			: 0
 	);
 
-	let currentAge = $derived(
-		profile ? new Date().getFullYear() - profile.birthYear : 30
-	);
+	let currentAge = $derived(profile ? new Date().getFullYear() - profile.birthYear : 30);
 
 	let coastFireNumber = $derived(
 		profile
@@ -291,7 +311,14 @@
 	let withdrawalPlans = $derived<WithdrawalPlan[]>(
 		profile
 			? optimizeWithdrawalOrder([
-					{ type: 'taxable', balance: (profile.portfolio.stocks || 0) + (profile.portfolio.bonds || 0) + (profile.portfolio.crypto || 0) + (profile.portfolio.gold || 0) },
+					{
+						type: 'taxable',
+						balance:
+							(profile.portfolio.stocks || 0) +
+							(profile.portfolio.bonds || 0) +
+							(profile.portfolio.crypto || 0) +
+							(profile.portfolio.gold || 0)
+					},
 					{ type: 'pension_fund', balance: profile.portfolio.pensionFund || 0 },
 					{ type: 'government_bonds', balance: profile.portfolio.cash || 0 },
 					{ type: 'tfr', balance: profile.portfolio.tfr || 0 }
@@ -304,12 +331,12 @@
 		// Usiamo il patrimonio LIQUIDO come base per il FIRE (immobili e TFR
 		// non sono prelevabili al 4%).
 		const liquidNw = calculateLiquidNetWorth(p.portfolio as unknown as Record<string, number>);
-		const monthlyTotal = Object.values(p.monthlyContributions).reduce((s, v) => s + (v || 0), 0) * 12;
+		const monthlyTotal =
+			Object.values(p.monthlyContributions).reduce((s, v) => s + (v || 0), 0) * 12;
 		const income = (p.annualIncome || 0) + (p.otherIncome || 0);
 		// I contributi non possono superare il reddito disponibile
-		const contribution = income > 0
-			? Math.min(monthlyTotal, Math.max(0, income - (p.annualExpenses || 0)))
-			: 0;
+		const contribution =
+			income > 0 ? Math.min(monthlyTotal, Math.max(0, income - (p.annualExpenses || 0))) : 0;
 
 		const lifeExp = p.lifeExpectancy || 90;
 		const defaults = {
@@ -375,7 +402,7 @@
 </Breadcrumb>
 
 <Heading tag="h1" class="mb-2">Calcolatore FIRE</Heading>
-<p class="text-gray-600 dark:text-gray-400 mb-8">
+<p class="mb-8 text-gray-600 dark:text-gray-400">
 	Calcola il tuo numero FIRE, il tasso di risparmio e gli anni necessari per raggiungere
 	l'indipendenza finanziaria in base ai tuoi dati.
 </p>
@@ -388,13 +415,13 @@
 {:else if !profile}
 	<Alert color="yellow" class="max-w-2xl">
 		{#snippet icon()}
-			<InfoCircleSolid class="w-5 h-5" />
+			<InfoCircleSolid class="h-5 w-5" />
 		{/snippet}
 		<span class="font-medium">Nessun profilo trovato.</span>
 		Per utilizzare il calcolatore FIRE devi prima compilare il tuo profilo finanziario.
 		<a
 			href="/profilo/"
-			class="inline-flex items-center ml-2 font-semibold text-yellow-800 dark:text-yellow-300 underline hover:no-underline"
+			class="ml-2 inline-flex items-center font-semibold text-yellow-800 underline hover:no-underline dark:text-yellow-300"
 		>
 			Vai al Profilo
 		</a>
@@ -407,7 +434,7 @@
 		<TabItem open>
 			{#snippet titleSlot()}
 				<div class="flex items-center gap-2">
-					<ChartPieOutline class="w-4 h-4" />
+					<ChartPieOutline class="h-4 w-4" />
 					Panoramica
 				</div>
 			{/snippet}
@@ -430,12 +457,16 @@
 			</div>
 
 			<!-- Issue #2: opzione "solo patrimonio" (escludi pensione/altri redditi dal FIRE) -->
-			<div class="mb-6 rounded-lg bg-gray-50 dark:bg-gray-800/60 p-4 border border-gray-200 dark:border-gray-700">
+			<div
+				class="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/60"
+			>
 				<Toggle bind:checked={includeFutureIncome}>
 					Considera pensione INPS e altri redditi nel FIRE Number
 				</Toggle>
 				<Helper class="mt-1 text-xs">
-					Se disattivato, il FIRE Number e la proiezione si basano <strong>solo sul patrimonio</strong>
+					Se disattivato, il FIRE Number e la proiezione si basano <strong
+						>solo sul patrimonio</strong
+					>
 					(modalita' conservativa): pensione INPS e altri redditi non riducono il capitale necessario.
 				</Helper>
 			</div>
@@ -458,21 +489,22 @@
 			{#if fireLooksEarly}
 				<Alert color="yellow" class="mt-6">
 					{#snippet icon()}
-						<InfoCircleSolid class="w-5 h-5" />
+						<InfoCircleSolid class="h-5 w-5" />
 					{/snippet}
 					<span class="font-medium">FIRE molto vicino: controlla le ipotesi.</span>
 					<p class="mt-2 text-sm">
-						Il risultato indica che sei (quasi) gia' FIRE. Spesso dipende da ipotesi
-						ottimistiche che vale la pena verificare:
+						Il risultato indica che sei (quasi) gia' FIRE. Spesso dipende da ipotesi ottimistiche
+						che vale la pena verificare:
 					</p>
-					<ul class="mt-2 ml-4 list-disc text-sm space-y-1">
+					<ul class="mt-2 ml-4 list-disc space-y-1 text-sm">
 						{#if pensionFundAmount > 0}
 							<li>
-								Il patrimonio di partenza usato per il calcolo ({formatCurrency(wiInitialPortfolio)})
-								comprende, nel dato di profilo, il <strong>fondo pensione</strong>
-								({formatCurrency(pensionFundAmount)}), prelevabile
-								pero' solo via <strong>RITA</strong> in prossimita' della pensione: oggi non e'
-								davvero disponibile per vivere di rendita.
+								Il patrimonio di partenza usato per il calcolo ({formatCurrency(
+									wiInitialPortfolio
+								)}) comprende, nel dato di profilo, il <strong>fondo pensione</strong>
+								({formatCurrency(pensionFundAmount)}), prelevabile pero' solo via
+								<strong>RITA</strong> in prossimita' della pensione: oggi non e' davvero disponibile per
+								vivere di rendita.
 							</li>
 						{/if}
 						{#if effPension > 0}
@@ -483,20 +515,23 @@
 						{/if}
 						{#if effOtherIncome > 0}
 							<li>
-								Sono conteggiati <strong>altri redditi</strong> ({formatCurrency(effOtherIncome)}/anno)
-								come rendita che abbassa il capitale necessario.
+								Sono conteggiati <strong>altri redditi</strong> ({formatCurrency(
+									effOtherIncome
+								)}/anno) come rendita che abbassa il capitale necessario.
 							</li>
 						{/if}
 						{#if fireReductionVsClassic > 0}
 							<li>
 								Senza questi aiuti il FIRE number "classico" (spese / SWR) sarebbe
-								<strong>{formatCurrency(fireNumberClassic)}</strong>, non {formatCurrency(fireNumber)}.
+								<strong>{formatCurrency(fireNumberClassic)}</strong>, non {formatCurrency(
+									fireNumber
+								)}.
 							</li>
 						{/if}
 					</ul>
 					<p class="mt-2 text-sm">
-						Apri la <strong>Simulazione Monte Carlo</strong> per testare la robustezza del piano
-						contro i ribassi di mercato.
+						Apri la <strong>Simulazione Monte Carlo</strong> per testare la robustezza del piano contro
+						i ribassi di mercato.
 					</p>
 				</Alert>
 			{/if}
@@ -505,7 +540,7 @@
 		<TabItem>
 			{#snippet titleSlot()}
 				<div class="flex items-center gap-2">
-					<ChartMixedDollarSolid class="w-4 h-4" />
+					<ChartMixedDollarSolid class="h-4 w-4" />
 					Simulazione
 				</div>
 			{/snippet}
@@ -516,34 +551,60 @@
 			</div>
 
 			<!-- Controls Row: Strategy + Parameters -->
-			<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+			<div class="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
 				<WithdrawalStrategySelector bind:selected={withdrawalStrategy} bind:targetBequest />
-				<ParameterControls bind:swr bind:expectedReturn bind:inflationRate bind:taxMode returnOverridden={deriveReturn} />
+				<ParameterControls
+					bind:swr
+					bind:expectedReturn
+					bind:inflationRate
+					bind:taxMode
+					returnOverridden={deriveReturn}
+				/>
 			</div>
 
 			<!-- Issue #2: stima del rendimento atteso dall'allocazione azioni/obbligazioni -->
-			<div class="mb-6 rounded-lg bg-blue-50 dark:bg-blue-900/20 p-4 border border-blue-200 dark:border-blue-800">
-				<Toggle bind:checked={deriveReturn}>
-					Stima il rendimento atteso dall'allocazione
-				</Toggle>
+			<div
+				class="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20"
+			>
+				<Toggle bind:checked={deriveReturn}>Stima il rendimento atteso dall'allocazione</Toggle>
 				<Helper class="mt-1 mb-3 text-xs">
-					Invece di un rendimento unico, ricava il rendimento atteso da rendimento azioni/obbligazioni
-					e dalla quota di ciascuno (come i calcolatori che separano Stock/Bond returns). Quando attivo,
-					sostituisce il "Rendimento atteso" impostato sopra.
+					Invece di un rendimento unico, ricava il rendimento atteso da rendimento
+					azioni/obbligazioni e dalla quota di ciascuno (come i calcolatori che separano Stock/Bond
+					returns). Quando attivo, sostituisce il "Rendimento atteso" impostato sopra.
 				</Helper>
 				{#if deriveReturn}
-					<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+					<div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
 						<div>
 							<Label for="stock-ret-calc" class="mb-1 text-xs">Rendimento azioni (%)</Label>
-							<Input id="stock-ret-calc" type="number" bind:value={stockReturnPct} step={0.1} size="sm" />
+							<Input
+								id="stock-ret-calc"
+								type="number"
+								bind:value={stockReturnPct}
+								step={0.1}
+								size="sm"
+							/>
 						</div>
 						<div>
 							<Label for="bond-ret-calc" class="mb-1 text-xs">Rendimento obbligazioni (%)</Label>
-							<Input id="bond-ret-calc" type="number" bind:value={bondReturnPct} step={0.1} size="sm" />
+							<Input
+								id="bond-ret-calc"
+								type="number"
+								bind:value={bondReturnPct}
+								step={0.1}
+								size="sm"
+							/>
 						</div>
 						<div>
 							<Label for="equity-alloc-calc" class="mb-1 text-xs">Quota azioni (%)</Label>
-							<Input id="equity-alloc-calc" type="number" bind:value={equityAllocPct} min={0} max={100} step={5} size="sm" />
+							<Input
+								id="equity-alloc-calc"
+								type="number"
+								bind:value={equityAllocPct}
+								min={0}
+								max={100}
+								step={5}
+								size="sm"
+							/>
 						</div>
 					</div>
 					<p class="mt-3 text-sm text-blue-800 dark:text-blue-300">
@@ -590,22 +651,18 @@
 		<TabItem>
 			{#snippet titleSlot()}
 				<div class="flex items-center gap-2">
-					<TableColumnSolid class="w-4 h-4" />
+					<TableColumnSolid class="h-4 w-4" />
 					Cash flow
 				</div>
 			{/snippet}
 
-			<ProjectionTable
-				{projections}
-				{retirementAge}
-				pensionAge={wiPensionAge}
-			/>
+			<ProjectionTable {projections} {retirementAge} pensionAge={wiPensionAge} />
 		</TabItem>
 
 		<TabItem>
 			{#snippet titleSlot()}
 				<div class="flex items-center gap-2">
-					<CashSolid class="w-4 h-4" />
+					<CashSolid class="h-4 w-4" />
 					Prelievi
 				</div>
 			{/snippet}

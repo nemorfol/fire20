@@ -20,7 +20,7 @@ let rngState: number | null = null;
 /** Inizializza il PRNG con un seed intero: la generazione diventa deterministica. */
 export function seedRandom(seed: number): void {
 	// Normalizza a intero unsigned 32-bit; evita lo stato 0 (degenere).
-	rngState = (seed >>> 0) || 0x9e3779b9;
+	rngState = seed >>> 0 || 0x9e3779b9;
 }
 
 /** Disattiva il PRNG seedato e torna a Math.random() (non deterministico). */
@@ -167,10 +167,7 @@ export function bootstrapSample(historicalReturns: number[]): number {
  * @param blockSize - Dimensione del blocco da estrarre
  * @returns Array di rendimenti consecutivi
  */
-export function blockBootstrapSample(
-	historicalReturns: number[],
-	blockSize: number
-): number[] {
+export function blockBootstrapSample(historicalReturns: number[], blockSize: number): number[] {
 	if (historicalReturns.length === 0) return [];
 	if (blockSize <= 0) return [];
 

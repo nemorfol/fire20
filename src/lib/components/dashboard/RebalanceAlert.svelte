@@ -33,12 +33,12 @@
 	<Alert color="yellow" class="mb-6">
 		<div class="flex flex-col gap-3">
 			<div class="flex items-start gap-3">
-				<ExclamationCircleSolid class="w-5 h-5 mt-0.5 flex-shrink-0" />
+				<ExclamationCircleSolid class="mt-0.5 h-5 w-5 flex-shrink-0" />
 				<div>
-					<h4 class="font-semibold text-lg text-yellow-800 dark:text-yellow-300">
+					<h4 class="text-lg font-semibold text-yellow-800 dark:text-yellow-300">
 						{t('rebalance.title')}
 					</h4>
-					<p class="text-sm text-yellow-700 dark:text-yellow-400 mt-1">
+					<p class="mt-1 text-sm text-yellow-700 dark:text-yellow-400">
 						{#if daysSince !== null}
 							{t('rebalance.daysSince', { days: daysSince })}
 						{:else}
@@ -48,7 +48,7 @@
 					</p>
 				</div>
 			</div>
-			<div class="flex flex-wrap gap-2 ml-8">
+			<div class="ml-8 flex flex-wrap gap-2">
 				<Button size="xs" color="yellow" onclick={handleRebalanced}>
 					{t('rebalance.done')}
 				</Button>

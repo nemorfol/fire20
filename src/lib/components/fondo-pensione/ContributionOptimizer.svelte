@@ -1,7 +1,18 @@
 ﻿<script lang="ts">
 	import {
-		Card, Label, Input, Button, Badge, Alert, Toggle,
-		Table, TableHead, TableHeadCell, TableBody, TableBodyRow, TableBodyCell
+		Card,
+		Label,
+		Input,
+		Button,
+		Badge,
+		Alert,
+		Toggle,
+		Table,
+		TableHead,
+		TableHeadCell,
+		TableBody,
+		TableBodyRow,
+		TableBodyCell
 	} from 'flowbite-svelte';
 	import { InfoCircleSolid } from 'flowbite-svelte-icons';
 	import EChart from '$lib/components/shared/EChart.svelte';
@@ -49,7 +60,7 @@
 		if (!result) return {};
 		return {
 			tooltip: { trigger: 'axis' as const },
-			legend: { data: result.levels.map(l => l.label) },
+			legend: { data: result.levels.map((l) => l.label) },
 			xAxis: {
 				type: 'category' as const,
 				data: Array.from({ length: retirementAge - currentAge }, (_, i) => `${currentAge + i + 1}`)
@@ -62,7 +73,8 @@
 			series: result.levels.map((level, idx) => {
 				const colors = ['#94a3b8', '#3b82f6', '#10b981', '#8b5cf6'];
 				const years = retirementAge - currentAge;
-				const totalAnnual = level.annualContribution + employerContribution + (tfrToFund ? annualSalary / 13.5 : 0);
+				const totalAnnual =
+					level.annualContribution + employerContribution + (tfrToFund ? annualSalary / 13.5 : 0);
 				const data: number[] = [];
 				let mont = 0;
 				for (let y = 0; y < years; y++) {
@@ -81,16 +93,14 @@
 	});
 </script>
 
-<div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
-	<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-		Ottimizzatore Contributi
-	</h3>
-	<p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-		Calcola il livello ottimale di contribuzione al fondo pensione per massimizzare
-		il risparmio fiscale e il montante alla pensione.
+<div class="mb-6 rounded-xl bg-white p-6 shadow-lg dark:bg-gray-800">
+	<h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">Ottimizzatore Contributi</h3>
+	<p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+		Calcola il livello ottimale di contribuzione al fondo pensione per massimizzare il risparmio
+		fiscale e il montante alla pensione.
 	</p>
 
-	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+	<div class="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
 		<div>
 			<Label for="co-salary" class="mb-1">Stipendio annuo lordo (EUR)</Label>
 			<Input id="co-salary" type="number" bind:value={annualSalary} min={10000} step={1000} />
@@ -125,49 +135,60 @@
 		</div>
 		<div>
 			<Label for="co-return" class="mb-1">Rendimento atteso (%)</Label>
-			<Input id="co-return" type="number" bind:value={expectedReturnRate} min={0} max={10} step={0.5} />
+			<Input
+				id="co-return"
+				type="number"
+				bind:value={expectedReturnRate}
+				min={0}
+				max={10}
+				step={0.5}
+			/>
 		</div>
 		<div class="flex items-end">
 			<Toggle bind:checked={tfrToFund}>TFR destinato al fondo</Toggle>
 		</div>
 	</div>
 
-	<Button color="primary" onclick={calculate}>
-		Calcola Ottimizzazione
-	</Button>
+	<Button color="primary" onclick={calculate}>Calcola Ottimizzazione</Button>
 </div>
 
 {#if computed && result}
 	<!-- Riepilogo deducibilita' -->
-	<div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
-		<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-			Deducibilita' Fiscale
-		</h3>
+	<div class="mb-6 rounded-xl bg-white p-6 shadow-lg dark:bg-gray-800">
+		<h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Deducibilita' Fiscale</h3>
 
-		<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-			<div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-center">
+		<div class="mb-4 grid grid-cols-2 gap-4 md:grid-cols-4">
+			<div class="rounded-lg bg-blue-50 p-3 text-center dark:bg-blue-900/20">
 				<p class="text-xs text-gray-500 dark:text-gray-400">Deduzione ordinaria</p>
-				<p class="text-xl font-bold text-blue-600 dark:text-blue-400">{formatCurrency(result.ordinaryDeduction)}</p>
+				<p class="text-xl font-bold text-blue-600 dark:text-blue-400">
+					{formatCurrency(result.ordinaryDeduction)}
+				</p>
 			</div>
-			<div class="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg text-center">
+			<div class="rounded-lg bg-purple-50 p-3 text-center dark:bg-purple-900/20">
 				<p class="text-xs text-gray-500 dark:text-gray-400">Extra deducibilita'</p>
-				<p class="text-xl font-bold text-purple-600 dark:text-purple-400">{formatCurrency(result.extraDeduction)}</p>
+				<p class="text-xl font-bold text-purple-600 dark:text-purple-400">
+					{formatCurrency(result.extraDeduction)}
+				</p>
 			</div>
-			<div class="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg text-center">
+			<div class="rounded-lg bg-green-50 p-3 text-center dark:bg-green-900/20">
 				<p class="text-xs text-gray-500 dark:text-gray-400">Max deducibile totale</p>
-				<p class="text-xl font-bold text-green-600 dark:text-green-400">{formatCurrency(result.totalMaxDeduction)}</p>
+				<p class="text-xl font-bold text-green-600 dark:text-green-400">
+					{formatCurrency(result.totalMaxDeduction)}
+				</p>
 			</div>
-			<div class="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg text-center">
+			<div class="rounded-lg bg-yellow-50 p-3 text-center dark:bg-yellow-900/20">
 				<p class="text-xs text-gray-500 dark:text-gray-400">IRPEF risparmiata/anno</p>
-				<p class="text-xl font-bold text-yellow-600 dark:text-yellow-400">{formatCurrency(result.irpefSaved)}</p>
+				<p class="text-xl font-bold text-yellow-600 dark:text-yellow-400">
+					{formatCurrency(result.irpefSaved)}
+				</p>
 			</div>
 		</div>
 
 		{#if result.extraDeduction > 0}
 			<Alert color="green" class="mb-4">
-				{#snippet icon()}<InfoCircleSolid class="w-5 h-5" />{/snippet}
-				Hai diritto all'<strong>extradeducibilita'</strong> per nuovi lavoratori post-2007.
-				Puoi dedurre fino a {formatCurrency(result.extraDeduction)} in piu' rispetto al limite ordinario.
+				{#snippet icon()}<InfoCircleSolid class="h-5 w-5" />{/snippet}
+				Hai diritto all'<strong>extradeducibilita'</strong> per nuovi lavoratori post-2007. Puoi
+				dedurre fino a {formatCurrency(result.extraDeduction)} in piu' rispetto al limite ordinario.
 			</Alert>
 		{/if}
 
@@ -180,8 +201,8 @@
 	</div>
 
 	<!-- Livelli di contribuzione -->
-	<div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
-		<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+	<div class="mb-6 rounded-xl bg-white p-6 shadow-lg dark:bg-gray-800">
+		<h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
 			Confronto Livelli di Contribuzione
 		</h3>
 
@@ -195,7 +216,9 @@
 			</TableHead>
 			<TableBody>
 				{#each result.levels as level}
-					{@const isOptimal = level.annualContribution <= result.totalMaxDeduction && level.annualContribution >= result.totalMaxDeduction - 500}
+					{@const isOptimal =
+						level.annualContribution <= result.totalMaxDeduction &&
+						level.annualContribution >= result.totalMaxDeduction - 500}
 					<TableBodyRow class={isOptimal ? 'bg-green-50 dark:bg-green-900/20' : ''}>
 						<TableBodyCell>
 							{level.label}
@@ -204,34 +227,43 @@
 							{/if}
 						</TableBodyCell>
 						<TableBodyCell>{formatCurrency(level.annualContribution)}</TableBodyCell>
-						<TableBodyCell class="text-green-600 dark:text-green-400">-{formatCurrency(level.taxSaving)}</TableBodyCell>
+						<TableBodyCell class="text-green-600 dark:text-green-400"
+							>-{formatCurrency(level.taxSaving)}</TableBodyCell
+						>
 						<TableBodyCell class="font-semibold">{formatCurrency(level.netCost)}</TableBodyCell>
-						<TableBodyCell class="font-bold text-blue-600 dark:text-blue-400">{formatCurrency(level.montanteAt67)}</TableBodyCell>
+						<TableBodyCell class="font-bold text-blue-600 dark:text-blue-400"
+							>{formatCurrency(level.montanteAt67)}</TableBodyCell
+						>
 					</TableBodyRow>
 				{/each}
 			</TableBody>
 		</Table>
 
 		<Alert color="blue" class="mt-4">
-			{#snippet icon()}<InfoCircleSolid class="w-5 h-5" />{/snippet}
-			<strong>Contributo ottimale consigliato: {formatCurrency(result.optimalContribution)}/anno</strong>
-			(al netto di contributo datore e TFR). Questo massimizza la deduzione fiscale senza superare il tetto.
+			{#snippet icon()}<InfoCircleSolid class="h-5 w-5" />{/snippet}
+			<strong
+				>Contributo ottimale consigliato: {formatCurrency(result.optimalContribution)}/anno</strong
+			>
+			(al netto di contributo datore e TFR). Questo massimizza la deduzione fiscale senza superare il
+			tetto.
 		</Alert>
 	</div>
 
 	<!-- Proiezione montante -->
-	<div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
-		<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+	<div class="mb-6 rounded-xl bg-white p-6 shadow-lg dark:bg-gray-800">
+		<h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
 			Proiezione del Montante ai Diversi Livelli
 		</h3>
 		<EChart options={projectionChartOptions()} height="400px" />
 
-		<div class="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+		<div class="mt-4 rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
 			<p class="text-sm text-gray-600 dark:text-gray-400">
-				Con il contributo attuale ({formatCurrency(currentContribution)}/anno + {formatCurrency(employerContribution)} datore
-				{#if tfrToFund}+ {formatCurrency(result.tfrAmount)} TFR{/if}),
-				il montante stimato a {retirementAge} anni sara' circa <strong>{formatCurrency(result.projectedMontante)}</strong>,
-				equivalente a una rendita di circa <strong>{formatCurrency(result.projectedMonthlyPension)}/mese</strong>.
+				Con il contributo attuale ({formatCurrency(currentContribution)}/anno + {formatCurrency(
+					employerContribution
+				)} datore
+				{#if tfrToFund}+ {formatCurrency(result.tfrAmount)} TFR{/if}), il montante stimato a {retirementAge}
+				anni sara' circa <strong>{formatCurrency(result.projectedMontante)}</strong>, equivalente a
+				una rendita di circa <strong>{formatCurrency(result.projectedMonthlyPension)}/mese</strong>.
 			</p>
 		</div>
 	</div>

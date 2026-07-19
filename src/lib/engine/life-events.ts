@@ -12,13 +12,13 @@ import {
 
 /** Tipo di evento di vita */
 export type LifeEventType =
-	| 'bonus'              // una-tantum income in un anno specifico
-	| 'oneTimeExpense'     // una-tantum spesa straordinaria (matrimonio, auto, casa, ecc.)
-	| 'unemployment'       // reddito a zero per N anni
-	| 'partTime'           // riduzione reddito del X% per N anni
-	| 'incomeChange'       // variazione permanente del reddito da un certo anno
-	| 'inheritance'        // eredita' una-tantum (con imposta di successione)
-	| 'propertySale';      // liquidazione immobile (con plusvalenza, regola 5 anni)
+	| 'bonus' // una-tantum income in un anno specifico
+	| 'oneTimeExpense' // una-tantum spesa straordinaria (matrimonio, auto, casa, ecc.)
+	| 'unemployment' // reddito a zero per N anni
+	| 'partTime' // riduzione reddito del X% per N anni
+	| 'incomeChange' // variazione permanente del reddito da un certo anno
+	| 'inheritance' // eredita' una-tantum (con imposta di successione)
+	| 'propertySale'; // liquidazione immobile (con plusvalenza, regola 5 anni)
 
 /** Evento di vita configurato dall'utente.
  *  Tutti i campi numerici sono obbligatori (anche se non usati dal tipo
@@ -210,7 +210,9 @@ export function computeYearlyImpact(
 					// vendita (reinvestita o usata per le spese, come un bonus).
 					if (e.year === targetYear) {
 						bonusIncome += net;
-						activeLabels.push(`Vendita immobile: ${e.label} (+${Math.round(net)} € netti, ${taxNote})`);
+						activeLabels.push(
+							`Vendita immobile: ${e.label} (+${Math.round(net)} € netti, ${taxNote})`
+						);
 					}
 				} else if (targetYear >= e.year && targetYear < e.year + n) {
 					// Incasso RATEALE (vendita con riserva di proprieta'/seller

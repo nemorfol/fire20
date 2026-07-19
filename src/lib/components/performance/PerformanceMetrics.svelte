@@ -1,7 +1,12 @@
 <script lang="ts">
 	import { Card } from 'flowbite-svelte';
 	import type { PortfolioSnapshot, CashFlow } from '$lib/engine/twr-calculator';
-	import { calculateTWR, calculateBenchmarkReturn, calculateAlpha, calculateMaxDrawdown } from '$lib/engine/twr-calculator';
+	import {
+		calculateTWR,
+		calculateBenchmarkReturn,
+		calculateAlpha,
+		calculateMaxDrawdown
+	} from '$lib/engine/twr-calculator';
 	import { sp500Returns } from '$lib/data/sp500';
 
 	let {
@@ -27,7 +32,8 @@
 
 		// Annualizzare il benchmark per confronto corretto con TWR annualizzato
 		const totalDays = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
-		const benchmarkAnnualized = totalDays > 0 ? Math.pow(1 + benchmarkReturn, 365 / totalDays) - 1 : 0;
+		const benchmarkAnnualized =
+			totalDays > 0 ? Math.pow(1 + benchmarkReturn, 365 / totalDays) - 1 : 0;
 		const alpha = calculateAlpha(twrResult.annualizedReturn, benchmarkAnnualized);
 
 		return {
@@ -52,22 +58,30 @@
 </script>
 
 {#if metrics}
-	<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+	<div class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
 		<Card class="max-w-none text-center">
 			<p class="text-sm text-gray-500 dark:text-gray-400">TWR Totale</p>
-			<p class="text-xl font-bold {trendColor(metrics.totalReturn)}">{fmtPct(metrics.totalReturn)}</p>
+			<p class="text-xl font-bold {trendColor(metrics.totalReturn)}">
+				{fmtPct(metrics.totalReturn)}
+			</p>
 		</Card>
 		<Card class="max-w-none text-center">
 			<p class="text-sm text-gray-500 dark:text-gray-400">TWR Annualizzato</p>
-			<p class="text-xl font-bold {trendColor(metrics.annualizedReturn)}">{fmtPct(metrics.annualizedReturn)}</p>
+			<p class="text-xl font-bold {trendColor(metrics.annualizedReturn)}">
+				{fmtPct(metrics.annualizedReturn)}
+			</p>
 		</Card>
 		<Card class="max-w-none text-center">
 			<p class="text-sm text-gray-500 dark:text-gray-400">S&P 500 (totale)</p>
-			<p class="text-xl font-bold {trendColor(metrics.benchmarkReturn)}">{fmtPct(metrics.benchmarkReturn)}</p>
+			<p class="text-xl font-bold {trendColor(metrics.benchmarkReturn)}">
+				{fmtPct(metrics.benchmarkReturn)}
+			</p>
 		</Card>
 		<Card class="max-w-none text-center">
 			<p class="text-sm text-gray-500 dark:text-gray-400">S&P 500 (annuale)</p>
-			<p class="text-xl font-bold {trendColor(metrics.benchmarkAnnualized)}">{fmtPct(metrics.benchmarkAnnualized)}</p>
+			<p class="text-xl font-bold {trendColor(metrics.benchmarkAnnualized)}">
+				{fmtPct(metrics.benchmarkAnnualized)}
+			</p>
 		</Card>
 		<Card class="max-w-none text-center">
 			<p class="text-sm text-gray-500 dark:text-gray-400">Alpha</p>

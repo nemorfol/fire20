@@ -164,7 +164,9 @@
 		alertMessage = message;
 		alertType = type;
 		showAlert = true;
-		setTimeout(() => { showAlert = false; }, 4000);
+		setTimeout(() => {
+			showAlert = false;
+		}, 4000);
 	}
 
 	function downloadJSON(data: any, filename: string) {
@@ -210,10 +212,13 @@
 				notify('Nessun profilo da esportare.', 'warning');
 				return;
 			}
-			downloadJSON({ version: '1.0', exportedAt: new Date().toISOString(), type: 'profiles', profiles }, `fire-profili-${new Date().toISOString().slice(0, 10)}.json`);
+			downloadJSON(
+				{ version: '1.0', exportedAt: new Date().toISOString(), type: 'profiles', profiles },
+				`fire-profili-${new Date().toISOString().slice(0, 10)}.json`
+			);
 			notify(`${profiles.length} profilo/i esportato/i con successo.`);
 		} catch (e) {
-			notify('Errore durante l\'esportazione dei profili.', 'error');
+			notify("Errore durante l'esportazione dei profili.", 'error');
 		}
 	}
 
@@ -227,7 +232,7 @@
 			downloadJSON(scenarios, `fire-scenari-${new Date().toISOString().slice(0, 10)}.json`);
 			notify(`${scenarios.length} scenario/i esportato/i con successo.`);
 		} catch (e) {
-			notify('Errore durante l\'esportazione degli scenari.', 'error');
+			notify("Errore durante l'esportazione degli scenari.", 'error');
 		}
 	}
 
@@ -238,7 +243,7 @@
 				notify('Nessun risultato da esportare.', 'warning');
 				return;
 			}
-			const flat = results.map(r => ({
+			const flat = results.map((r) => ({
 				id: r.id,
 				scenarioId: r.scenarioId,
 				profileId: r.profileId,
@@ -263,7 +268,7 @@
 			downloadCSV(csv, `fire-risultati-${new Date().toISOString().slice(0, 10)}.csv`);
 			notify(`${results.length} risultato/i esportato/i in CSV.`);
 		} catch (e) {
-			notify('Errore durante l\'esportazione dei risultati.', 'error');
+			notify("Errore durante l'esportazione dei risultati.", 'error');
 		}
 	}
 
@@ -308,10 +313,14 @@
 					const rCount = d.results?.length ?? 0;
 					importPreview = `Il backup contiene:\n- ${pCount} profilo/i\n- ${sCount} scenario/i\n- ${rCount} risultato/i di simulazione\n\nI dati esistenti verranno sovrascritti.`;
 				} else {
-					const list = Array.isArray(data) ? data : Array.isArray(data.profiles) ? data.profiles : null;
-						if (list) {
+					const list = Array.isArray(data)
+						? data
+						: Array.isArray(data.profiles)
+							? data.profiles
+							: null;
+					if (list) {
 						pendingImportData = list;
-							importPreview = `File contiene ${list.length} profilo/i da importare.`;
+						importPreview = `File contiene ${list.length} profilo/i da importare.`;
 					} else if (data.name) {
 						importPreview = `Profilo: "${data.name}"\nVerr\u00e0 aggiunto ai profili esistenti.`;
 					} else {
@@ -339,35 +348,39 @@
 				const d = pendingImportData.data || pendingImportData;
 				// Guardia di struttura: un file malformato NON deve toccare i dati.
 				if (!d || typeof d !== 'object' || !Array.isArray(d.profiles)) {
-					notify('File di backup non valido: manca l\'elenco dei profili.', 'error');
+					notify("File di backup non valido: manca l'elenco dei profili.", 'error');
 					return;
 				}
 				if (importMode === 'replace') {
 					// SOSTITUISCI: comportamento distruttivo, esplicito e confermato.
-					await db.transaction('rw', [db.profiles, db.scenarios, db.simulation_results], async () => {
-						await db.profiles.clear();
-						await db.scenarios.clear();
-						await db.simulation_results.clear();
-						if (d.profiles.length) {
-							await db.profiles.bulkAdd(
-								d.profiles.map((p: any) => ({
-									...p,
-									createdAt: new Date(p.createdAt),
-									updatedAt: new Date(p.updatedAt)
-								}))
-							);
+					await db.transaction(
+						'rw',
+						[db.profiles, db.scenarios, db.simulation_results],
+						async () => {
+							await db.profiles.clear();
+							await db.scenarios.clear();
+							await db.simulation_results.clear();
+							if (d.profiles.length) {
+								await db.profiles.bulkAdd(
+									d.profiles.map((p: any) => ({
+										...p,
+										createdAt: new Date(p.createdAt),
+										updatedAt: new Date(p.updatedAt)
+									}))
+								);
+							}
+							if (Array.isArray(d.scenarios) && d.scenarios.length) {
+								await db.scenarios.bulkAdd(
+									d.scenarios.map((s: any) => ({ ...s, createdAt: new Date(s.createdAt) }))
+								);
+							}
+							if (Array.isArray(d.results) && d.results.length) {
+								await db.simulation_results.bulkAdd(
+									d.results.map((r: any) => ({ ...r, runAt: new Date(r.runAt) }))
+								);
+							}
 						}
-						if (Array.isArray(d.scenarios) && d.scenarios.length) {
-							await db.scenarios.bulkAdd(
-								d.scenarios.map((s: any) => ({ ...s, createdAt: new Date(s.createdAt) }))
-							);
-						}
-						if (Array.isArray(d.results) && d.results.length) {
-							await db.simulation_results.bulkAdd(
-								d.results.map((r: any) => ({ ...r, runAt: new Date(r.runAt) }))
-							);
-						}
-					});
+					);
 					notify('Backup importato (sostituzione completata).');
 				} else {
 					// UNISCI (default, NON distruttivo): aggiunge i profili con NUOVI id,
@@ -400,7 +413,7 @@
 			}
 			await loadCounts();
 		} catch (e) {
-			notify('Errore durante l\'importazione. Verifica il formato del file.', 'error');
+			notify("Errore durante l'importazione. Verifica il formato del file.", 'error');
 		}
 		pendingImportData = null;
 	}
@@ -410,12 +423,16 @@
 	async function deleteAllData() {
 		showDeleteModal = false;
 		try {
-			await db.transaction('rw', [db.profiles, db.scenarios, db.simulation_results, db.risk_events], async () => {
-				await db.profiles.clear();
-				await db.scenarios.clear();
-				await db.simulation_results.clear();
-				await db.risk_events.clear();
-			});
+			await db.transaction(
+				'rw',
+				[db.profiles, db.scenarios, db.simulation_results, db.risk_events],
+				async () => {
+					await db.profiles.clear();
+					await db.scenarios.clear();
+					await db.simulation_results.clear();
+					await db.risk_events.clear();
+				}
+			);
 			await loadCounts();
 			notify('Tutti i dati sono stati cancellati.');
 		} catch (e) {
@@ -435,35 +452,45 @@
 
 <Heading tag="h1" class="mb-6">Impostazioni</Heading>
 
-<p class="text-gray-600 dark:text-gray-400 mb-8">
+<p class="mb-8 text-gray-600 dark:text-gray-400">
 	Gestisci i dati dell'applicazione: esporta, importa e cancella profili, scenari e risultati.
 </p>
 
 <!-- Alert -->
 {#if showAlert}
 	<div class="mb-4">
-		<Alert color={alertType === 'success' ? 'green' : alertType === 'error' ? 'red' : 'yellow'} dismissable>
+		<Alert
+			color={alertType === 'success' ? 'green' : alertType === 'error' ? 'red' : 'yellow'}
+			dismissable
+		>
 			{alertMessage}
 		</Alert>
 	</div>
 {/if}
 
 <!-- Language Selector -->
-<Card class="max-w-none mb-6">
+<Card class="mb-6 max-w-none">
 	<Heading tag="h3" class="mb-2">{t('settings.language')}</Heading>
-	<p class="text-sm text-gray-500 dark:text-gray-400 mb-4">{t('settings.chooseLanguage')}</p>
+	<p class="mb-4 text-sm text-gray-500 dark:text-gray-400">{t('settings.chooseLanguage')}</p>
 	<div class="flex flex-wrap gap-4">
 		{#each locales as locale}
 			<button
 				type="button"
-				class="flex items-center gap-3 px-4 py-3 rounded-lg border-2 transition-colors cursor-pointer {selectedLocale === locale.code ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}"
+				class="flex cursor-pointer items-center gap-3 rounded-lg border-2 px-4 py-3 transition-colors {selectedLocale ===
+				locale.code
+					? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
+					: 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600'}"
 				onclick={() => handleLocaleChange(locale.code)}
 			>
 				<span class="text-2xl">{locale.flag}</span>
 				<span class="font-medium text-gray-900 dark:text-white">{locale.label}</span>
 				{#if selectedLocale === locale.code}
-					<svg class="w-5 h-5 text-primary-500" fill="currentColor" viewBox="0 0 20 20">
-						<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+					<svg class="text-primary-500 h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+						<path
+							fill-rule="evenodd"
+							d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+							clip-rule="evenodd"
+						/>
 					</svg>
 				{/if}
 			</button>
@@ -472,24 +499,33 @@
 </Card>
 
 <!-- Currency Selector -->
-<Card class="max-w-none mb-6">
+<Card class="mb-6 max-w-none">
 	<Heading tag="h3" class="mb-2">Valuta</Heading>
-	<p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Seleziona la valuta utilizzata per la visualizzazione degli importi.</p>
+	<p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+		Seleziona la valuta utilizzata per la visualizzazione degli importi.
+	</p>
 	<div class="flex flex-wrap gap-4">
 		{#each currencies as curr}
 			<button
 				type="button"
-				class="flex items-center gap-3 px-4 py-3 rounded-lg border-2 transition-colors cursor-pointer {selectedCurrency === curr.code ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}"
+				class="flex cursor-pointer items-center gap-3 rounded-lg border-2 px-4 py-3 transition-colors {selectedCurrency ===
+				curr.code
+					? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
+					: 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600'}"
 				onclick={() => handleCurrencyChange(curr.code)}
 			>
 				<span class="text-2xl">{curr.flag}</span>
 				<div class="text-left">
 					<span class="font-medium text-gray-900 dark:text-white">{curr.name}</span>
-					<span class="text-sm text-gray-500 dark:text-gray-400 ml-1">({curr.symbol})</span>
+					<span class="ml-1 text-sm text-gray-500 dark:text-gray-400">({curr.symbol})</span>
 				</div>
 				{#if selectedCurrency === curr.code}
-					<svg class="w-5 h-5 text-primary-500" fill="currentColor" viewBox="0 0 20 20">
-						<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+					<svg class="text-primary-500 h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+						<path
+							fill-rule="evenodd"
+							d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+							clip-rule="evenodd"
+						/>
 					</svg>
 				{/if}
 			</button>
@@ -498,9 +534,9 @@
 </Card>
 
 <!-- Dashboard: ticker di mercato -->
-<Card class="max-w-none mb-6">
+<Card class="mb-6 max-w-none">
 	<Heading tag="h3" class="mb-2">Ticker di mercato</Heading>
-	<p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
+	<p class="mb-3 text-sm text-gray-500 dark:text-gray-400">
 		Mostra le quotazioni in tempo reale nella dashboard. Richiede una chiamata a Yahoo Finance
 		(servizio esterno): se lo disattivi, l'app non effettua alcuna chiamata di rete e sparisce
 		l'eventuale rumore di errori CORS in console. Default: attivo.
@@ -513,10 +549,11 @@
 <!-- Promemoria Ribilanciamento -->
 <AssistenteAICard />
 
-<Card class="max-w-none mb-6">
+<Card class="mb-6 max-w-none">
 	<Heading tag="h3" class="mb-4">Promemoria Ribilanciamento</Heading>
-	<p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-		Ricevi un promemoria periodico per ribilanciare il tuo portafoglio e mantenere l'allocazione target.
+	<p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+		Ricevi un promemoria periodico per ribilanciare il tuo portafoglio e mantenere l'allocazione
+		target.
 	</p>
 
 	<div class="space-y-4">
@@ -526,7 +563,7 @@
 		</Toggle>
 
 		{#if reminder.enabled}
-			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+			<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 				<!-- Frequenza -->
 				<div>
 					<Label for="rebal-freq" class="mb-2">Frequenza</Label>
@@ -550,7 +587,9 @@
 						bind:value={reminder.thresholdPercent}
 						onchange={updateReminder}
 					/>
-					<p class="text-xs text-gray-400 mt-1">Allerta se l'allocazione devia oltre questa % dal target.</p>
+					<p class="mt-1 text-xs text-gray-400">
+						Allerta se l'allocazione devia oltre questa % dal target.
+					</p>
 				</div>
 
 				<!-- Data ultimo ribilanciamento -->
@@ -560,8 +599,11 @@
 						id="rebal-last"
 						type="date"
 						value={reminder.lastRebalanceDate ?? ''}
-						onchange={(e: Event) => { reminder.lastRebalanceDate = (e.target as HTMLInputElement).value || null; updateReminder(); }}
-						class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+						onchange={(e: Event) => {
+							reminder.lastRebalanceDate = (e.target as HTMLInputElement).value || null;
+							updateReminder();
+						}}
+						class="focus:border-primary-500 focus:ring-primary-500 dark:focus:border-primary-500 dark:focus:ring-primary-500 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
 					/>
 				</div>
 
@@ -573,17 +615,17 @@
 						type="date"
 						value={reminder.nextReminderDate ?? ''}
 						disabled
-						class="block w-full rounded-lg border border-gray-300 bg-gray-100 p-2.5 text-sm text-gray-500 dark:border-gray-600 dark:bg-gray-600 dark:text-gray-400 cursor-not-allowed"
+						class="block w-full cursor-not-allowed rounded-lg border border-gray-300 bg-gray-100 p-2.5 text-sm text-gray-500 dark:border-gray-600 dark:bg-gray-600 dark:text-gray-400"
 					/>
-					<p class="text-xs text-gray-400 mt-1">Calcolato automaticamente.</p>
+					<p class="mt-1 text-xs text-gray-400">Calcolato automaticamente.</p>
 				</div>
 			</div>
 		{/if}
 
 		<!-- Notifiche -->
-		<hr class="border-gray-200 dark:border-gray-700 my-4" />
+		<hr class="my-4 border-gray-200 dark:border-gray-700" />
 		<Heading tag="h4" class="mb-3 text-base">Notifiche Browser</Heading>
-		<p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
+		<p class="mb-3 text-sm text-gray-500 dark:text-gray-400">
 			Ricevi notifiche dal browser quando e il momento di ribilanciare il portafoglio.
 		</p>
 
@@ -598,7 +640,9 @@
 				</Button>
 			{:else if notificationPermission === 'denied'}
 				<Badge color="red">Bloccate</Badge>
-				<p class="text-sm text-gray-500">Le notifiche sono state bloccate. Modificale dalle impostazioni del browser.</p>
+				<p class="text-sm text-gray-500">
+					Le notifiche sono state bloccate. Modificale dalle impostazioni del browser.
+				</p>
 			{:else}
 				<Badge color="yellow">Non attive</Badge>
 				<Button size="sm" color="blue" onclick={handleRequestNotificationPermission}>
@@ -610,104 +654,127 @@
 </Card>
 
 <!-- DB Stats -->
-<Card class="max-w-none mb-6">
+<Card class="mb-6 max-w-none">
 	<Heading tag="h3" class="mb-4">Stato del Database</Heading>
 	<div class="flex flex-wrap gap-6">
 		<div class="text-center">
 			<Badge large color="blue">{profileCount}</Badge>
-			<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Profili</p>
+			<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Profili</p>
 		</div>
 		<div class="text-center">
 			<Badge large color="indigo">{scenarioCount}</Badge>
-			<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Scenari</p>
+			<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Scenari</p>
 		</div>
 		<div class="text-center">
 			<Badge large color="purple">{resultCount}</Badge>
-			<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Risultati</p>
+			<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Risultati</p>
 		</div>
 	</div>
 </Card>
 
 <!-- Export Section -->
-<Card class="max-w-none mb-6">
+<Card class="mb-6 max-w-none">
 	<Heading tag="h3" class="mb-4">Esportazione Dati</Heading>
-	<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+	<div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
 		<Button color="blue" onclick={exportProfiles}>
-			<ArrowDownToBracketOutline class="w-4 h-4 me-2" />
+			<ArrowDownToBracketOutline class="me-2 h-4 w-4" />
 			Esporta Profili (JSON)
 		</Button>
 		<Button color="blue" onclick={exportScenarios}>
-			<ArrowDownToBracketOutline class="w-4 h-4 me-2" />
+			<ArrowDownToBracketOutline class="me-2 h-4 w-4" />
 			Esporta Scenari (JSON)
 		</Button>
 		<Button color="blue" onclick={exportResultsCSV}>
-			<ArrowDownToBracketOutline class="w-4 h-4 me-2" />
+			<ArrowDownToBracketOutline class="me-2 h-4 w-4" />
 			Esporta Risultati (CSV)
 		</Button>
 		<Button color="green" onclick={exportFullBackup}>
-			<ArrowDownToBracketOutline class="w-4 h-4 me-2" />
+			<ArrowDownToBracketOutline class="me-2 h-4 w-4" />
 			Backup Completo (JSON)
 		</Button>
 		<Button color="purple" onclick={exportPdfReport}>
-			<FilePdfSolid class="w-4 h-4 me-2" />
+			<FilePdfSolid class="me-2 h-4 w-4" />
 			Esporta Report PDF
 		</Button>
 	</div>
 </Card>
 
 <!-- Import Section -->
-<Card class="max-w-none mb-6">
+<Card class="mb-6 max-w-none">
 	<Heading tag="h3" class="mb-4">Importazione Dati</Heading>
-	<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+	<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
 		<div>
-			<p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Importa Backup Completo (JSON)</p>
+			<p class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+				Importa Backup Completo (JSON)
+			</p>
 			<Fileupload accept=".json" onchange={(e: Event) => handleFileImport(e, 'backup')} />
-			<p class="text-xs text-gray-400 mt-1">Sovrascrive tutti i dati esistenti.</p>
+			<p class="mt-1 text-xs text-gray-400">Sovrascrive tutti i dati esistenti.</p>
 		</div>
 		<div>
-			<p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Importa Profilo (JSON)</p>
+			<p class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+				Importa Profilo (JSON)
+			</p>
 			<Fileupload accept=".json" onchange={(e: Event) => handleFileImport(e, 'profile')} />
-			<p class="text-xs text-gray-400 mt-1">Aggiunge ai profili esistenti.</p>
+			<p class="mt-1 text-xs text-gray-400">Aggiunge ai profili esistenti.</p>
 		</div>
 	</div>
 </Card>
 
 <!-- Data Management -->
-<Card class="max-w-none mb-6">
+<Card class="mb-6 max-w-none">
 	<Heading tag="h3" class="mb-4">Gestione Dati</Heading>
-	<p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-		Elimina permanentemente tutti i dati salvati nell'applicazione. Questa azione non pu&ograve; essere annullata.
+	<p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+		Elimina permanentemente tutti i dati salvati nell'applicazione. Questa azione non pu&ograve;
+		essere annullata.
 	</p>
-	<Button color="red" onclick={() => showDeleteModal = true}>
-		<TrashBinSolid class="w-4 h-4 me-2" />
+	<Button color="red" onclick={() => (showDeleteModal = true)}>
+		<TrashBinSolid class="me-2 h-4 w-4" />
 		Cancella Tutti i Dati
 	</Button>
 </Card>
 
 <!-- App Info -->
-<Card class="max-w-none mb-6">
+<Card class="mb-6 max-w-none">
 	<Heading tag="h3" class="mb-4">Informazioni sull'Applicazione</Heading>
 	<div class="space-y-3 text-sm text-gray-600 dark:text-gray-400">
 		<p><span class="font-semibold">Versione:</span> 2.0.0</p>
-		<p><span class="font-semibold">Stack tecnologico:</span> SvelteKit 5, Svelte 5 (runes), Flowbite-Svelte, Tailwind CSS v4, ECharts, Dexie.js, TypeScript</p>
+		<p>
+			<span class="font-semibold">Stack tecnologico:</span> SvelteKit 5, Svelte 5 (runes), Flowbite-Svelte,
+			Tailwind CSS v4, ECharts, Dexie.js, TypeScript
+		</p>
 		<div>
-			<p class="font-semibold mb-1">Fonti dati:</p>
-			<ul class="list-disc list-inside space-y-1 ml-2">
+			<p class="mb-1 font-semibold">Fonti dati:</p>
+			<ul class="ml-2 list-inside list-disc space-y-1">
 				<li>
 					S&P 500, Obbligazioni, T-Bills:
-					<a href="https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/histretSP.html" target="_blank" rel="noopener" class="text-blue-600 hover:underline">
+					<a
+						href="https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/histretSP.html"
+						target="_blank"
+						rel="noopener"
+						class="text-blue-600 hover:underline"
+					>
 						NYU Stern (Damodaran)
 					</a>
 				</li>
 				<li>
 					CAPE Ratio:
-					<a href="http://www.econ.yale.edu/~shiller/data.htm" target="_blank" rel="noopener" class="text-blue-600 hover:underline">
+					<a
+						href="http://www.econ.yale.edu/~shiller/data.htm"
+						target="_blank"
+						rel="noopener"
+						class="text-blue-600 hover:underline"
+					>
 						Robert Shiller, Yale University
 					</a>
 				</li>
 				<li>
 					Inflazione Italia:
-					<a href="https://www.istat.it/" target="_blank" rel="noopener" class="text-blue-600 hover:underline">
+					<a
+						href="https://www.istat.it/"
+						target="_blank"
+						rel="noopener"
+						class="text-blue-600 hover:underline"
+					>
 						ISTAT
 					</a>
 				</li>
@@ -725,13 +792,13 @@
 		<ExclamationCircleSolid class="mx-auto mb-4 h-12 w-12 text-red-500" />
 		<p class="mb-2 text-lg font-medium">Sei sicuro di voler cancellare tutti i dati?</p>
 		<p class="text-sm text-gray-500 dark:text-gray-400">
-			Verranno eliminati {profileCount} profili, {scenarioCount} scenari e {resultCount} risultati.
-			Questa azione non pu&ograve; essere annullata.
+			Verranno eliminati {profileCount} profili, {scenarioCount} scenari e {resultCount} risultati. Questa
+			azione non pu&ograve; essere annullata.
 		</p>
 	</div>
 	{#snippet footer()}
 		<div class="flex justify-end gap-3">
-			<Button color="alternative" onclick={() => showDeleteModal = false}>Annulla</Button>
+			<Button color="alternative" onclick={() => (showDeleteModal = false)}>Annulla</Button>
 			<Button color="red" onclick={deleteAllData}>Cancella Tutto</Button>
 		</div>
 	{/snippet}
@@ -744,23 +811,48 @@
 		<p class="text-sm whitespace-pre-line text-gray-700 dark:text-gray-300">{importPreview}</p>
 		{#if pendingImportType === 'backup'}
 			<fieldset class="mt-4 space-y-2 text-left">
-				<legend class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Come importare</legend>
+				<legend class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300"
+					>Come importare</legend
+				>
 				<label class="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
-					<input type="radio" name="import-mode" value="merge" bind:group={importMode} class="mt-1" />
-					<span><strong>Unisci</strong> (consigliato) — aggiunge i profili del backup a quelli
-						attuali, senza cancellare nulla.</span>
+					<input
+						type="radio"
+						name="import-mode"
+						value="merge"
+						bind:group={importMode}
+						class="mt-1"
+					/>
+					<span
+						><strong>Unisci</strong> (consigliato) — aggiunge i profili del backup a quelli attuali, senza
+						cancellare nulla.</span
+					>
 				</label>
 				<label class="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
-					<input type="radio" name="import-mode" value="replace" bind:group={importMode} class="mt-1" />
-					<span><strong>Sostituisci</strong> — <span class="text-red-600 dark:text-red-400">cancella
-						tutti i dati attuali</span> e li rimpiazza con il backup. Irreversibile.</span>
+					<input
+						type="radio"
+						name="import-mode"
+						value="replace"
+						bind:group={importMode}
+						class="mt-1"
+					/>
+					<span
+						><strong>Sostituisci</strong> —
+						<span class="text-red-600 dark:text-red-400">cancella tutti i dati attuali</span> e li rimpiazza
+						con il backup. Irreversibile.</span
+					>
 				</label>
 			</fieldset>
 		{/if}
 	</div>
 	{#snippet footer()}
 		<div class="flex justify-end gap-3">
-			<Button color="alternative" onclick={() => { showImportModal = false; pendingImportData = null; }}>Annulla</Button>
+			<Button
+				color="alternative"
+				onclick={() => {
+					showImportModal = false;
+					pendingImportData = null;
+				}}>Annulla</Button
+			>
 			<Button color="blue" onclick={confirmImport}>Conferma Importazione</Button>
 		</div>
 	{/snippet}

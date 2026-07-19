@@ -200,9 +200,7 @@ function generateMultiAssetReturn(
 		}
 
 		// Rendimenti indipendenti (fallback)
-		const assetReturns = assetClasses.map((a) =>
-			logNormalReturn(a.expectedReturn, a.stdDev)
-		);
+		const assetReturns = assetClasses.map((a) => logNormalReturn(a.expectedReturn, a.stdDev));
 		return { assetReturns, inflation: Math.max(0, inflation) };
 	}
 
@@ -240,14 +238,8 @@ function generateReturn(
 				[1.0, correlation],
 				[correlation, 1.0]
 			];
-			const means = [
-				params.expectedStockReturn ?? 0.07,
-				params.expectedBondReturn ?? 0.03
-			];
-			const stdDevs = [
-				params.stockStdDev ?? 0.16,
-				params.bondStdDev ?? 0.06
-			];
+			const means = [params.expectedStockReturn ?? 0.07, params.expectedBondReturn ?? 0.03];
+			const stdDevs = [params.stockStdDev ?? 0.16, params.bondStdDev ?? 0.06];
 			const [stockReturn, bondReturn] = correlatedReturns(means, stdDevs, corrMatrix);
 			return { stockReturn, bondReturn, inflation: Math.max(0, inflation) };
 		}
@@ -374,19 +366,21 @@ function runSingleSimulation(params: MonteCarloParams): number[] {
 			// === Multi-asset path ===
 			if (pregenAssetReturns && pregenInflation) {
 				// block-bootstrap con blocchi pre-generati
-				const assetReturns = assetClasses.map((_, idx) =>
-					pregenAssetReturns![idx][year] ?? assetClasses[idx].expectedReturn
+				const assetReturns = assetClasses.map(
+					(_, idx) => pregenAssetReturns![idx][year] ?? assetClasses[idx].expectedReturn
 				);
 				inflation = Math.max(0, pregenInflation[year] ?? params.inflationRate);
 				portfolioReturn = assetClasses.reduce(
-					(sum, ac, idx) => sum + assetReturns[idx] * ac.allocation, 0
+					(sum, ac, idx) => sum + assetReturns[idx] * ac.allocation,
+					0
 				);
 			} else {
 				// parametric o historical
 				const ret = generateMultiAssetReturn(params, assetClasses, corrMatrix);
 				inflation = ret.inflation;
 				portfolioReturn = assetClasses.reduce(
-					(sum, ac, idx) => sum + ret.assetReturns[idx] * ac.allocation, 0
+					(sum, ac, idx) => sum + ret.assetReturns[idx] * ac.allocation,
+					0
 				);
 			}
 		} else {

@@ -75,7 +75,7 @@
 
 	const columns: { key: keyof YearlyProjection; label: string }[] = [
 		{ key: 'year', label: 'Anno' },
-		{ key: 'age', label: 'Eta\'' },
+		{ key: 'age', label: "Eta'" },
 		{ key: 'portfolio', label: 'Portafoglio' },
 		{ key: 'contributions', label: 'Contributi' },
 		{ key: 'pensionIncome', label: 'Pensione' },
@@ -89,14 +89,17 @@
 	}
 </script>
 
-<div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
-	<div class="p-4 border-b border-gray-200 dark:border-gray-700 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+<div
+	class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800"
+>
+	<div
+		class="flex flex-col gap-3 border-b border-gray-200 p-4 md:flex-row md:items-center md:justify-between dark:border-gray-700"
+	>
 		<div>
-			<h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-				Proiezione Anno per Anno
-			</h3>
-			<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-				Clicca sulle intestazioni per ordinare. Attiva la vista dettagliata per vedere il breakdown fiscale riga per riga.
+			<h3 class="text-lg font-semibold text-gray-900 dark:text-white">Proiezione Anno per Anno</h3>
+			<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+				Clicca sulle intestazioni per ordinare. Attiva la vista dettagliata per vedere il breakdown
+				fiscale riga per riga.
 			</p>
 		</div>
 		<div class="flex items-center gap-3">
@@ -104,20 +107,23 @@
 				<span class="text-sm font-medium">Vista dettagliata</span>
 			</Toggle>
 			<Button size="xs" color="alternative" onclick={handleExport}>
-				<DownloadOutline class="w-4 h-4 me-1" />
+				<DownloadOutline class="me-1 h-4 w-4" />
 				Esporta CSV
 			</Button>
 		</div>
 	</div>
 
-	<div class="overflow-x-auto max-h-[500px] overflow-y-auto">
+	<div class="max-h-[500px] overflow-x-auto overflow-y-auto">
 		<Table striped hoverable>
 			<TableHead class="sticky top-0 z-10">
 				{#if detailedView}
 					<TableHeadCell class="w-8"></TableHeadCell>
 				{/if}
 				{#each columns as col}
-					<TableHeadCell class="cursor-pointer select-none whitespace-nowrap" onclick={() => toggleSort(col.key)}>
+					<TableHeadCell
+						class="cursor-pointer whitespace-nowrap select-none"
+						onclick={() => toggleSort(col.key)}
+					>
 						{col.label}{sortIcon(col.key)}
 					</TableHeadCell>
 				{/each}
@@ -129,14 +135,14 @@
 							<TableBodyCell class="p-1">
 								<button
 									type="button"
-									class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
+									class="rounded p-1 hover:bg-gray-200 dark:hover:bg-gray-600"
 									aria-label="Espandi dettaglio"
 									onclick={() => toggleRow(row.year)}
 								>
 									{#if expandedRows.has(row.year)}
-										<ChevronDownOutline class="w-4 h-4" />
+										<ChevronDownOutline class="h-4 w-4" />
 									{:else}
-										<ChevronRightOutline class="w-4 h-4" />
+										<ChevronRightOutline class="h-4 w-4" />
 									{/if}
 								</button>
 							</TableBodyCell>
@@ -145,26 +151,45 @@
 						<TableBodyCell>
 							{row.age}
 							{#if row.age === retirementAge}
-								<span class="ml-1 text-xs text-green-600 dark:text-green-400 font-bold">FIRE</span>
+								<span class="ml-1 text-xs font-bold text-green-600 dark:text-green-400">FIRE</span>
 							{/if}
 							{#if row.age === pensionAge}
-								<span class="ml-1 text-xs text-blue-600 dark:text-blue-400 font-bold">Pensione</span>
+								<span class="ml-1 text-xs font-bold text-blue-600 dark:text-blue-400">Pensione</span
+								>
 							{/if}
 						</TableBodyCell>
-						<TableBodyCell class="tabular-nums font-medium">{formatCurrency(row.portfolio)}</TableBodyCell>
-						<TableBodyCell class="tabular-nums {row.contributions > 0 ? 'text-green-600 dark:text-green-400' : ''}">
+						<TableBodyCell class="font-medium tabular-nums"
+							>{formatCurrency(row.portfolio)}</TableBodyCell
+						>
+						<TableBodyCell
+							class="tabular-nums {row.contributions > 0
+								? 'text-green-600 dark:text-green-400'
+								: ''}"
+						>
 							{row.contributions > 0 ? '+' : ''}{formatCurrency(row.contributions)}
 						</TableBodyCell>
-						<TableBodyCell class="tabular-nums {(row.pensionIncome ?? 0) > 0 ? 'text-blue-600 dark:text-blue-400' : ''}">
+						<TableBodyCell
+							class="tabular-nums {(row.pensionIncome ?? 0) > 0
+								? 'text-blue-600 dark:text-blue-400'
+								: ''}"
+						>
 							{(row.pensionIncome ?? 0) > 0 ? formatCurrency(row.pensionIncome ?? 0) : ''}
 						</TableBodyCell>
-						<TableBodyCell class="tabular-nums {row.returns >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}">
+						<TableBodyCell
+							class="tabular-nums {row.returns >= 0
+								? 'text-green-600 dark:text-green-400'
+								: 'text-red-600 dark:text-red-400'}"
+						>
 							{row.returns >= 0 ? '+' : ''}{formatCurrency(row.returns)}
 						</TableBodyCell>
-						<TableBodyCell class="tabular-nums {row.withdrawals > 0 ? 'text-orange-600 dark:text-orange-400' : ''}">
+						<TableBodyCell
+							class="tabular-nums {row.withdrawals > 0
+								? 'text-orange-600 dark:text-orange-400'
+								: ''}"
+						>
 							{row.withdrawals > 0 ? '-' : ''}{formatCurrency(row.withdrawals)}
 						</TableBodyCell>
-						<TableBodyCell class="tabular-nums text-red-600 dark:text-red-400">
+						<TableBodyCell class="text-red-600 tabular-nums dark:text-red-400">
 							{row.taxes > 0 ? '-' : ''}{formatCurrency(row.taxes)}
 						</TableBodyCell>
 					</TableBodyRow>
@@ -172,10 +197,14 @@
 					{#if detailedView && expandedRows.has(row.year)}
 						<TableBodyRow class="bg-gray-50 dark:bg-gray-900/40">
 							<TableBodyCell colspan={9} class="p-0">
-								<div class="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+								<div class="grid grid-cols-1 gap-4 p-4 text-sm md:grid-cols-2 lg:grid-cols-3">
 									<!-- Entrate -->
 									<div>
-										<h6 class="font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide text-xs">Entrate</h6>
+										<h6
+											class="mb-2 text-xs font-semibold tracking-wide text-gray-700 uppercase dark:text-gray-300"
+										>
+											Entrate
+										</h6>
 										<dl class="space-y-1">
 											<div class="flex justify-between">
 												<dt class="text-gray-500 dark:text-gray-400">Stipendio lordo</dt>
@@ -183,32 +212,46 @@
 											</div>
 											<div class="flex justify-between">
 												<dt class="text-gray-500 dark:text-gray-400">Contributi INPS</dt>
-												<dd class="tabular-nums text-red-600 dark:text-red-400">-{formatCurrency(row.inpsContributions ?? 0)}</dd>
+												<dd class="text-red-600 tabular-nums dark:text-red-400">
+													-{formatCurrency(row.inpsContributions ?? 0)}
+												</dd>
 											</div>
 											<div class="flex justify-between">
 												<dt class="text-gray-500 dark:text-gray-400">IRPEF + addizionali</dt>
-												<dd class="tabular-nums text-red-600 dark:text-red-400">-{formatCurrency(row.irpef ?? 0)}</dd>
+												<dd class="text-red-600 tabular-nums dark:text-red-400">
+													-{formatCurrency(row.irpef ?? 0)}
+												</dd>
 											</div>
-											<div class="flex justify-between font-medium border-t border-gray-200 dark:border-gray-700 pt-1">
+											<div
+												class="flex justify-between border-t border-gray-200 pt-1 font-medium dark:border-gray-700"
+											>
 												<dt class="text-gray-700 dark:text-gray-300">Stipendio netto</dt>
 												<dd class="tabular-nums">{formatCurrency(row.netSalary ?? 0)}</dd>
 											</div>
 											{#if (row.pensionIncome ?? 0) > 0}
 												<div class="flex justify-between">
 													<dt class="text-gray-500 dark:text-gray-400">Pensione INPS</dt>
-													<dd class="tabular-nums text-blue-600 dark:text-blue-400">+{formatCurrency(row.pensionIncome ?? 0)}</dd>
+													<dd class="text-blue-600 tabular-nums dark:text-blue-400">
+														+{formatCurrency(row.pensionIncome ?? 0)}
+													</dd>
 												</div>
 											{/if}
 											{#if (row.otherIncomeActive ?? 0) > 0}
 												<div class="flex justify-between">
 													<dt class="text-gray-500 dark:text-gray-400">Altri redditi</dt>
-													<dd class="tabular-nums text-blue-600 dark:text-blue-400">+{formatCurrency(row.otherIncomeActive ?? 0)}</dd>
+													<dd class="text-blue-600 tabular-nums dark:text-blue-400">
+														+{formatCurrency(row.otherIncomeActive ?? 0)}
+													</dd>
 												</div>
 											{/if}
 											{#if (row.lifeEventBonus ?? 0) > 0}
 												<div class="flex justify-between">
-													<dt class="text-gray-500 dark:text-gray-400">Bonus / eventi una-tantum</dt>
-													<dd class="tabular-nums text-green-600 dark:text-green-400">+{formatCurrency(row.lifeEventBonus ?? 0)}</dd>
+													<dt class="text-gray-500 dark:text-gray-400">
+														Bonus / eventi una-tantum
+													</dt>
+													<dd class="text-green-600 tabular-nums dark:text-green-400">
+														+{formatCurrency(row.lifeEventBonus ?? 0)}
+													</dd>
 												</div>
 											{/if}
 										</dl>
@@ -216,7 +259,11 @@
 
 									<!-- Uscite -->
 									<div>
-										<h6 class="font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide text-xs">Uscite</h6>
+										<h6
+											class="mb-2 text-xs font-semibold tracking-wide text-gray-700 uppercase dark:text-gray-300"
+										>
+											Uscite
+										</h6>
 										<dl class="space-y-1">
 											<div class="flex justify-between">
 												<dt class="text-gray-500 dark:text-gray-400">Spese base</dt>
@@ -237,10 +284,14 @@
 											{#if (row.lifeEventExpense ?? 0) > 0}
 												<div class="flex justify-between">
 													<dt class="text-gray-500 dark:text-gray-400">Spesa straordinaria</dt>
-													<dd class="tabular-nums text-red-600 dark:text-red-400">{formatCurrency(row.lifeEventExpense ?? 0)}</dd>
+													<dd class="text-red-600 tabular-nums dark:text-red-400">
+														{formatCurrency(row.lifeEventExpense ?? 0)}
+													</dd>
 												</div>
 											{/if}
-											<div class="flex justify-between font-medium border-t border-gray-200 dark:border-gray-700 pt-1">
+											<div
+												class="flex justify-between border-t border-gray-200 pt-1 font-medium dark:border-gray-700"
+											>
 												<dt class="text-gray-700 dark:text-gray-300">Totale spese</dt>
 												<dd class="tabular-nums">{formatCurrency(row.totalExpenses ?? 0)}</dd>
 											</div>
@@ -249,15 +300,23 @@
 
 									<!-- Portafoglio -->
 									<div>
-										<h6 class="font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide text-xs">Portafoglio</h6>
+										<h6
+											class="mb-2 text-xs font-semibold tracking-wide text-gray-700 uppercase dark:text-gray-300"
+										>
+											Portafoglio
+										</h6>
 										<dl class="space-y-1">
 											<div class="flex justify-between">
 												<dt class="text-gray-500 dark:text-gray-400">Rendimenti lordi</dt>
-												<dd class="tabular-nums">{formatCurrency(row.investmentReturnsGross ?? 0)}</dd>
+												<dd class="tabular-nums">
+													{formatCurrency(row.investmentReturnsGross ?? 0)}
+												</dd>
 											</div>
 											<div class="flex justify-between">
 												<dt class="text-gray-500 dark:text-gray-400">Tasse rendimenti</dt>
-												<dd class="tabular-nums text-red-600 dark:text-red-400">-{formatCurrency(row.taxes)}</dd>
+												<dd class="text-red-600 tabular-nums dark:text-red-400">
+													-{formatCurrency(row.taxes)}
+												</dd>
 											</div>
 											<div class="flex justify-between">
 												<dt class="text-gray-500 dark:text-gray-400">Rendimenti netti</dt>
@@ -266,16 +325,22 @@
 											{#if row.contributions > 0}
 												<div class="flex justify-between">
 													<dt class="text-gray-500 dark:text-gray-400">Nuovi contributi</dt>
-													<dd class="tabular-nums text-green-600 dark:text-green-400">+{formatCurrency(row.contributions)}</dd>
+													<dd class="text-green-600 tabular-nums dark:text-green-400">
+														+{formatCurrency(row.contributions)}
+													</dd>
 												</div>
 											{/if}
 											{#if row.withdrawals > 0}
 												<div class="flex justify-between">
 													<dt class="text-gray-500 dark:text-gray-400">Prelievi</dt>
-													<dd class="tabular-nums text-orange-600 dark:text-orange-400">-{formatCurrency(row.withdrawals)}</dd>
+													<dd class="text-orange-600 tabular-nums dark:text-orange-400">
+														-{formatCurrency(row.withdrawals)}
+													</dd>
 												</div>
 											{/if}
-											<div class="flex justify-between font-medium border-t border-gray-200 dark:border-gray-700 pt-1">
+											<div
+												class="flex justify-between border-t border-gray-200 pt-1 font-medium dark:border-gray-700"
+											>
 												<dt class="text-gray-700 dark:text-gray-300">Portafoglio finale</dt>
 												<dd class="tabular-nums">{formatCurrency(row.portfolio)}</dd>
 											</div>

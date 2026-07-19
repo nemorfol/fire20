@@ -33,73 +33,83 @@
 	let hasOtherIncomeInFire = $derived(otherIncome > 0 && otherIncomeEndAge > retirementAge);
 </script>
 
-<div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 p-8 text-white shadow-xl">
+<div
+	class="from-primary-600 via-primary-700 to-primary-900 relative overflow-hidden rounded-2xl bg-gradient-to-br p-8 text-white shadow-xl"
+>
 	<div class="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/10 blur-2xl"></div>
 	<div class="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-white/5 blur-xl"></div>
 
 	<div class="relative">
-		<p class="text-sm font-medium uppercase tracking-wider text-primary-200 mb-2 flex items-center">
+		<p class="text-primary-200 mb-2 flex items-center text-sm font-medium tracking-wider uppercase">
 			Il tuo numero FIRE
 			<AssumptionTooltip id="tip-fire-number" variant="info">
-				<strong class="block mb-1 text-white">Come viene calcolato</strong>
+				<strong class="mb-1 block text-white">Come viene calcolato</strong>
 				<span class="text-gray-200">
-					Capitale per coprire le spese annue in FIRE applicando il tasso di
-					prelievo sicuro (SWR). Include: pensione INPS con "ponte" se il FIRE
-					arriva prima dei 67, PV delle spese future per figli/mutuo, sottrazione
-					PV degli "altri redditi" perpetui. Scontato al rendimento reale.
+					Capitale per coprire le spese annue in FIRE applicando il tasso di prelievo sicuro (SWR).
+					Include: pensione INPS con "ponte" se il FIRE arriva prima dei 67, PV delle spese future
+					per figli/mutuo, sottrazione PV degli "altri redditi" perpetui. Scontato al rendimento
+					reale.
 				</span>
 			</AssumptionTooltip>
 		</p>
-		<p class="text-5xl font-extrabold tracking-tight mb-3">
+		<p class="mb-3 text-5xl font-extrabold tracking-tight">
 			{formatCurrency(fireNumber)}
 		</p>
-		<div class="flex items-center gap-2 text-primary-200 text-sm">
+		<div class="text-primary-200 flex items-center gap-2 text-sm">
 			<span class="inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-xs font-medium">
 				{formatCompact(fireNumber)}
 			</span>
 		</div>
 
-		<div class="mt-6 pt-6 border-t border-white/20">
+		<div class="mt-6 border-t border-white/20 pt-6">
 			{#if hasPensionBridge}
-				<p class="text-sm text-primary-100">
-					Il portafoglio deve coprire <strong>{bridgeYears} anni di "ponte"</strong> a spese piene
-					({formatCurrency(annualExpenses)}/anno dai {retirementAge} ai {pensionAge} anni)
-					e poi il gap residuo di {formatCurrency(expensesNetOfPension)}/anno dopo la pensione INPS.
+				<p class="text-primary-100 text-sm">
+					Il portafoglio deve coprire <strong>{bridgeYears} anni di "ponte"</strong> a spese piene ({formatCurrency(
+						annualExpenses
+					)}/anno dai {retirementAge} ai {pensionAge} anni) e poi il gap residuo di {formatCurrency(
+						expensesNetOfPension
+					)}/anno dopo la pensione INPS.
 				</p>
-				<p class="text-xs text-primary-300 mt-2">
+				<p class="text-primary-300 mt-2 text-xs">
 					Il calcolo usa il valore attuale (PV) delle due rendite al rendimento reale.
 				</p>
-				<p class="text-xs text-primary-200 mt-2">
-					Riferimento: FIRE Number "classico" senza considerare la pensione = <strong>{formatCurrency(fireNumberClassic)}</strong>
+				<p class="text-primary-200 mt-2 text-xs">
+					Riferimento: FIRE Number "classico" senza considerare la pensione = <strong
+						>{formatCurrency(fireNumberClassic)}</strong
+					>
 					({formatCurrency(annualExpenses)} / {(withdrawalRate * 100).toFixed(1)}%).
 				</p>
 			{:else if hasPension}
-				<p class="text-sm text-primary-100 font-mono">
-					({formatCurrency(annualExpenses)} − {formatCurrency(annualPension)}) / {(withdrawalRate * 100).toFixed(1)}% = <strong>{formatCurrency(fireNumber)}</strong>
+				<p class="text-primary-100 font-mono text-sm">
+					({formatCurrency(annualExpenses)} − {formatCurrency(annualPension)}) / {(
+						withdrawalRate * 100
+					).toFixed(1)}% = <strong>{formatCurrency(fireNumber)}</strong>
 				</p>
-				<p class="text-xs text-primary-300 mt-1">
+				<p class="text-primary-300 mt-1 text-xs">
 					(Spese annuali − Pensione INPS annua) / Tasso di prelievo sicuro = Numero FIRE
 				</p>
-				<p class="text-xs text-primary-200 mt-2">
-					Pensione INPS gia' attiva (FIRE age &ge; {pensionAge}): copri con il portafoglio solo il gap residuo di {formatCurrency(expensesNetOfPension)}/anno.
+				<p class="text-primary-200 mt-2 text-xs">
+					Pensione INPS gia' attiva (FIRE age &ge; {pensionAge}): copri con il portafoglio solo il
+					gap residuo di {formatCurrency(expensesNetOfPension)}/anno.
 				</p>
 			{:else}
-				<p class="text-sm text-primary-100 font-mono">
-					{formatCurrency(annualExpenses)} / {(withdrawalRate * 100).toFixed(1)}% = <strong>{formatCurrency(fireNumber)}</strong>
+				<p class="text-primary-100 font-mono text-sm">
+					{formatCurrency(annualExpenses)} / {(withdrawalRate * 100).toFixed(1)}% =
+					<strong>{formatCurrency(fireNumber)}</strong>
 				</p>
-				<p class="text-xs text-primary-300 mt-1">
+				<p class="text-primary-300 mt-1 text-xs">
 					Spese annuali / Tasso di prelievo sicuro = Numero FIRE
 				</p>
 			{/if}
 
 			{#if hasOtherIncomeInFire}
-				<p class="text-xs text-emerald-200 mt-3 border-t border-white/10 pt-3">
+				<p class="mt-3 border-t border-white/10 pt-3 text-xs text-emerald-200">
 					Altri redditi in FIRE: <strong>{formatCurrency(otherIncome)}/anno</strong>
 					{#if otherIncomeEndAge > retirementAge}
 						fino a {otherIncomeEndAge} anni
 					{/if}
-					(affitti, dividendi, rendite). Il valore attuale di questa rendita riduce
-					il FIRE Number: senza di essa sarebbe <strong>{formatCurrency(fireNumberClassic)}</strong>.
+					(affitti, dividendi, rendite). Il valore attuale di questa rendita riduce il FIRE Number: senza
+					di essa sarebbe <strong>{formatCurrency(fireNumberClassic)}</strong>.
 				</p>
 			{/if}
 		</div>

@@ -38,6 +38,7 @@ Invarianti consolidati del progetto — nessun intervento di questo piano deve r
 ## FASE A — Igiene documentale (priorita' massima, effort basso)
 
 ### A1. Correggere CLAUDE.md: informazione obsoleta sui test **[URGENTE]**
+
 - **File:** `CLAUDE.md` (riga ~24).
 - **Problema:** dichiara "Non esiste una test suite automatica... `npm run check` e' l'unico
   gate". E' FALSO da giugno 2026: esistono 11 file `*.test.ts` (Vitest) su engine/db/llm/utils
@@ -49,6 +50,7 @@ Invarianti consolidati del progetto — nessun intervento di questo piano deve r
 - **Accettazione:** CLAUDE.md riflette lo stato reale di test e CI.
 
 ### A2. Estendere CLAUDE.md con le sezioni mancanti
+
 - **File:** `CLAUDE.md`.
 - **Fare:** aggiungere sezioni sintetiche (rimandando ai file per il dettaglio):
   - **Invarianti da non rompere** — riportare la lista della sezione 0 di questo documento.
@@ -60,6 +62,7 @@ Invarianti consolidati del progetto — nessun intervento di questo piano deve r
 - **Accettazione:** un agente nuovo puo' lavorare senza scoprire queste cose per tentativi.
 
 ### A3. Creare CHANGELOG.md
+
 - **File nuovo:** `CHANGELOG.md` (formato Keep a Changelog, in italiano).
 - **Fonti:** distillare da `git log` e dalle bozze locali `FORUM_POST_UPDATE*.txt` (contengono
   changelog narrativi non versionati, a rischio perdita). Ricostruire almeno le macro-ondate:
@@ -68,6 +71,7 @@ Invarianti consolidati del progetto — nessun intervento di questo piano deve r
 - **Accettazione:** CHANGELOG versionato; da qui in poi ogni feat/fix utente aggiunge una riga.
 
 ### A4. Creare docs/ con il registro delle assunzioni fiscali
+
 - **File nuovo:** `docs/ASSUNZIONI-FISCALI.md`.
 - **Fare:** tabella {parametro, valore 2026, fonte normativa, file/costante nel codice} estratta
   da `assumptions.ts` e dalla pagina metodologia (IRPEF 33%, crypto 33%, L.335/1995 massimale,
@@ -77,6 +81,7 @@ Invarianti consolidati del progetto — nessun intervento di questo piano deve r
 - **Accettazione:** ogni valore ha fonte citata; nessun valore in contrasto col codice.
 
 ### A5. CONTRIBUTING.md + template GitHub
+
 - **File nuovi:** `CONTRIBUTING.md`, `.github/ISSUE_TEMPLATE/bug.yml`,
   `.github/ISSUE_TEMPLATE/feature.yml`, `.github/PULL_REQUEST_TEMPLATE.md`.
 - **Fare:** estrarre e ampliare la sezione "Contributi" del README: gate (`check`+`test`),
@@ -86,6 +91,7 @@ Invarianti consolidati del progetto — nessun intervento di questo piano deve r
 - **Accettazione:** template attivi su GitHub; CONTRIBUTING linkato dal README.
 
 ### A6. Pulizia repo root
+
 - **Fare:**
   - `git rm --cached FORUM_POST.md` e aggiornare `.gitignore` da `FORUM*.txt` a `FORUM*`
     (le bozze forum sono lavoro locale, il pattern attuale non copre il `.md`).
@@ -100,6 +106,7 @@ Invarianti consolidati del progetto — nessun intervento di questo piano deve r
 ## FASE B — Igiene tecnica (priorita' alta, effort basso/medio)
 
 ### B1. Dipendenze: rimuovere le morte, sistemare le fuori posto
+
 - **File:** `package.json`.
 - **Fare:**
   - Rimuovere `jstat` e `simple-statistics`: dichiarate ma con ZERO import in `src`
@@ -110,6 +117,7 @@ Invarianti consolidati del progetto — nessun intervento di questo piano deve r
 - **Accettazione:** `npm ci && npm run check && npm test && npm run build` verdi.
 
 ### B2. `xlsx@0.18.5`: vulnerabilita' note **[DECISIONE UTENTE sulla strategia]**
+
 - **File:** `package.json`, `src/lib/utils/broker-import.ts` (e ogni altro uso).
 - **Problema:** la versione npm di SheetJS e' ferma e ha CVE note (prototype pollution/ReDoS);
   processa file caricati dall'utente.
@@ -120,6 +128,7 @@ Invarianti consolidati del progetto — nessun intervento di questo piano deve r
   versione installata.
 
 ### B3. Introdurre lint/format
+
 - **File nuovi:** config ESLint (flat config con `eslint-plugin-svelte` +
   `typescript-eslint`) e Prettier (`prettier-plugin-svelte`, `prettier-plugin-tailwindcss`).
 - **Fare:** aggiungere `npm run lint` e `npm run format`; integrare `lint` nella CI; un unico
@@ -127,6 +136,7 @@ Invarianti consolidati del progetto — nessun intervento di questo piano deve r
 - **Accettazione:** CI con step lint verde; nessun cambiamento funzionale.
 
 ### B4. Deduplicare componenti e setup worker
+
 - **File:** `src/lib/components/shared/EChart.svelte` vs
   `src/lib/components/simulazione/EChart.svelte` (due wrapper ECharts distinti);
   setup del worker Monte Carlo duplicato tra `src/routes/simulazione/+page.svelte` e
@@ -137,6 +147,7 @@ Invarianti consolidati del progetto — nessun intervento di questo piano deve r
 - **Accettazione:** grafici e simulazioni invariati in entrambe le pagine; check/test verdi.
 
 ### B5. Offload dei calcoli pesanti dal main thread (effort medio) **[DECISIONE UTENTE]**
+
 - **Problema:** solo Monte Carlo gira nel worker. `projectPortfolio`
   (`src/lib/engine/fire-calculator.ts`, funzione da ~367 righe) e la sensitivity/tornado girano
   sincroni sul main thread, chiamati da ~19 punti (calcolatore, confronto-profili, rischi...):
@@ -148,6 +159,7 @@ Invarianti consolidati del progetto — nessun intervento di questo piano deve r
 - **Accettazione:** nessuna regressione numerica; interazioni fluide sulle pagine pesanti.
 
 ### B6. Tipizzare i callback ECharts
+
 - **File:** ~13 componenti `.svelte` con 30 usi di `any` (concentrati in
   `dati-storici/+page.svelte` e `impostazioni/+page.svelte`).
 - **Fare:** usare i tipi di `echarts` (`ECElementEvent`, `EChartsOption`, formatter tipizzati).
@@ -159,6 +171,7 @@ Invarianti consolidati del progetto — nessun intervento di questo piano deve r
 ## FASE C — Coerenza funzionale (priorita' alta)
 
 ### C1. Modulo orfano `tfr-rules.ts`: promessa non mantenuta **[DECISIONE UTENTE]**
+
 - **Problema:** `src/lib/engine/tfr-rules.ts` esporta `checkTFRAnticipationEligibility` e
   `compareTFRDestination` (TFR in azienda vs fondo pensione, art. 2120 c.c.) ma NESSUNA UI le
   usa. La guida (step 12, `steps.ts:~1321`) descrive la funzionalita' come esistente.
@@ -170,6 +183,7 @@ Invarianti consolidati del progetto — nessun intervento di questo piano deve r
   guida o aggiornamento dello step 12 + test sul modulo.
 
 ### C2. Guida: 5 feature reali senza capitolo (viola la regola di progetto)
+
 - **File:** `src/lib/guida/steps.ts` (+ `src/routes/guida/+page.svelte`).
 - **Mancano capitoli dedicati per:** `/scenari` (scenari salvati e confronto), `/dati-storici`,
   `/contenitori` (confronto contenitori fiscali), `/confronto-profili`, `/community`.
@@ -184,6 +198,7 @@ Invarianti consolidati del progetto — nessun intervento di questo piano deve r
 - **Accettazione:** ogni route utente ha il suo capitolo; conteggio dinamico; ordine coerente.
 
 ### C3. i18n: decidere e uniformare **[DECISIONE UTENTE]**
+
 - **Problema:** l'infrastruttura i18n esiste (`src/lib/i18n/`, ~85 chiavi it/en) ma e' usata da
   soli 6 file; ~95% della UI e' italiano hardcoded (guida inclusa, 2119 righe). Il selettore
   lingua in Impostazioni promette un inglese che non esiste: switch EN inutilizzabile.
@@ -196,6 +211,7 @@ Invarianti consolidati del progetto — nessun intervento di questo piano deve r
 - **Accettazione:** nessuna promessa di lingua non mantenuta; sidebar uniforme.
 
 ### C4. Doppia fonte di verita' sulla pensione INPS
+
 - **File:** `src/lib/engine/pension-italy.ts` (usato da `PensionCalculator.svelte`) vs
   `src/lib/engine/inps-simulator.ts` (usato da `/pensione` e `INPSSimulator.svelte`).
 - **Problema:** due moduli coprono la stima pensione contributiva in punti diversi della UI:
@@ -206,6 +222,7 @@ Invarianti consolidati del progetto — nessun intervento di questo piano deve r
 - **Accettazione:** test di coerenza verde; nessun valore fiscale cambiato senza fonte.
 
 ### C5. Discoverability delle feature "sepolte" (effort medio, UX)
+
 - **Problema:** funzioni forti vivono solo dentro tab (Coniuge, Eventi di vita, import
   GestPTF/Banca/INPS nel Profilo; Cash flow e tornado nel Calcolatore); `/confronto-profili` e
   `/community` dipendono da dati creati altrove senza agganci contestuali; sidebar piatta a
@@ -251,10 +268,10 @@ Da pianificare come lavori dedicati, non nello stesso ciclo delle fasi A-C:
 
 ## Decisioni da confermare con l'utente prima di partire
 
-| # | Decisione | Raccomandazione |
-|---|---|---|
-| B2 | Strategia xlsx (CDN SheetJS vs exceljs) | Tarball CDN SheetJS |
-| B5 | Offload proiezioni in worker: fare ora o solo misurare? | Prima misurare |
-| C1 | TFR: costruire UI o togliere promessa dalla guida | Costruire la UI |
-| C3 | i18n: nascondere selettore EN o completare traduzioni | Nascondere per ora |
-| D | Quale investimento strutturale prioritizzare | D2 (E2E) per primo |
+| #   | Decisione                                               | Raccomandazione     |
+| --- | ------------------------------------------------------- | ------------------- |
+| B2  | Strategia xlsx (CDN SheetJS vs exceljs)                 | Tarball CDN SheetJS |
+| B5  | Offload proiezioni in worker: fare ora o solo misurare? | Prima misurare      |
+| C1  | TFR: costruire UI o togliere promessa dalla guida       | Costruire la UI     |
+| C3  | i18n: nascondere selettore EN o completare traduzioni   | Nascondere per ora  |
+| D   | Quale investimento strutturale prioritizzare            | D2 (E2E) per primo  |

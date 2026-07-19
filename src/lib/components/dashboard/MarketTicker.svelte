@@ -1,11 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { Badge } from 'flowbite-svelte';
-	import {
-		fetchMultipleQuotes,
-		DEFAULT_WATCHLIST,
-		type MarketQuote
-	} from '$lib/utils/market-data';
+	import { fetchMultipleQuotes, DEFAULT_WATCHLIST, type MarketQuote } from '$lib/utils/market-data';
 	import { t } from '$lib/i18n/store.svelte';
 
 	let quotes = $state<MarketQuote[]>([]);
@@ -67,58 +63,62 @@
 </script>
 
 {#if enabled}
-<div class="w-full overflow-hidden bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 mb-6">
-	{#if loading}
-		<div class="flex items-center justify-center py-3 px-4">
-			<div class="animate-pulse flex gap-8">
-				{#each Array(6) as _}
-					<div class="flex gap-2 items-center">
-						<div class="h-3 w-16 bg-gray-300 dark:bg-gray-600 rounded"></div>
-						<div class="h-3 w-12 bg-gray-300 dark:bg-gray-600 rounded"></div>
-					</div>
-				{/each}
-			</div>
-		</div>
-	{:else if error && quotes.length === 0}
-		<div class="py-2 px-4 text-center">
-			<p class="text-xs text-gray-400 dark:text-gray-500">{error}</p>
-		</div>
-	{:else}
-		<div class="flex items-center">
-			<!-- Label -->
-			<div class="flex-shrink-0 px-3 py-2 bg-gray-100 dark:bg-gray-700 border-r border-gray-200 dark:border-gray-600">
-				<span class="text-xs font-semibold text-gray-500 dark:text-gray-400 whitespace-nowrap">{t('market.tickerLabel')}</span>
-				{#if lastRefresh}
-					<span class="text-xs text-gray-400 dark:text-gray-500 ml-1">{lastRefresh}</span>
-				{/if}
-			</div>
-
-			<!-- Scrolling ticker -->
-			<div class="overflow-x-auto flex-1">
-				<div class="flex items-center gap-5 px-4 py-2 animate-ticker whitespace-nowrap min-w-max">
-					{#each quotes as quote}
-						<div class="flex items-center gap-2 text-sm">
-							<span class="font-medium text-gray-700 dark:text-gray-300">{quote.name}</span>
-							<span class="font-semibold text-gray-900 dark:text-white">{formatPrice(quote)}</span>
-							<Badge
-								color={quote.change >= 0 ? 'green' : 'red'}
-								class="text-xs"
-							>
-								{formatChange(quote)}
-							</Badge>
+	<div
+		class="mb-6 w-full overflow-hidden rounded-lg border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800"
+	>
+		{#if loading}
+			<div class="flex items-center justify-center px-4 py-3">
+				<div class="flex animate-pulse gap-8">
+					{#each Array(6) as _}
+						<div class="flex items-center gap-2">
+							<div class="h-3 w-16 rounded bg-gray-300 dark:bg-gray-600"></div>
+							<div class="h-3 w-12 rounded bg-gray-300 dark:bg-gray-600"></div>
 						</div>
 					{/each}
 				</div>
 			</div>
-		</div>
-
-		{#if error}
-			<div class="px-4 pb-1">
-				<p class="text-xs text-yellow-500">{error}</p>
+		{:else if error && quotes.length === 0}
+			<div class="px-4 py-2 text-center">
+				<p class="text-xs text-gray-400 dark:text-gray-500">{error}</p>
 			</div>
+		{:else}
+			<div class="flex items-center">
+				<!-- Label -->
+				<div
+					class="flex-shrink-0 border-r border-gray-200 bg-gray-100 px-3 py-2 dark:border-gray-600 dark:bg-gray-700"
+				>
+					<span class="text-xs font-semibold whitespace-nowrap text-gray-500 dark:text-gray-400"
+						>{t('market.tickerLabel')}</span
+					>
+					{#if lastRefresh}
+						<span class="ml-1 text-xs text-gray-400 dark:text-gray-500">{lastRefresh}</span>
+					{/if}
+				</div>
+
+				<!-- Scrolling ticker -->
+				<div class="flex-1 overflow-x-auto">
+					<div class="animate-ticker flex min-w-max items-center gap-5 px-4 py-2 whitespace-nowrap">
+						{#each quotes as quote}
+							<div class="flex items-center gap-2 text-sm">
+								<span class="font-medium text-gray-700 dark:text-gray-300">{quote.name}</span>
+								<span class="font-semibold text-gray-900 dark:text-white">{formatPrice(quote)}</span
+								>
+								<Badge color={quote.change >= 0 ? 'green' : 'red'} class="text-xs">
+									{formatChange(quote)}
+								</Badge>
+							</div>
+						{/each}
+					</div>
+				</div>
+			</div>
+
+			{#if error}
+				<div class="px-4 pb-1">
+					<p class="text-xs text-yellow-500">{error}</p>
+				</div>
+			{/if}
 		{/if}
-	{/if}
-</div>
+	</div>
 {/if}
 
 <style>

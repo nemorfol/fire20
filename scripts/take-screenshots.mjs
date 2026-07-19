@@ -15,7 +15,7 @@ const pages = [
 	{ name: '07-dati-storici', url: '/dati-storici/', waitFor: 3000 },
 	{ name: '08-guida', url: '/guida/', waitFor: 2000 },
 	{ name: '09-guida-step', url: '/guida/cos-e-fire/', waitFor: 2000 },
-	{ name: '10-impostazioni', url: '/impostazioni/', waitFor: 2000 },
+	{ name: '10-impostazioni', url: '/impostazioni/', waitFor: 2000 }
 ];
 
 async function run() {

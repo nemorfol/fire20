@@ -379,16 +379,21 @@ db.version(6)
 		await tx
 			.table('profiles')
 			.toCollection()
-			.modify((p: { portfolio?: Record<string, number>; monthlyContributions?: Record<string, number> }) => {
-				if (p.portfolio) {
-					if (p.portfolio.bfp == null) p.portfolio.bfp = 0;
-					if (p.portfolio.cd == null) p.portfolio.cd = 0;
+			.modify(
+				(p: {
+					portfolio?: Record<string, number>;
+					monthlyContributions?: Record<string, number>;
+				}) => {
+					if (p.portfolio) {
+						if (p.portfolio.bfp == null) p.portfolio.bfp = 0;
+						if (p.portfolio.cd == null) p.portfolio.cd = 0;
+					}
+					if (p.monthlyContributions) {
+						if (p.monthlyContributions.bfp == null) p.monthlyContributions.bfp = 0;
+						if (p.monthlyContributions.cd == null) p.monthlyContributions.cd = 0;
+					}
 				}
-				if (p.monthlyContributions) {
-					if (p.monthlyContributions.bfp == null) p.monthlyContributions.bfp = 0;
-					if (p.monthlyContributions.cd == null) p.monthlyContributions.cd = 0;
-				}
-			});
+			);
 	});
 
 export { db };

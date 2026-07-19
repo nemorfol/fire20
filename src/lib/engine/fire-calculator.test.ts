@@ -145,7 +145,7 @@ describe('calculateSavingsRate', () => {
 });
 
 describe('calculateCoastFireNumber', () => {
-	it('a parita\' di eta\' = FIRE number', () => {
+	it("a parita' di eta' = FIRE number", () => {
 		expect(calculateCoastFireNumber(50, 50, 600000, 0.05)).toBe(600000);
 	});
 	it('sconta il FIRE number al rendimento reale', () => {

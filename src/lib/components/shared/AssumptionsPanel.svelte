@@ -67,17 +67,14 @@
 	}
 
 	const fmtPercent = (v: number) => `${(v * 100).toFixed(2)}%`;
-	const fmtEuro = (v: number) =>
-		v >= 1000 ? `${(v / 1000).toFixed(1)}k€` : `${v.toFixed(0)}€`;
+	const fmtEuro = (v: number) => (v >= 1000 ? `${(v / 1000).toFixed(1)}k€` : `${v.toFixed(0)}€`);
 </script>
 
-<Card size="xl" class="!max-w-none w-full mb-4">
-	<div class="flex flex-col sm:flex-row sm:items-start gap-4">
+<Card size="xl" class="mb-4 w-full !max-w-none">
+	<div class="flex flex-col gap-4 sm:flex-row sm:items-start">
 		<div class="flex-1">
-			<div class="flex items-center gap-2 mb-2">
-				<h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-					Ipotesi attive
-				</h3>
+			<div class="mb-2 flex items-center gap-2">
+				<h3 class="text-lg font-semibold text-gray-900 dark:text-white">Ipotesi attive</h3>
 				<Badge color="blue">{assumptions.label}</Badge>
 				{#if isCustom}
 					<Badge color="yellow">Personalizzato</Badge>
@@ -89,7 +86,7 @@
 		</div>
 		<div class="flex items-center gap-2">
 			<select
-				class="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm"
+				class="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700"
 				value={selectedPresetId}
 				onchange={(e) => selectPreset((e.target as HTMLSelectElement).value)}
 			>
@@ -101,14 +98,14 @@
 				{/if}
 			</select>
 			<button
-				class="text-sm px-3 py-2 rounded-md border border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-200 dark:hover:bg-blue-950/50 transition-colors"
+				class="rounded-md border border-blue-300 px-3 py-2 text-sm text-blue-700 transition-colors hover:bg-blue-50 dark:border-blue-700 dark:text-blue-200 dark:hover:bg-blue-950/50"
 				onclick={() => (expanded = !expanded)}
 			>
 				{#if expanded}
-					<ChevronUpOutline class="w-4 h-4 inline-block" />
+					<ChevronUpOutline class="inline-block h-4 w-4" />
 					Nascondi
 				{:else}
-					<ChevronDownOutline class="w-4 h-4 inline-block" />
+					<ChevronDownOutline class="inline-block h-4 w-4" />
 					Dettagli
 				{/if}
 			</button>
@@ -116,28 +113,29 @@
 	</div>
 
 	{#if expanded}
-		<div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-4">
+		<div class="mt-4 space-y-4 border-t border-gray-200 pt-4 dark:border-gray-700">
 			<div class="flex justify-end">
 				{#if !editing}
 					<button
-						class="text-xs px-3 py-1 rounded-md bg-blue-600 hover:bg-blue-700 text-white"
+						class="rounded-md bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700"
 						onclick={startEditing}
 					>
 						Modifica (crea preset personalizzato)
 					</button>
 				{:else}
 					<span class="text-xs text-amber-700 dark:text-amber-300">
-						Modalita' editing — i preset non sono modificabili, le modifiche creano un set "Personalizzato".
+						Modalita' editing — i preset non sono modificabili, le modifiche creano un set
+						"Personalizzato".
 					</span>
 				{/if}
 			</div>
 
 			<!-- IRPEF -->
 			<section>
-				<h4 class="text-sm font-semibold mb-2 text-gray-900 dark:text-white">Scaglioni IRPEF</h4>
-				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+				<h4 class="mb-2 text-sm font-semibold text-gray-900 dark:text-white">Scaglioni IRPEF</h4>
+				<div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
 					{#each assumptions.irpefBrackets as bracket, idx (idx)}
-						<div class="flex items-center gap-2 text-xs p-2 bg-gray-50 dark:bg-gray-800 rounded">
+						<div class="flex items-center gap-2 rounded bg-gray-50 p-2 text-xs dark:bg-gray-800">
 							<span class="text-gray-600 dark:text-gray-400">
 								{fmtEuro(bracket.from)}–{bracket.to === Number.POSITIVE_INFINITY
 									? '∞'
@@ -149,9 +147,10 @@
 									step="0.01"
 									min="0"
 									max="1"
-									class="w-16 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-1 py-0.5"
+									class="w-16 rounded border border-gray-300 bg-white px-1 py-0.5 dark:border-gray-600 dark:bg-gray-700"
 									value={bracket.rate}
-									onchange={(e) => updateBracket(idx, 'rate', Number((e.target as HTMLInputElement).value))}
+									onchange={(e) =>
+										updateBracket(idx, 'rate', Number((e.target as HTMLInputElement).value))}
 								/>
 							{:else}
 								<span class="font-mono font-semibold">{fmtPercent(bracket.rate)}</span>
@@ -163,78 +162,93 @@
 
 			<!-- Capital -->
 			<section>
-				<h4 class="text-sm font-semibold mb-2 text-gray-900 dark:text-white">
+				<h4 class="mb-2 text-sm font-semibold text-gray-900 dark:text-white">
 					Redditi finanziari e patrimoniali
 				</h4>
-				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-xs">
-					<div class="p-2 bg-gray-50 dark:bg-gray-800 rounded">
+				<div class="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2 lg:grid-cols-3">
+					<div class="rounded bg-gray-50 p-2 dark:bg-gray-800">
 						<span class="text-gray-600 dark:text-gray-400">Capital gain azioni/ETF:</span>
 						{#if editing}
 							<input
 								type="number"
 								step="0.001"
-								class="ml-1 w-16 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-1 py-0.5"
+								class="ml-1 w-16 rounded border border-gray-300 bg-white px-1 py-0.5 dark:border-gray-600 dark:bg-gray-700"
 								value={assumptions.capital.stocksAndEtf}
-								onchange={(e) => updateCapital('stocksAndEtf', Number((e.target as HTMLInputElement).value))}
+								onchange={(e) =>
+									updateCapital('stocksAndEtf', Number((e.target as HTMLInputElement).value))}
 							/>
 						{:else}
-							<span class="font-mono font-semibold ml-1">{fmtPercent(assumptions.capital.stocksAndEtf)}</span>
+							<span class="ml-1 font-mono font-semibold"
+								>{fmtPercent(assumptions.capital.stocksAndEtf)}</span
+							>
 						{/if}
 					</div>
-					<div class="p-2 bg-gray-50 dark:bg-gray-800 rounded">
+					<div class="rounded bg-gray-50 p-2 dark:bg-gray-800">
 						<span class="text-gray-600 dark:text-gray-400">Titoli di stato (BTP/BOT):</span>
 						{#if editing}
 							<input
 								type="number"
 								step="0.001"
-								class="ml-1 w-16 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-1 py-0.5"
+								class="ml-1 w-16 rounded border border-gray-300 bg-white px-1 py-0.5 dark:border-gray-600 dark:bg-gray-700"
 								value={assumptions.capital.governmentBonds}
-								onchange={(e) => updateCapital('governmentBonds', Number((e.target as HTMLInputElement).value))}
+								onchange={(e) =>
+									updateCapital('governmentBonds', Number((e.target as HTMLInputElement).value))}
 							/>
 						{:else}
-							<span class="font-mono font-semibold ml-1">{fmtPercent(assumptions.capital.governmentBonds)}</span>
+							<span class="ml-1 font-mono font-semibold"
+								>{fmtPercent(assumptions.capital.governmentBonds)}</span
+							>
 						{/if}
 					</div>
-					<div class="p-2 bg-gray-50 dark:bg-gray-800 rounded">
+					<div class="rounded bg-gray-50 p-2 dark:bg-gray-800">
 						<span class="text-gray-600 dark:text-gray-400">Cedolare secca affitti:</span>
 						{#if editing}
 							<input
 								type="number"
 								step="0.001"
-								class="ml-1 w-16 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-1 py-0.5"
+								class="ml-1 w-16 rounded border border-gray-300 bg-white px-1 py-0.5 dark:border-gray-600 dark:bg-gray-700"
 								value={assumptions.capital.cedolareSecca}
-								onchange={(e) => updateCapital('cedolareSecca', Number((e.target as HTMLInputElement).value))}
+								onchange={(e) =>
+									updateCapital('cedolareSecca', Number((e.target as HTMLInputElement).value))}
 							/>
 						{:else}
-							<span class="font-mono font-semibold ml-1">{fmtPercent(assumptions.capital.cedolareSecca)}</span>
+							<span class="ml-1 font-mono font-semibold"
+								>{fmtPercent(assumptions.capital.cedolareSecca)}</span
+							>
 						{/if}
 					</div>
-					<div class="p-2 bg-gray-50 dark:bg-gray-800 rounded">
+					<div class="rounded bg-gray-50 p-2 dark:bg-gray-800">
 						<span class="text-gray-600 dark:text-gray-400">Bollo titoli (annuo):</span>
 						{#if editing}
 							<input
 								type="number"
 								step="0.0001"
-								class="ml-1 w-20 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-1 py-0.5"
+								class="ml-1 w-20 rounded border border-gray-300 bg-white px-1 py-0.5 dark:border-gray-600 dark:bg-gray-700"
 								value={assumptions.capital.stampDuty}
-								onchange={(e) => updateCapital('stampDuty', Number((e.target as HTMLInputElement).value))}
+								onchange={(e) =>
+									updateCapital('stampDuty', Number((e.target as HTMLInputElement).value))}
 							/>
 						{:else}
-							<span class="font-mono font-semibold ml-1">{fmtPercent(assumptions.capital.stampDuty)}</span>
+							<span class="ml-1 font-mono font-semibold"
+								>{fmtPercent(assumptions.capital.stampDuty)}</span
+							>
 						{/if}
 					</div>
-					<div class="p-2 bg-gray-50 dark:bg-gray-800 rounded">
+					<div class="rounded bg-gray-50 p-2 dark:bg-gray-800">
 						<span class="text-gray-600 dark:text-gray-400">IVAFE (broker estero):</span>
 						{#if editing}
 							<input
 								type="number"
 								step="0.0001"
-								class="ml-1 w-20 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-1 py-0.5"
+								class="ml-1 w-20 rounded border border-gray-300 bg-white px-1 py-0.5 dark:border-gray-600 dark:bg-gray-700"
 								value={assumptions.capital.ivafe}
-								onchange={(e) => updateCapital('ivafe', Number((e.target as HTMLInputElement).value))}
+								onchange={(e) =>
+									updateCapital('ivafe', Number((e.target as HTMLInputElement).value))}
 							/>
 						{:else}
-							<span class="font-mono font-semibold ml-1">{fmtPercent(assumptions.capital.ivafe)}</span>
+							<span class="ml-1 font-mono font-semibold"
+								>{fmtPercent(assumptions.capital.ivafe)}</span
+							>
 						{/if}
 					</div>
 				</div>
@@ -242,63 +256,79 @@
 
 			<!-- INPS -->
 			<section>
-				<h4 class="text-sm font-semibold mb-2 text-gray-900 dark:text-white">Contributi INPS</h4>
-				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-xs">
-					<div class="p-2 bg-gray-50 dark:bg-gray-800 rounded">
+				<h4 class="mb-2 text-sm font-semibold text-gray-900 dark:text-white">Contributi INPS</h4>
+				<div class="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2 lg:grid-cols-3">
+					<div class="rounded bg-gray-50 p-2 dark:bg-gray-800">
 						<span class="text-gray-600 dark:text-gray-400">Dipendente:</span>
 						{#if editing}
 							<input
 								type="number"
 								step="0.0001"
-								class="ml-1 w-20 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-1 py-0.5"
+								class="ml-1 w-20 rounded border border-gray-300 bg-white px-1 py-0.5 dark:border-gray-600 dark:bg-gray-700"
 								value={assumptions.inps.employeeBase}
-								onchange={(e) => updateInps('employeeBase', Number((e.target as HTMLInputElement).value))}
+								onchange={(e) =>
+									updateInps('employeeBase', Number((e.target as HTMLInputElement).value))}
 							/>
 						{:else}
-							<span class="font-mono font-semibold ml-1">{fmtPercent(assumptions.inps.employeeBase)}</span>
+							<span class="ml-1 font-mono font-semibold"
+								>{fmtPercent(assumptions.inps.employeeBase)}</span
+							>
 						{/if}
 					</div>
-					<div class="p-2 bg-gray-50 dark:bg-gray-800 rounded">
+					<div class="rounded bg-gray-50 p-2 dark:bg-gray-800">
 						<span class="text-gray-600 dark:text-gray-400">Parasubordinato:</span>
-						<span class="font-mono font-semibold ml-1">{fmtPercent(assumptions.inps.parasubordinato)}</span>
+						<span class="ml-1 font-mono font-semibold"
+							>{fmtPercent(assumptions.inps.parasubordinato)}</span
+						>
 					</div>
-					<div class="p-2 bg-gray-50 dark:bg-gray-800 rounded">
+					<div class="rounded bg-gray-50 p-2 dark:bg-gray-800">
 						<span class="text-gray-600 dark:text-gray-400">Massimale:</span>
-						<span class="font-mono font-semibold ml-1">{fmtEuro(assumptions.inps.massimale)}</span>
+						<span class="ml-1 font-mono font-semibold">{fmtEuro(assumptions.inps.massimale)}</span>
 					</div>
 				</div>
 			</section>
 
 			<!-- Fondo pensione -->
 			<section>
-				<h4 class="text-sm font-semibold mb-2 text-gray-900 dark:text-white">Fondo pensione complementare</h4>
-				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-xs">
-					<div class="p-2 bg-gray-50 dark:bg-gray-800 rounded">
+				<h4 class="mb-2 text-sm font-semibold text-gray-900 dark:text-white">
+					Fondo pensione complementare
+				</h4>
+				<div class="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2 lg:grid-cols-3">
+					<div class="rounded bg-gray-50 p-2 dark:bg-gray-800">
 						<span class="text-gray-600 dark:text-gray-400">Deduzione max:</span>
 						{#if editing}
 							<input
 								type="number"
 								step="1"
-								class="ml-1 w-20 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-1 py-0.5"
+								class="ml-1 w-20 rounded border border-gray-300 bg-white px-1 py-0.5 dark:border-gray-600 dark:bg-gray-700"
 								value={assumptions.pensionFund.maxDeduction}
-								onchange={(e) => updatePension('maxDeduction', Number((e.target as HTMLInputElement).value))}
+								onchange={(e) =>
+									updatePension('maxDeduction', Number((e.target as HTMLInputElement).value))}
 							/>
 						{:else}
-							<span class="font-mono font-semibold ml-1">{fmtEuro(assumptions.pensionFund.maxDeduction)}</span>
+							<span class="ml-1 font-mono font-semibold"
+								>{fmtEuro(assumptions.pensionFund.maxDeduction)}</span
+							>
 						{/if}
 					</div>
-					<div class="p-2 bg-gray-50 dark:bg-gray-800 rounded">
+					<div class="rounded bg-gray-50 p-2 dark:bg-gray-800">
 						<span class="text-gray-600 dark:text-gray-400">Extra (post-2007):</span>
-						<span class="font-mono font-semibold ml-1">{fmtEuro(assumptions.pensionFund.extraDeduction)}</span>
+						<span class="ml-1 font-mono font-semibold"
+							>{fmtEuro(assumptions.pensionFund.extraDeduction)}</span
+						>
 					</div>
-					<div class="p-2 bg-gray-50 dark:bg-gray-800 rounded">
+					<div class="rounded bg-gray-50 p-2 dark:bg-gray-800">
 						<span class="text-gray-600 dark:text-gray-400">Tassa rendimenti:</span>
-						<span class="font-mono font-semibold ml-1">{fmtPercent(assumptions.pensionFund.returnTaxRate)}</span>
+						<span class="ml-1 font-mono font-semibold"
+							>{fmtPercent(assumptions.pensionFund.returnTaxRate)}</span
+						>
 					</div>
-					<div class="p-2 bg-gray-50 dark:bg-gray-800 rounded">
+					<div class="rounded bg-gray-50 p-2 dark:bg-gray-800">
 						<span class="text-gray-600 dark:text-gray-400">Tassa prestazione (15→9%):</span>
-						<span class="font-mono font-semibold ml-1">
-							{fmtPercent(assumptions.pensionFund.benefitTaxBase)}–{fmtPercent(assumptions.pensionFund.benefitTaxFloor)}
+						<span class="ml-1 font-mono font-semibold">
+							{fmtPercent(assumptions.pensionFund.benefitTaxBase)}–{fmtPercent(
+								assumptions.pensionFund.benefitTaxFloor
+							)}
 						</span>
 					</div>
 				</div>
@@ -306,7 +336,7 @@
 
 			<!-- Addizionali -->
 			<section>
-				<h4 class="text-sm font-semibold mb-2 text-gray-900 dark:text-white">
+				<h4 class="mb-2 text-sm font-semibold text-gray-900 dark:text-white">
 					Addizionali medie nazionali
 				</h4>
 				{#if editing}
@@ -316,7 +346,7 @@
 						</label>
 						<select
 							id="region-select"
-							class="ml-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-1 py-0.5"
+							class="ml-1 rounded border border-gray-300 bg-white px-1 py-0.5 dark:border-gray-600 dark:bg-gray-700"
 							onchange={(e) => {
 								const sel = (e.target as HTMLSelectElement).value;
 								const r = ADDIZIONALI_REGIONALI.find((x) => x.region === sel);
@@ -330,49 +360,54 @@
 								</option>
 							{/each}
 						</select>
-						<p class="text-gray-500 dark:text-gray-400 mt-1">
-							Valori <strong>indicativi</strong>: le regioni applicano scaglioni propri e
-							soglie di esenzione, e i valori cambiano per anno e reddito — verifica la
-							delibera della tua regione. L'addizionale comunale (sotto) va impostata a parte.
+						<p class="mt-1 text-gray-500 dark:text-gray-400">
+							Valori <strong>indicativi</strong>: le regioni applicano scaglioni propri e soglie di
+							esenzione, e i valori cambiano per anno e reddito — verifica la delibera della tua
+							regione. L'addizionale comunale (sotto) va impostata a parte.
 						</p>
 					</div>
 				{/if}
-				<div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-					<div class="p-2 bg-gray-50 dark:bg-gray-800 rounded">
+				<div class="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
+					<div class="rounded bg-gray-50 p-2 dark:bg-gray-800">
 						<span class="text-gray-600 dark:text-gray-400">Regionale (media IT):</span>
 						{#if editing}
 							<input
 								type="number"
 								step="0.0001"
-								class="ml-1 w-20 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-1 py-0.5"
+								class="ml-1 w-20 rounded border border-gray-300 bg-white px-1 py-0.5 dark:border-gray-600 dark:bg-gray-700"
 								value={assumptions.surtaxes.regional}
-								onchange={(e) => updateSurtax('regional', Number((e.target as HTMLInputElement).value))}
+								onchange={(e) =>
+									updateSurtax('regional', Number((e.target as HTMLInputElement).value))}
 							/>
 						{:else}
-							<span class="font-mono font-semibold ml-1">{fmtPercent(assumptions.surtaxes.regional)}</span>
+							<span class="ml-1 font-mono font-semibold"
+								>{fmtPercent(assumptions.surtaxes.regional)}</span
+							>
 						{/if}
 					</div>
-					<div class="p-2 bg-gray-50 dark:bg-gray-800 rounded">
+					<div class="rounded bg-gray-50 p-2 dark:bg-gray-800">
 						<span class="text-gray-600 dark:text-gray-400">Comunale (media IT):</span>
 						{#if editing}
 							<input
 								type="number"
 								step="0.0001"
-								class="ml-1 w-20 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-1 py-0.5"
+								class="ml-1 w-20 rounded border border-gray-300 bg-white px-1 py-0.5 dark:border-gray-600 dark:bg-gray-700"
 								value={assumptions.surtaxes.municipal}
-								onchange={(e) => updateSurtax('municipal', Number((e.target as HTMLInputElement).value))}
+								onchange={(e) =>
+									updateSurtax('municipal', Number((e.target as HTMLInputElement).value))}
 							/>
 						{:else}
-							<span class="font-mono font-semibold ml-1">{fmtPercent(assumptions.surtaxes.municipal)}</span>
+							<span class="ml-1 font-mono font-semibold"
+								>{fmtPercent(assumptions.surtaxes.municipal)}</span
+							>
 						{/if}
 					</div>
 				</div>
 			</section>
 
-			<p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
-				Tutti i valori sono espressi come decimali (0.26 = 26%) o euro. La modifica
-				non e' permanente: per salvarla nel profilo serve cliccare "Salva profilo"
-				dalla pagina Profilo.
+			<p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+				Tutti i valori sono espressi come decimali (0.26 = 26%) o euro. La modifica non e'
+				permanente: per salvarla nel profilo serve cliccare "Salva profilo" dalla pagina Profilo.
 			</p>
 		</div>
 	{/if}

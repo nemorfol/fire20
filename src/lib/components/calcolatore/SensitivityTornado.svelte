@@ -31,7 +31,7 @@
 		metric === 'finalPortfolio'
 			? 'Portafoglio finale'
 			: metric === 'depletionAge'
-				? 'Eta\' di esaurimento'
+				? "Eta' di esaurimento"
 				: metric === 'cumulativeWithdrawals'
 					? 'Prelievi cumulati'
 					: 'Portafoglio minimo'
@@ -62,10 +62,12 @@
 					const idx = arr?.[0]?.dataIndex ?? 0;
 					const r = sortedAsc[idx];
 					if (!r) return '';
-					return `<b>${r.variable}</b><br/>` +
+					return (
+						`<b>${r.variable}</b><br/>` +
 						`Baseline: ${fmt(r.baseline)} → ${metricLabel}: ${fmt(r.baselineMetric)}<br/>` +
 						`-${(shock * 100).toFixed(0)}% (${fmt(r.low)}): ${fmt(r.lowMetric)} (${fmt(r.lowMetric - r.baselineMetric)})<br/>` +
-						`+${(shock * 100).toFixed(0)}% (${fmt(r.high)}): ${fmt(r.highMetric)} (${fmt(r.highMetric - r.baselineMetric)})`;
+						`+${(shock * 100).toFixed(0)}% (${fmt(r.high)}): ${fmt(r.highMetric)} (${fmt(r.highMetric - r.baselineMetric)})`
+					);
 				}) as never
 			},
 			xAxis: {
@@ -99,12 +101,12 @@
 	});
 </script>
 
-<Card size="xl" class="!max-w-none w-full">
+<Card size="xl" class="w-full !max-w-none">
 	<div class="mb-3">
 		<h3 class="text-lg font-semibold text-gray-900 dark:text-white">Analisi di sensitivita'</h3>
 		<p class="text-sm text-gray-600 dark:text-gray-400">
-			Ogni variabile e' shockata di ±{(shock * 100).toFixed(0)}% rispetto al baseline.
-			Le barre piu' lunghe = leve piu' influenti sul {metricLabel.toLowerCase()}.
+			Ogni variabile e' shockata di ±{(shock * 100).toFixed(0)}% rispetto al baseline. Le barre piu'
+			lunghe = leve piu' influenti sul {metricLabel.toLowerCase()}.
 		</p>
 	</div>
 	<EChart options={chartOptions} height="380px" />

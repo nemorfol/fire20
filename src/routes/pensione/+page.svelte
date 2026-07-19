@@ -1,17 +1,29 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import {
-		Heading, Breadcrumb, BreadcrumbItem, Alert, Spinner, Card, Label, Select, Toggle
+		Heading,
+		Breadcrumb,
+		BreadcrumbItem,
+		Alert,
+		Spinner,
+		Card,
+		Label,
+		Select,
+		Toggle
 	} from 'flowbite-svelte';
 	import {
-		ExclamationCircleOutline, ArrowRightOutline, InfoCircleSolid
+		ExclamationCircleOutline,
+		ArrowRightOutline,
+		InfoCircleSolid
 	} from 'flowbite-svelte-icons';
 	import type { Profile } from '$lib/db/index';
 	import { getAllProfiles } from '$lib/db/profiles';
 	import CurrencyInput from '$lib/components/shared/CurrencyInput.svelte';
 	import PercentInput from '$lib/components/shared/PercentInput.svelte';
 	import {
-		simulateINPSPension, type INPSSimulatorParams, type INPSSimulatorResult
+		simulateINPSPension,
+		type INPSSimulatorParams,
+		type INPSSimulatorResult
 	} from '$lib/engine/inps-simulator';
 	import PensionByAgeChart from '$lib/components/pensione/PensionByAgeChart.svelte';
 	import ScenarioComparisonPanel from '$lib/components/pensione/ScenarioComparisonPanel.svelte';
@@ -67,8 +79,9 @@
 
 	let monthlyPensionNet = $derived.by(() => {
 		if (!result) return 0;
-		const point = result.pensionAtAge.find((p) => p.age === targetRetirementAge)
-			?? result.pensionAtAge.find((p) => p.age === result!.earliestRetirementAge);
+		const point =
+			result.pensionAtAge.find((p) => p.age === targetRetirementAge) ??
+			result.pensionAtAge.find((p) => p.age === result!.earliestRetirementAge);
 		return point?.monthlyNet ?? 0;
 	});
 
@@ -121,10 +134,10 @@
 </Breadcrumb>
 
 <Heading tag="h1" class="mb-2">Pensione INPS</Heading>
-<p class="text-gray-600 dark:text-gray-400 mb-6">
-	Simula la tua pensione INPS con il metodo contributivo, confronta scenari alternativi
-	(riscatto laurea, uscita posticipata, crescita salariale) e quantifica il gap rispetto
-	alle spese FIRE da coprire con fondo pensione o portafoglio privato.
+<p class="mb-6 text-gray-600 dark:text-gray-400">
+	Simula la tua pensione INPS con il metodo contributivo, confronta scenari alternativi (riscatto
+	laurea, uscita posticipata, crescita salariale) e quantifica il gap rispetto alle spese FIRE da
+	coprire con fondo pensione o portafoglio privato.
 </p>
 
 {#if loading}
@@ -135,19 +148,22 @@
 {:else if !profile}
 	<Alert color="yellow">
 		{#snippet icon()}
-			<ExclamationCircleOutline class="w-5 h-5" />
+			<ExclamationCircleOutline class="h-5 w-5" />
 		{/snippet}
 		<span class="font-medium">Profilo non trovato.</span>
 		Per simulare la pensione devi prima creare un profilo.
-		<a href="/profilo/" class="ml-2 inline-flex items-center gap-1 text-yellow-800 dark:text-yellow-300 underline font-medium">
-			Crea Profilo <ArrowRightOutline class="w-3 h-3" />
+		<a
+			href="/profilo/"
+			class="ml-2 inline-flex items-center gap-1 font-medium text-yellow-800 underline dark:text-yellow-300"
+		>
+			Crea Profilo <ArrowRightOutline class="h-3 w-3" />
 		</a>
 	</Alert>
 {:else}
 	<!-- Parametri -->
-	<Card class="max-w-none mb-6">
-		<Heading tag="h4" class="text-lg mb-4">Parametri simulazione</Heading>
-		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-5">
+	<Card class="mb-6 max-w-none">
+		<Heading tag="h4" class="mb-4 text-lg">Parametri simulazione</Heading>
+		<div class="grid grid-cols-1 gap-x-4 gap-y-5 md:grid-cols-2 lg:grid-cols-3">
 			<div>
 				<Label for="gender" class="mb-2">Genere</Label>
 				<Select id="gender" items={genderOptions} bind:value={gender} />
@@ -161,7 +177,7 @@
 				<input
 					id="firstEmp"
 					type="number"
-					class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 p-2.5"
+					class="w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 dark:border-gray-600 dark:bg-gray-700"
 					bind:value={firstEmploymentYear}
 					min={1970}
 					max={currentYear}
@@ -186,7 +202,7 @@
 				<input
 					id="years"
 					type="number"
-					class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 p-2.5"
+					class="w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 dark:border-gray-600 dark:bg-gray-700"
 					bind:value={existingContributionYears}
 					min={0}
 					max={50}
@@ -216,25 +232,25 @@
 		</div>
 
 		{#if fireAge < targetRetirementAge}
-			<div class="mt-4 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+			<div class="mt-4 rounded-lg border border-gray-200 p-3 dark:border-gray-700">
 				<Toggle bind:checked={stopContributionsAtFire}>
 					<span class="font-medium text-gray-900 dark:text-white">
 						Interrompi i contributi INPS all'età FIRE ({fireAge} anni)
 					</span>
 				</Toggle>
-				<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-					In un percorso FIRE i versamenti si fermano a fine lavoro; nel gap fino alla pensione
-					il montante si rivaluta senza nuovi contributi (stima più realistica). #37
+				<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+					In un percorso FIRE i versamenti si fermano a fine lavoro; nel gap fino alla pensione il
+					montante si rivaluta senza nuovi contributi (stima più realistica). #37
 				</p>
 			</div>
 		{/if}
 
 		<Alert color="blue" class="mt-4">
 			{#snippet icon()}
-				<InfoCircleSolid class="w-4 h-4" />
+				<InfoCircleSolid class="h-4 w-4" />
 			{/snippet}
-			Eta target di pensione: <strong>{targetRetirementAge}</strong> anni
-			(da profilo). Anni mancanti: {yearsToPension}. Vita stimata post-pensione:
+			Eta target di pensione: <strong>{targetRetirementAge}</strong> anni (da profilo). Anni
+			mancanti: {yearsToPension}. Vita stimata post-pensione:
 			{yearsInRetirement} anni.
 		</Alert>
 	</Card>
@@ -242,10 +258,7 @@
 	{#if result}
 		<!-- Chart eta -->
 		<div class="mb-6">
-			<PensionByAgeChart
-				pensionAtAge={result.pensionAtAge}
-				{fireMonthlyExpenses}
-			/>
+			<PensionByAgeChart pensionAtAge={result.pensionAtAge} {fireMonthlyExpenses} />
 		</div>
 
 		<!-- Scenari -->

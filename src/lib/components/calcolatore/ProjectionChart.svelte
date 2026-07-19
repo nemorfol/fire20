@@ -19,7 +19,9 @@
 		inflationRate?: number;
 	} = $props();
 
-	let chartOptions = $derived<EChartsOption>(buildChartOptions(projections, fireNumber, retirementAge, currentAge, inflationRate));
+	let chartOptions = $derived<EChartsOption>(
+		buildChartOptions(projections, fireNumber, retirementAge, currentAge, inflationRate)
+	);
 
 	function buildChartOptions(
 		data: YearlyProjection[],
@@ -65,7 +67,8 @@
 						html += `<div class="text-xs opacity-75">(${formatCurrency(realPortfolio)} in euro di oggi)</div>`;
 					}
 					html += `<div>Target FIRE: ${formatCurrency(target)}</div>`;
-					if (d.contributions > 0) html += `<div>Contributi: +${formatCurrency(d.contributions)}</div>`;
+					if (d.contributions > 0)
+						html += `<div>Contributi: +${formatCurrency(d.contributions)}</div>`;
 					if (d.withdrawals > 0) html += `<div>Prelievi: -${formatCurrency(d.withdrawals)}</div>`;
 					html += `<div>Rendimenti: ${formatCurrency(d.returns)}</div>`;
 					if (d.taxes > 0) html += `<div>Tasse: -${formatCurrency(d.taxes)}</div>`;
@@ -113,13 +116,16 @@
 					areaStyle: {
 						color: {
 							type: 'linear',
-							x: 0, y: 0, x2: 0, y2: 1,
+							x: 0,
+							y: 0,
+							x2: 0,
+							y2: 1,
 							colorStops: [
 								{ offset: 0, color: 'rgba(16,185,129,0.35)' },
 								{ offset: 1, color: 'rgba(16,185,129,0.05)' }
 							]
 						}
-					},
+					}
 				},
 				{
 					name: 'Decumulo',
@@ -131,7 +137,10 @@
 					areaStyle: {
 						color: {
 							type: 'linear',
-							x: 0, y: 0, x2: 0, y2: 1,
+							x: 0,
+							y: 0,
+							x2: 0,
+							y2: 1,
 							colorStops: [
 								{ offset: 0, color: 'rgba(245,158,11,0.35)' },
 								{ offset: 1, color: 'rgba(245,158,11,0.05)' }
@@ -163,14 +172,16 @@
 	}
 </script>
 
-<div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm">
-	<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+<div
+	class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+>
+	<h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
 		Proiezione del Portafoglio
 	</h3>
 	{#if projections.length > 0}
 		<EChart options={chartOptions} height="420px" />
 	{:else}
-		<div class="flex items-center justify-center h-64 text-gray-400">
+		<div class="flex h-64 items-center justify-center text-gray-400">
 			Nessun dato da visualizzare
 		</div>
 	{/if}

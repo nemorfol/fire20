@@ -38,7 +38,7 @@ export const SERIES_IT_DEFAULT: SeriesPreset = {
 	label: 'Italiano (MSCI World + BTP + ISTAT)',
 	description:
 		'Default IT-centric: MSCI World ex-USA (1970-2024), BTP 7-10y (1991-2024 stimati), ' +
-		'inflazione ISTAT (1960-2024). Piu\' rappresentativo di un portafoglio italiano EUR.',
+		"inflazione ISTAT (1960-2024). Piu' rappresentativo di un portafoglio italiano EUR.",
 	stocks: toDecimals(internationalReturns),
 	bonds: toDecimals(btpReturns),
 	inflation: toDecimals(inflationITReturns),

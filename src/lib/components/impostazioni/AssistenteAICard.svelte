@@ -1,5 +1,15 @@
 <script lang="ts">
-	import { Card, Heading, Toggle, Select, Input, Label, Button, Badge, Alert } from 'flowbite-svelte';
+	import {
+		Card,
+		Heading,
+		Toggle,
+		Select,
+		Input,
+		Label,
+		Button,
+		Badge,
+		Alert
+	} from 'flowbite-svelte';
 	import { getLLMSettings, updateLLMSettings, type LLMSettings } from '$lib/llm/store.svelte';
 	import { detectProviders, pickBestOllamaModel } from '$lib/llm';
 	import type { LLMProviderStatus } from '$lib/llm/types';
@@ -55,11 +65,11 @@
 	}
 </script>
 
-<Card class="max-w-none mb-6">
+<Card class="mb-6 max-w-none">
 	<Heading tag="h3" class="mb-2">
 		Assistente AI <Badge color="purple" class="ml-2 align-middle">opzionale</Badge>
 	</Heading>
-	<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+	<p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
 		Spiega i tuoi numeri (FIRE number, Monte Carlo, fisco) usando un'AI che gira sul tuo
 		dispositivo. <strong>Gratis</strong> e <strong>privato</strong>: nessun dato viene inviato a
 		server esterni, nessun modello viene scaricato dall'app. Disattivato di default.
@@ -77,7 +87,11 @@
 			<div class="grid gap-3 sm:grid-cols-2">
 				<div>
 					<Label class="mb-1">URL Ollama (locale)</Label>
-					<Input bind:value={settings.ollamaUrl} onchange={persist} placeholder="http://localhost:11434" />
+					<Input
+						bind:value={settings.ollamaUrl}
+						onchange={persist}
+						placeholder="http://localhost:11434"
+					/>
 				</div>
 				<div>
 					<Label class="mb-1">Modello Ollama</Label>
@@ -92,7 +106,11 @@
 							di default). Premi «Rileva provider» per aggiornare la lista.
 						</p>
 					{:else}
-						<Input bind:value={settings.ollamaModel} onchange={persist} placeholder="es. llama3.2" />
+						<Input
+							bind:value={settings.ollamaModel}
+							onchange={persist}
+							placeholder="es. llama3.2"
+						/>
 						<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
 							Premi «Rileva provider» per elencare i modelli installati e scegliere dal menu.
 						</p>
@@ -107,7 +125,7 @@
 			{#if detected}
 				<ul class="space-y-2">
 					{#each statuses as s (s.id)}
-						<li class="flex items-center gap-2 text-sm flex-wrap">
+						<li class="flex flex-wrap items-center gap-2 text-sm">
 							<Badge color={s.available ? 'green' : 'gray'}>
 								{s.available ? 'disponibile' : 'non disponibile'}
 							</Badge>
@@ -121,9 +139,9 @@
 			<Alert color="blue" class="text-sm">
 				<strong>Privacy & costi:</strong> l'assistente usa solo l'AI gia' presente sul tuo
 				dispositivo (browser o Ollama locale). Nessun modello viene scaricato dall'app, nessun
-				costo, nessun dato inviato. Sul sito pubblico funziona solo se il browser ha l'AI
-				integrata; per usare Ollama esegui l'app in locale. <strong>Non e' consulenza
-				finanziaria</strong>: l'AI spiega i numeri, non li calcola.
+				costo, nessun dato inviato. Sul sito pubblico funziona solo se il browser ha l'AI integrata;
+				per usare Ollama esegui l'app in locale. <strong>Non e' consulenza finanziaria</strong>:
+				l'AI spiega i numeri, non li calcola.
 			</Alert>
 		</div>
 	{/if}

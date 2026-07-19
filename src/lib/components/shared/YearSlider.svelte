@@ -18,20 +18,14 @@
 	<Label class="mb-2">{label}</Label>
 {/if}
 <div class="flex items-center gap-4">
-	<Range
-		{min}
-		{max}
-		step={1}
-		bind:value
-		class="flex-1"
-	/>
+	<Range {min} {max} step={1} bind:value class="flex-1" />
 	<span
-		class="min-w-[3rem] text-center text-lg font-semibold text-primary-600 dark:text-primary-400"
+		class="text-primary-600 dark:text-primary-400 min-w-[3rem] text-center text-lg font-semibold"
 	>
 		{value}
 	</span>
 </div>
-<div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+<div class="mt-1 flex justify-between text-xs text-gray-500 dark:text-gray-400">
 	<span>{min}</span>
 	<span>{max}</span>
 </div>
