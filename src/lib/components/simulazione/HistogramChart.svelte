@@ -1,5 +1,6 @@
 <script lang="ts">
 	import EChart from '$lib/components/shared/EChart.svelte';
+	import type { TopLevelFormatterParams } from 'echarts/types/dist/shared';
 	import type { MonteCarloResult } from '$lib/engine/monte-carlo';
 	import { formatCompact, formatCurrency } from '$lib/utils/format';
 
@@ -50,10 +51,10 @@
 			tooltip: {
 				trigger: 'axis',
 				axisPointer: { type: 'shadow' },
-				formatter: (params: any) => {
+				formatter: (params: TopLevelFormatterParams) => {
 					if (!Array.isArray(params) || params.length === 0) return '';
 					const p = params[0];
-					return `${p.name}<br/>${p.marker} Frequenza: ${p.value}`;
+					return `${p.name}<br/>${p.marker as string} Frequenza: ${p.value as number}`;
 				}
 			},
 			grid: {

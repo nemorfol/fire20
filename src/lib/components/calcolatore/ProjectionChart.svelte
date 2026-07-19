@@ -3,6 +3,7 @@
 	import { formatCompact, formatCurrency } from '$lib/utils/format';
 	import type { YearlyProjection } from '$lib/engine/fire-calculator';
 	import type { EChartsOption } from 'echarts';
+	import type { TopLevelFormatterParams } from 'echarts/types/dist/shared';
 
 	let {
 		projections = [] as YearlyProjection[],
@@ -50,7 +51,7 @@
 		return {
 			tooltip: {
 				trigger: 'axis',
-				formatter: (params: any) => {
+				formatter: (params: TopLevelFormatterParams) => {
 					const p = Array.isArray(params) ? params : [params];
 					const dataIndex = p[0]?.dataIndex ?? 0;
 					const d = data[dataIndex];

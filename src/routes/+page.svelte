@@ -36,6 +36,7 @@
 	import { formatCurrency, formatPercent, formatCompact, formatDate } from '$lib/utils/format';
 	import StatCard from '$lib/components/shared/StatCard.svelte';
 	import EChart from '$lib/components/shared/EChart.svelte';
+	import type { CallbackDataParams } from 'echarts/types/dist/shared';
 	import MarketTicker from '$lib/components/dashboard/MarketTicker.svelte';
 	import RebalanceAlert from '$lib/components/dashboard/RebalanceAlert.svelte';
 	import BenchmarkComparison from '$lib/components/dashboard/BenchmarkComparison.svelte';
@@ -87,9 +88,9 @@
 		return {
 			tooltip: {
 				trigger: 'axis',
-				formatter: (params: any) => {
+				formatter: (params: CallbackDataParams[]) => {
 					const p = params[0];
-					return `<strong>${p.name}</strong><br/>Portafoglio: ${formatCurrency(p.value)}`;
+					return `<strong>${p.name}</strong><br/>Portafoglio: ${formatCurrency(p.value as number)}`;
 				}
 			},
 			grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
@@ -151,7 +152,8 @@
 		return {
 			tooltip: {
 				trigger: 'item',
-				formatter: (p: any) => `${p.name}: ${formatCurrency(p.value)} (${p.percent.toFixed(1)}%)`
+				formatter: (p: CallbackDataParams) =>
+					`${p.name}: ${formatCurrency(p.value as number)} (${p.percent!.toFixed(1)}%)`
 			},
 			legend: {
 				orient: 'vertical',

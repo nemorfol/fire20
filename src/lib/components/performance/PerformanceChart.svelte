@@ -1,5 +1,6 @@
 ﻿<script lang="ts">
 	import EChart from '$lib/components/shared/EChart.svelte';
+	import type { EChartsCoreOption } from 'echarts/core';
 	import type { PortfolioSnapshot, CashFlow } from '$lib/engine/twr-calculator';
 	import { buildPortfolioCumulativeSeries, buildBenchmarkCumulativeSeries } from '$lib/engine/twr-calculator';
 	import { sp500Returns } from '$lib/data/sp500';
@@ -91,7 +92,7 @@
 					itemStyle: { color: '#f59e0b' }
 				}
 			]
-		} as any;
+		} satisfies EChartsCoreOption;
 	});
 </script>
 

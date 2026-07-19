@@ -4,6 +4,7 @@
 	import type { RiskEvent } from '$lib/engine/risk-scenarios';
 	import { formatCurrency, formatCompact } from '$lib/utils/format';
 	import EChart from '$lib/components/shared/EChart.svelte';
+	import type { CallbackDataParams } from 'echarts/types/dist/shared';
 
 	let {
 		baseline,
@@ -42,10 +43,10 @@
 		return {
 			tooltip: {
 				trigger: 'axis',
-				formatter: (params: any) => {
+				formatter: (params: CallbackDataParams[]) => {
 					let html = `<strong>${params[0].name}</strong><br/>`;
 					for (const p of params) {
-						html += `${p.marker} ${p.seriesName}: ${formatCurrency(Math.max(0, p.value))}<br/>`;
+						html += `${p.marker as string} ${p.seriesName}: ${formatCurrency(Math.max(0, p.value as number))}<br/>`;
 					}
 					return html;
 				}

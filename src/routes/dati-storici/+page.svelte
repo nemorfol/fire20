@@ -3,6 +3,11 @@
 	import * as echarts from 'echarts/core';
 	import { HeatmapChart } from 'echarts/charts';
 	import { VisualMapComponent } from 'echarts/components';
+	import type {
+		CallbackDataParams,
+		TopLevelFormatterParams,
+		LineSeriesOption
+	} from 'echarts/types/dist/shared';
 	echarts.use([HeatmapChart, VisualMapComponent]);
 
 	import EChart from '$lib/components/shared/EChart.svelte';
@@ -50,9 +55,9 @@
 	const barChartOptions = $derived({
 		tooltip: {
 			trigger: 'axis',
-			formatter: (params: any) => {
+			formatter: (params: TopLevelFormatterParams) => {
 				const p = Array.isArray(params) ? params[0] : params;
-				return `<b>${p.name}</b><br/>${selected.label}: ${p.value.toFixed(2)}${selected.unit}`;
+				return `<b>${p.name}</b><br/>${selected.label}: ${(p.value as number).toFixed(2)}${selected.unit}`;
 			}
 		},
 		grid: { left: 60, right: 30, top: 20, bottom: 80 },
@@ -76,7 +81,7 @@
 			})),
 			barMaxWidth: 12
 		}]
-	} as any);
+	} satisfies echarts.EChartsCoreOption);
 
 	// === Rolling Returns ===
 	function computeRolling(data: AnnualReturn[], windowYears: number): { year: number; value: number }[] {
@@ -122,7 +127,7 @@
 		const map10 = rollingToMap(rolling10);
 		const map20 = rollingToMap(rolling20);
 
-		const series: any[] = [];
+		const series: LineSeriesOption[] = [];
 		if (showRolling1) series.push({ name: '1 anno', type: 'line', data: years.map((y: number) => map1.get(y) ?? null), smooth: true, symbol: 'none', lineStyle: { width: 1 } });
 		if (showRolling5) series.push({ name: '5 anni', type: 'line', data: years.map((y: number) => map5.get(y) ?? null), smooth: true, symbol: 'none', lineStyle: { width: 1.5 } });
 		if (showRolling10) series.push({ name: '10 anni', type: 'line', data: years.map((y: number) => map10.get(y) ?? null), smooth: true, symbol: 'none', lineStyle: { width: 2 } });
@@ -146,7 +151,7 @@
 			},
 			dataZoom: [{ type: 'slider', start: 0, end: 100, bottom: 10, height: 25 }],
 			series
-		} as any;
+		} satisfies echarts.EChartsCoreOption;
 	});
 
 	// === Correlation Heatmap ===
@@ -165,8 +170,8 @@
 
 	const heatmapOptions = $derived({
 		tooltip: {
-			formatter: (params: any) => {
-				const [x, y, val] = params.data;
+			formatter: (params: CallbackDataParams) => {
+				const [x, y, val] = params.data as [number, number, number];
 				return `${assetNames[y]} vs ${assetNames[x]}: <b>${val.toFixed(3)}</b>`;
 			}
 		},
@@ -199,7 +204,7 @@
 			data: heatmapData,
 			label: {
 				show: true,
-				formatter: (p: any) => p.data[2].toFixed(2),
+				formatter: (p: CallbackDataParams) => (p.data as number[])[2].toFixed(2),
 				fontSize: 11,
 				// Le etichette sono SOPRA le celle colorate (chiare): restano scure a
 				// prescindere dal tema, altrimenti spariscono in dark mode.
@@ -207,7 +212,7 @@
 			},
 			emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.5)' } }
 		}]
-	} as any);
+	} satisfies echarts.EChartsCoreOption);
 
 	// === Distribution Histogram ===
 	const histogramOptions = $derived.by(() => {
@@ -228,12 +233,12 @@
 		return {
 			tooltip: {
 				trigger: 'axis',
-				formatter: (params: any) => {
+				formatter: (params: TopLevelFormatterParams) => {
 					const p = Array.isArray(params) ? params[0] : params;
 					const idx = p.dataIndex;
 					const lo = min + idx * binWidth;
 					const hi = lo + binWidth;
-					return `${lo.toFixed(1)}${selected.unit} ~ ${hi.toFixed(1)}${selected.unit}<br/>Frequenza: <b>${p.value}</b>`;
+					return `${lo.toFixed(1)}${selected.unit} ~ ${hi.toFixed(1)}${selected.unit}<br/>Frequenza: <b>${p.value as number}</b>`;
 				}
 			},
 			grid: { left: 60, right: 30, top: 20, bottom: 40 },
@@ -249,7 +254,7 @@
 				itemStyle: { color: '#3b82f6', borderRadius: [3, 3, 0, 0] },
 				barCategoryGap: '10%'
 			}]
-		} as any;
+		} satisfies echarts.EChartsCoreOption;
 	});
 
 	const selectItems = datasets.map(d => ({ value: d.key, name: d.label }));

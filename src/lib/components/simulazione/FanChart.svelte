@@ -1,7 +1,12 @@
 <script lang="ts">
 	import EChart from '$lib/components/shared/EChart.svelte';
+	import type { CallbackDataParams } from 'echarts/types/dist/shared';
 	import type { MonteCarloResult } from '$lib/engine/monte-carlo';
 	import { formatCompact, formatCurrency } from '$lib/utils/format';
+
+	// I parametri di un tooltip ad asse portano anche `axisValue`, non dichiarato
+	// in CallbackDataParams: lo aggiungiamo localmente invece di ricorrere ad any.
+	type AxisTooltipParam = CallbackDataParams & { axisValue?: string | number };
 
 	let {
 		result
@@ -23,14 +28,14 @@
 			tooltip: {
 				trigger: 'axis',
 				axisPointer: { type: 'cross' },
-				formatter: (params: any) => {
+				formatter: (params: AxisTooltipParam[]) => {
 					if (!Array.isArray(params) || params.length === 0) return '';
 					const yearLabel = params[0].axisValue;
 					let html = `<strong>${yearLabel}</strong><br/>`;
 					for (const p of params) {
 						if (p.seriesName && p.value != null) {
-							const val = typeof p.value === 'number' ? p.value : p.value[1];
-							html += `${p.marker} ${p.seriesName}: ${formatCurrency(val)}<br/>`;
+							const val = typeof p.value === 'number' ? p.value : (p.value as number[])[1];
+							html += `${p.marker as string} ${p.seriesName}: ${formatCurrency(val)}<br/>`;
 						}
 					}
 					return html;
