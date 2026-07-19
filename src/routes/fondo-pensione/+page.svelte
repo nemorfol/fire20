@@ -6,6 +6,7 @@
 	import RITACalculator from '$lib/components/fondo-pensione/RITACalculator.svelte';
 	import RiscattoLaurea from '$lib/components/fondo-pensione/RiscattoLaurea.svelte';
 	import ContributionOptimizer from '$lib/components/fondo-pensione/ContributionOptimizer.svelte';
+	import TFRDestination from '$lib/components/fondo-pensione/TFRDestination.svelte';
 </script>
 
 <svelte:head>
@@ -206,6 +207,15 @@
 				Trova il livello ottimale di contribuzione per massimizzare il risparmio fiscale.
 			</p>
 			<ContributionOptimizer />
+		</TabItem>
+
+		<!-- TAB 6: Destinazione TFR -->
+		<TabItem title="Destinazione TFR">
+			<p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+				Confronta il TFR in azienda con il conferimento al fondo pensione e verifica le regole di
+				anticipazione (art. 2120 c.c.).
+			</p>
+			<TFRDestination />
 		</TabItem>
 	</Tabs>
 </div>

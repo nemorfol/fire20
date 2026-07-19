@@ -15,7 +15,18 @@ sua riga nella sezione «Non rilasciato».
 
 ## [Non rilasciato]
 
-_Niente ancora. Le prossime modifiche vanno annotate qui prima del rilascio._
+### Aggiunto
+
+- **Tab «Destinazione TFR»** nella pagina Fondo Pensione: confronta il netto a scadenza del TFR
+  lasciato in azienda (rivalutazione 1,5% + 75% inflazione, tassazione separata) contro il
+  conferimento al fondo pensione (D.Lgs. 252/2005), con grafico e rendimento netto annualizzato,
+  e verifica l'eleggibilità all'anticipazione (art. 2120 c.c.: 8 anni di anzianità, una sola
+  volta, fino al 70%) con importo massimo, tassazione stimata e tabella dei requisiti. I campi
+  sono precompilati dal profilo attivo (empty state se manca). Espone i moduli finora orfani
+  `checkTFRAnticipationEligibility` e `compareTFRDestination` di `tfr-rules.ts`, allineando la
+  guida (capitolo «Fondi Pensione e TFR») alla funzionalità reale.
+- Test di caratterizzazione per `tfr-rules.ts` (`src/lib/engine/tfr-rules.test.ts`) che fissano il
+  comportamento di eleggibilità e confronto destinazione.
 
 ---
 

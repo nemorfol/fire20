@@ -1459,7 +1459,11 @@ Se muori dopo 10 anni con 120.000€ residui → <strong>eredi ricevono 120.000�
 <li><strong>Limite aziendale:</strong> le aziende con piu' di 25 dipendenti possono applicare un tetto del 10% degli aventi diritto per anno</li>
 <li><strong>Tassazione:</strong> separata con aliquota media IRPEF degli ultimi 5 anni (tipicamente 20-30% per redditi medi)</li>
 </ul>
-<p>L'engine include il modulo <code>tfr-rules.ts</code> con <code>checkTFRAnticipationEligibility</code> (valuta eleggibilita') e <code>compareTFRDestination</code> (confronta TFR in azienda vs destinato al fondo pensione a parita' di contributo). Utile per decidere dove destinare il TFR all'inizio del rapporto di lavoro: la scelta e' permanente.</p>
+<p>Nel <strong>Fondo Pensione &rarr; tab "Destinazione TFR"</strong> trovi lo strumento dedicato: precompila i dati dal tuo profilo attivo (RAL, orizzonte, inflazione, aliquota marginale, TFR gia' maturato) e ti mostra <strong>due cose</strong>:</p>
+<ul>
+<li><strong>Confronto della destinazione</strong> — il netto a scadenza del TFR lasciato in azienda contro quello conferito al fondo pensione, con grafico e rendimento netto annualizzato di ciascuna strada, per decidere dove destinarlo all'inizio del rapporto (la scelta e' permanente).</li>
+<li><strong>Verifica dell'anticipazione</strong> — se hai diritto a chiederla (8 anni di anzianita', una sola volta, fino al 70%), l'importo massimo, la tassazione stimata e una tabella dei requisiti a fronte della tua situazione.</li>
+</ul>
 `
 	},
 
