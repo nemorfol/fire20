@@ -26,9 +26,6 @@
 	import { generateFireReport } from '$lib/utils/pdf-export';
 	import { getAllScenarios } from '$lib/db/scenarios';
 	import { getAllResults } from '$lib/db/results';
-	import { t } from '$lib/i18n/store.svelte';
-	import { getLocale, setLocale } from '$lib/i18n/store.svelte';
-	import { locales, type Locale } from '$lib/i18n/index';
 	import { Toggle, Select, Input, Label } from 'flowbite-svelte';
 	import { currencies, type Currency } from '$lib/utils/currency';
 	import { getCurrency, setCurrency } from '$lib/utils/currency-store.svelte';
@@ -46,8 +43,6 @@
 		startReminderChecks
 	} from '$lib/utils/notifications';
 	import AssistenteAICard from '$lib/components/impostazioni/AssistenteAICard.svelte';
-
-	let selectedLocale = $state<Locale>(getLocale());
 
 	// Rebalance reminder state
 	let reminder = $state<RebalanceReminder>(getReminder());
@@ -112,11 +107,6 @@
 		setReminder(reminder);
 	}
 	let selectedCurrency = $state<Currency>(getCurrency());
-
-	function handleLocaleChange(locale: Locale) {
-		selectedLocale = locale;
-		setLocale(locale);
-	}
 
 	function handleCurrencyChange(code: Currency) {
 		selectedCurrency = code;
@@ -467,36 +457,6 @@
 		</Alert>
 	</div>
 {/if}
-
-<!-- Language Selector -->
-<Card class="mb-6 max-w-none">
-	<Heading tag="h3" class="mb-2">{t('settings.language')}</Heading>
-	<p class="mb-4 text-sm text-gray-500 dark:text-gray-400">{t('settings.chooseLanguage')}</p>
-	<div class="flex flex-wrap gap-4">
-		{#each locales as locale}
-			<button
-				type="button"
-				class="flex cursor-pointer items-center gap-3 rounded-lg border-2 px-4 py-3 transition-colors {selectedLocale ===
-				locale.code
-					? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-					: 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600'}"
-				onclick={() => handleLocaleChange(locale.code)}
-			>
-				<span class="text-2xl">{locale.flag}</span>
-				<span class="font-medium text-gray-900 dark:text-white">{locale.label}</span>
-				{#if selectedLocale === locale.code}
-					<svg class="text-primary-500 h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-						<path
-							fill-rule="evenodd"
-							d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-							clip-rule="evenodd"
-						/>
-					</svg>
-				{/if}
-			</button>
-		{/each}
-	</div>
-</Card>
 
 <!-- Currency Selector -->
 <Card class="mb-6 max-w-none">

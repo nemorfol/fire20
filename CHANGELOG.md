@@ -28,6 +28,14 @@ sua riga nella sezione «Non rilasciato».
 - Test di caratterizzazione per `tfr-rules.ts` (`src/lib/engine/tfr-rules.test.ts`) che fissano il
   comportamento di eleggibilità e confronto destinazione.
 
+### Modificato
+
+- **i18n solo-italiano**: nascosto il selettore lingua in Impostazioni (prometteva un inglese non
+  mantenuto). L'infrastruttura `src/lib/i18n/` resta in piedi per una localizzazione futura; il
+  locale residuo `'en'` eventualmente salvato in `localStorage` viene normalizzato a `'it'` così
+  la UI resta coerente. Uniformate le voci sidebar «Assistente AI» e «Metodologia e Fonti», ora
+  passano da `t('nav.*')` come le altre (aggiunte le chiavi it/en).
+
 ---
 
 ## Igiene documentale e tecnica — 2026-07-19

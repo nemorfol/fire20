@@ -17,6 +17,8 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'nav.profileCompare': 'Confronto profili',
 		'nav.community': 'Community',
 		'nav.guide': 'Guida',
+		'nav.assistant': 'Assistente AI',
+		'nav.methodology': 'Metodologia e Fonti',
 		'nav.settings': 'Impostazioni',
 		// Common
 		'common.save': 'Salva',
@@ -117,6 +119,8 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'nav.profileCompare': 'Profile Comparison',
 		'nav.community': 'Community',
 		'nav.guide': 'Guide',
+		'nav.assistant': 'AI Assistant',
+		'nav.methodology': 'Methodology & Sources',
 		'nav.settings': 'Settings',
 		// Common
 		'common.save': 'Save',

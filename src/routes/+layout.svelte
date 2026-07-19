@@ -279,7 +279,7 @@
 						{#snippet icon()}<BookOpenSolid class={iconClass} />{/snippet}
 					</SidebarItem>
 					<SidebarItem
-						label="Assistente AI"
+						label={t('nav.assistant')}
 						href="/assistente/"
 						active={isActive('/assistente/')}
 						onclick={() => (sidebarOpen = false)}
@@ -287,7 +287,7 @@
 						{#snippet icon()}<MessagesSolid class={iconClass} />{/snippet}
 					</SidebarItem>
 					<SidebarItem
-						label="Metodologia e Fonti"
+						label={t('nav.methodology')}
 						href="/metodologia/"
 						active={isActive('/metodologia/')}
 						onclick={() => (sidebarOpen = false)}
