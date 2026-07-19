@@ -142,9 +142,10 @@ src/
 
 I contributi sono benvenuti: il progetto **accetta Pull Request su GitHub**.
 
+- La guida completa per contribuire e' in **[CONTRIBUTING.md](CONTRIBUTING.md)** (setup, gate, convenzioni, regole del progetto).
 - Per modifiche rilevanti, apri prima una issue per discuterne (cosi' evitiamo lavoro duplicato).
 - Per orientarti nel codice parti da [CLAUDE.md](CLAUDE.md) (architettura, comandi, convenzioni).
-- Prima di aprire una PR esegui `npm run check` (non deve segnalare errori) e mantieni lo stile esistente (italiano, Svelte 5 in runes mode).
+- Prima di aprire una PR esegui `npm run check` e `npm test` (devono essere verdi) e mantieni lo stile esistente (italiano, Svelte 5 in runes mode).
 - Ogni nuova funzionalita' va documentata nella guida interattiva (`src/lib/guida/steps.ts`).
 
 ## Licenza

@@ -1,0 +1,75 @@
+name: "Segnalazione bug"
+description: "Segnala un malfunzionamento di FIRE Planner"
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Grazie per la segnalazione! Compila i campi qui sotto per aiutarci a riprodurre il problema.
+
+        > ⚠️ **Non allegare dati finanziari personali** (importi, patrimonio, estratti conto INPS,
+        > file di backup, screenshot con i tuoi numeri). L'app è tutta client-side: i tuoi dati
+        > restano sul tuo dispositivo e non devono finire in una issue pubblica. Descrivi il caso
+        > con valori di esempio.
+  - type: input
+    id: pagina
+    attributes:
+      label: "Pagina / route interessata"
+      description: "Dove si verifica il problema (es. /calcolatore, /simulazione, /profilo → Coniuge)."
+      placeholder: "/calcolatore"
+    validations:
+      required: true
+  - type: textarea
+    id: passi
+    attributes:
+      label: "Passi per riprodurre"
+      description: "Elenca i passi, uno per riga."
+      placeholder: |
+        1. Vai su ...
+        2. Clicca su ...
+        3. Imposta ...
+        4. Osserva ...
+    validations:
+      required: true
+  - type: textarea
+    id: atteso
+    attributes:
+      label: "Comportamento atteso"
+      description: "Cosa ti aspettavi che accadesse."
+    validations:
+      required: true
+  - type: textarea
+    id: osservato
+    attributes:
+      label: "Comportamento osservato"
+      description: "Cosa è successo invece. Se compare un errore o una schermata di 'Riprova', riportalo."
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: "Browser e sistema operativo"
+      description: "Es. Chrome 141 su Windows 11, Safari su iOS 18."
+      placeholder: "Chrome 141 / Windows 11"
+    validations:
+      required: true
+  - type: dropdown
+    id: profilo-legacy
+    attributes:
+      label: "Il profilo è stato creato con una versione precedente dell'app?"
+      description: "Rilevante per i bug di migrazione/retrocompatibilità: i profili vecchi possono non avere i campi più recenti."
+      options:
+        - "Non lo so"
+        - "Sì, profilo creato tempo fa e poi aggiornato"
+        - "No, profilo creato di recente"
+        - "Nessun profilo salvato (dati appena inseriti)"
+    validations:
+      required: true
+  - type: textarea
+    id: note
+    attributes:
+      label: "Note aggiuntive"
+      description: "Qualsiasi altro dettaglio utile (senza dati personali)."
+    validations:
+      required: false
