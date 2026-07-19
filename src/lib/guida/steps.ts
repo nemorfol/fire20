@@ -204,8 +204,8 @@ Con spese annue di 22.000€ e FIRE number di 550.000€, è al <strong>15%</str
 </ul>
 <p>Ogni evento ha un toggle di attivazione (what-if rapido senza eliminarli) e appare nel cash flow dettagliato nell'anno corrispondente. Engine: <code>life-events.ts</code> con <code>computeYearlyImpact</code> che consolida tutti gli eventi di un anno.</p>
 
-<h3>Confronto side-by-side tra profili (pagina /confronto-profili)</h3>
-<p>Se hai creato piu' profili (es. "solo tu oggi" vs "famiglia in 3 anni" oppure "single" vs "coppia"), la voce navbar <strong>Confronto profili</strong> ti fa selezionare 2 profili dal DB e li confronta in una tabella con ~15 metriche (FIRE Number, anni al FIRE, patrimonio, costo figli, residuo mutuo, pensione INPS, ecc.), un grafico proiezione overlay dei due portafogli, e un'estrazione automatica delle 3 differenze piu' significative.</p>
+<h3>Confronto tra profili</h3>
+<p>Se crei piu' profili (es. "solo tu oggi" vs "famiglia in 3 anni", oppure "single" vs "coppia"), puoi metterli a confronto diretto nella pagina <strong>Confronto profili</strong>. Il capitolo dedicato di questa guida (sezione <em>Calcoli e Simulazioni</em>) spiega le metriche confrontate, il grafico overlay e le differenze chiave.</p>
 
 <h3>Planner familiare: figli e mutuo</h3>
 <p>La tab <strong>Famiglia</strong> nel profilo modella due voci tipicamente italiane con forte impatto sul FIRE Number:</p>
@@ -429,7 +429,7 @@ La differenza? Il FIRE Number è sceso di 342.000€ E il risparmio mensile è p
 	},
 
 	// ============================================================
-	// CATEGORY: Calcoli e Simulazioni (Steps 5-10)
+	// CATEGORY: Calcoli e Simulazioni (Steps 5-13)
 	// ============================================================
 	{
 		id: 'asset-allocation',
@@ -830,8 +830,61 @@ Questo significa che nella maggior parte dei casi il piano funziona, ma c'è un 
 	},
 
 	{
-		id: 'rischio-sequenza-rendimenti',
+		id: 'dati-storici',
 		number: 9,
+		title: 'Dati Storici di Mercato',
+		category: 'Calcoli e Simulazioni',
+		icon: '📈',
+		summary:
+			"I dataset che alimentano le simulazioni: S&P 500 dal 1928, obbligazioni, oro, inflazione IT/US, CAPE e correlazioni. Perche' i dati storici contano.",
+		appLink: '/dati-storici/',
+		appLinkLabel: 'Esplora i dati storici',
+		content: `
+<h3>Perche' i dati storici contano</h3>
+<p>Le proiezioni FIRE non nascono dal nulla: si appoggiano a <strong>quasi un secolo di dati di mercato</strong>. Sapere quanto hanno reso davvero azioni, obbligazioni e oro — e quanto sono stati volatili — ti aiuta a scegliere ipotesi di rendimento realistiche, senza illusioni ne' paure eccessive. Questa pagina raccoglie i dataset che alimentano la <strong>Simulazione Monte Carlo</strong> in modalita' storica (bootstrap) e ti lascia esplorarli liberamente.</p>
+
+<h3>I dataset disponibili</h3>
+<ul>
+<li><strong>S&P 500</strong> — rendimenti totali annuali dal <strong>1928 al 2024</strong> (dividendi inclusi). E' la serie azionaria piu' lunga e affidabile: copre la Grande Depressione, la guerra, gli anni '70, le bolle e le crisi del 2008 e 2020.</li>
+<li><strong>Obbligazioni USA</strong> — i Treasury, il "mattone" difensivo del portafoglio.</li>
+<li><strong>Oro</strong> — bene rifugio, storicamente poco correlato ad azioni e obbligazioni.</li>
+<li><strong>Inflazione USA</strong> e <strong>Inflazione Italia</strong> — perche' cio' che conta e' il <strong>rendimento reale</strong> (al netto dell'inflazione), e l'inflazione italiana ha una storia diversa da quella americana.</li>
+<li><strong>Azioni Internazionali</strong> — per non ragionare solo sul mercato USA, che e' stato il piu' performante del secolo (attenzione al bias).</li>
+<li><strong>CAPE Ratio</strong> (Shiller P/E) — il rapporto prezzo/utili corretto per il ciclo economico: quanto e' caro il mercato oggi rispetto alla sua storia.</li>
+</ul>
+
+<h3>Cosa puoi vedere per ogni serie</h3>
+<ul>
+<li><strong>Statistiche</strong>: media, deviazione standard (la misura della volatilita'), minimo e massimo con l'anno in cui sono avvenuti, numero di osservazioni e un indice di Sharpe approssimato.</li>
+<li><strong>Rendimenti annuali</strong>: l'istogramma a barre verdi/rosse anno per anno, con zoom temporale.</li>
+<li><strong>Rendimenti rolling</strong> a 1, 5, 10 e 20 anni: la media annualizzata su finestre mobili. E' il grafico piu' istruttivo per il FIRE (vedi sotto).</li>
+<li><strong>Distribuzione</strong>: quanto spesso i rendimenti cadono in ciascuna fascia.</li>
+<li><strong>Matrice di correlazione</strong> tra azioni USA, azioni internazionali, obbligazioni, oro, immobili e liquidita' (correlazioni di Pearson sui rendimenti reali 1970-2024).</li>
+</ul>
+
+<div class="example">
+<strong>Cosa raccontano i numeri dell'S&P 500:</strong> nel lungo periodo l'azionario USA ha reso in media circa il <strong>10% nominale</strong> annuo, ma con una deviazione standard intorno al <strong>19-20%</strong>: un singolo anno puo' facilmente stare tra -10% e +30%. Il peggior anno della serie e' il <strong>1931 (-43,8%)</strong>, il migliore il <strong>1933 (+50%)</strong>. Ecco perche' un piano FIRE non puo' basarsi sul solo "rendimento medio": deve reggere anche le sequenze peggiori.
+</div>
+
+<h3>Rolling returns: il grafico che sfata i miti</h3>
+<p>I rendimenti rolling mostrano una verita' fondamentale: <strong>piu' lungo e' l'orizzonte, piu' i rendimenti si stabilizzano</strong>. Su 1 anno l'azionario e' una montagna russa; su 20 anni le finestre storiche sono quasi tutte positive in termini reali. Questo giustifica un'allocazione azionaria alta in fase di accumulo e spiega perche' il <strong>rischio sequenza</strong> (capitolo successivo) si concentra nei primi anni di prelievo.</p>
+
+<h3>A cosa servono nel resto dell'app</h3>
+<p>Questi stessi dati alimentano il <strong>bootstrap</strong> della Simulazione Monte Carlo: invece di generare rendimenti da una distribuzione teorica, il motore "pesca" anni reali dalla storia, preservandone code e comportamenti estremi. Le correlazioni tra asset class, inoltre, sono la ragione per cui diversificare (azioni + obbligazioni + oro) riduce la volatilita' complessiva senza sacrificare troppo il rendimento.</p>
+
+<div class="tip">
+<strong>Consiglio:</strong> confronta l'inflazione italiana con quella USA prima di fissare l'ipotesi di inflazione nel Calcolatore. E guarda il CAPE: quando e' molto sopra la sua media storica, e' prudente usare un tasso di prelievo (SWR) piu' conservativo, perche' valutazioni alte hanno storicamente preceduto rendimenti decennali piu' bassi.
+</div>
+
+<div class="warning">
+<strong>Attenzione:</strong> "i rendimenti passati non sono garanzia di rendimenti futuri" non e' solo una formula di rito. I dati USA sopravvalutano probabilmente il futuro (survivorship bias: gli USA sono stati il mercato vincente del '900). Usa i dati storici come <strong>range di plausibilita'</strong>, non come promessa.
+</div>
+`
+	},
+
+	{
+		id: 'rischio-sequenza-rendimenti',
+		number: 10,
 		title: 'Rischio Sequenza dei Rendimenti',
 		category: 'Calcoli e Simulazioni',
 		icon: '📉',
@@ -911,7 +964,7 @@ Quando il mercato si riprende (mediamente entro 2-3 anni), torni a prelevare dal
 
 	{
 		id: 'inflazione-potere-acquisto',
-		number: 10,
+		number: 11,
 		title: "Inflazione e Potere d'Acquisto",
 		category: 'Calcoli e Simulazioni',
 		icon: '📈',
@@ -988,12 +1041,100 @@ Sposta lo slider <strong>Inflazione</strong> da 2% a 6% per vedere chiaramente l
 `
 	},
 
+	{
+		id: 'scenari',
+		number: 12,
+		title: 'Scenari Salvati e Confronto',
+		category: 'Calcoli e Simulazioni',
+		icon: '🗂️',
+		summary:
+			"Salva, duplica e confronta fino a 4 scenari FIRE. Ideale per rispondere alle domande 'e se...?': FIRE a 45 vs 50, con o senza vendita immobile.",
+		appLink: '/scenari/',
+		appLinkLabel: 'Gestisci gli scenari',
+		content: `
+<h3>A cosa servono gli scenari salvati</h3>
+<p>Il Calcolatore ti da' una fotografia con i parametri attuali. Ma la vera domanda del FIRE e' "<strong>e se...?</strong>": e se andassi in pensione a 50 invece che a 45? E se vendessi la seconda casa? E se il mercato rendesse il 5% invece del 7%? La pagina <strong>Scenari Salvati</strong> ti permette di congelare queste varianti, dare loro un nome e <strong>confrontarle fianco a fianco</strong> senza perdere i dati.</p>
+
+<h3>Come funziona</h3>
+<p>Ogni scenario parte da un <strong>profilo</strong> esistente e vi applica degli <strong>scostamenti</strong> (override): ad esempio spese in FIRE diverse, eta' di pensionamento diversa, o parametri di simulazione (tasso di prelievo, allocazione azionaria, rendimento atteso, inflazione) modificati. Il profilo originale resta intatto: lo scenario e' una "variazione sul tema".</p>
+<ul>
+<li><strong>Tipo</strong>: puoi etichettare ogni scenario come <em>Ottimistico</em>, <em>Pessimistico</em>, <em>Personalizzato</em> o <em>Storico</em>, cosi' lo distingui a colpo d'occhio.</li>
+<li><strong>Duplica</strong>: crei una copia di uno scenario per modificarne un solo parametro e isolarne l'effetto.</li>
+<li><strong>Esegui simulazione</strong>: ogni scenario puo' lanciare una <strong>Monte Carlo in modalita' storica</strong> (nel Web Worker, senza bloccare la UI). Il risultato — tasso di successo, valore mediano finale, numero di iterazioni — viene <strong>salvato</strong> e mostrato sulla card.</li>
+<li><strong>Confronta</strong>: seleziona da 2 a <strong>4 scenari</strong> e apri il confronto affiancato.</li>
+</ul>
+
+<div class="example">
+<strong>Esempio "FIRE a 45 vs 50":</strong> duplichi lo scenario base e nella copia porti l'eta' di pensionamento da 45 a 50. Esegui entrambe le simulazioni: magari scopri che a 45 il tasso di successo e' 78%, mentre a 50 sale al 94%. Quei 5 anni di lavoro in piu' comprano un margine di sicurezza enorme — ora e' un dato, non una sensazione.
+</div>
+
+<div class="example">
+<strong>Esempio "con/senza vendita immobile":</strong> uno scenario tiene la seconda casa (illiquida, ma con affitto), l'altro la vende trasformandola in portafoglio investito. Confrontando tasso di successo e patrimonio mediano finale vedi quale strada regge meglio ai ribassi di mercato.
+</div>
+
+<h3>Scenari vs Confronto profili</h3>
+<p>Sono strumenti complementari: gli <strong>scenari</strong> confrontano varianti di uno stesso piano (stesso profilo, parametri diversi) e ne misurano la robustezza con la Monte Carlo; il <strong>Confronto profili</strong> (capitolo successivo) confronta due <strong>profili diversi</strong> su un pannello di metriche. Usa gli scenari per lo stress test, il confronto profili per il "chi e' messo meglio".</p>
+
+<div class="tip">
+<strong>Consiglio:</strong> tieni sempre almeno tre scenari — uno "Base" (ipotesi realistiche), uno "Pessimistico" (SWR 3%, rendimento 5%, inflazione 3%) e uno "Ottimistico". Se il piano regge anche nel pessimistico, puoi dormire tranquillo.
+</div>
+
+<div class="warning">
+<strong>Attenzione:</strong> eliminando uno scenario si cancellano anche i risultati delle simulazioni associate. Gli scenari (come tutto il resto) vivono solo sul tuo dispositivo (IndexedDB): fai un backup dalle Impostazioni se non vuoi perderli cambiando browser.
+</div>
+`
+	},
+
+	{
+		id: 'confronto-profili',
+		number: 13,
+		title: 'Confronto tra Profili',
+		category: 'Calcoli e Simulazioni',
+		icon: '⚖️',
+		summary:
+			"Metti due profili fianco a fianco su ~16 metriche, con grafico overlay e differenze chiave automatiche. Utile per 'io vs coniuge' o 'oggi vs piano alternativo'.",
+		appLink: '/confronto-profili/',
+		appLinkLabel: 'Confronta due profili',
+		content: `
+<h3>Due profili, fianco a fianco</h3>
+<p>Se hai creato piu' di un profilo finanziario, la pagina <strong>Confronto profili</strong> li mette a confronto diretto. E' pensata per rispondere a domande come "<strong>io o il mio coniuge siamo messi meglio?</strong>", "<strong>quanto cambia il mio FIRE se aspetto 5 anni?</strong>" oppure "<strong>single o coppia con figli?</strong>".</p>
+
+<h3>Cosa confronta</h3>
+<p>Scegli un <strong>Profilo A</strong> (blu) e un <strong>Profilo B</strong> (rosso). L'app calcola per entrambi e mostra una tabella con circa <strong>16 metriche</strong>, tra cui:</p>
+<ul>
+<li><strong>FIRE Number</strong> (quello ridotto da pensione e altri redditi) e <strong>FIRE Number classico</strong> (spese / 4%)</li>
+<li><strong>Patrimonio</strong> netto totale, liquido e illiquido</li>
+<li><strong>Anni al FIRE</strong> e <strong>tasso di risparmio</strong></li>
+<li><strong>Eta' FIRE target</strong>, <strong>eta' pensione INPS</strong> e <strong>pensione mensile stimata</strong></li>
+<li><strong>Numero di figli</strong> e <strong>costo totale</strong> residuo per i figli</li>
+<li><strong>Mutuo</strong> (presenza e capitale residuo)</li>
+<li><strong>Spese annuali</strong> e <strong>spese in FIRE</strong></li>
+</ul>
+<p>Ogni riga ha una colonna <strong>&Delta;</strong> (delta) colorata <strong>dal punto di vista del Profilo A</strong>: verde se A e' messo meglio su quella metrica, rosso se e' meglio B, grigio per le metriche neutre (es. eta' pensione, numero figli).</p>
+
+<h3>Grafico e differenze chiave</h3>
+<p>Sotto la tabella trovi un <strong>grafico overlay</strong> che sovrappone la proiezione del portafoglio dei due profili anno per anno (con i rispettivi contributi, rendimento, inflazione, pensione, figli e mutuo). Infine un riquadro <strong>"Differenze chiave"</strong> estrae automaticamente le <strong>3 metriche</strong> in cui i due profili divergono di piu' in termini relativi, spiegandole a parole.</p>
+
+<div class="example">
+<strong>Esempio "oggi vs piano alternativo":</strong> il Profilo A sei tu oggi (FIRE a 50, spese 24.000€); il Profilo B e' una versione con spese tagliate a 20.000€ e 300€/mese di risparmio in piu'. Il confronto mostra che B abbassa il FIRE Number di circa 100.000€ e anticipa il FIRE di alcuni anni: le differenze chiave lo evidenziano subito.
+</div>
+
+<div class="tip">
+<strong>Consiglio:</strong> per confrontare "te oggi vs te tra qualche anno" non serve invecchiare il profilo a mano: crea un secondo profilo con i parametri futuri attesi (stipendio piu' alto, patrimonio cresciuto) e mettili a confronto. Per lo stress test dello <em>stesso</em> piano contro i crash, usa invece gli <strong>Scenari</strong> e la Monte Carlo.
+</div>
+
+<div class="warning">
+<strong>Attenzione:</strong> servono <strong>almeno due profili</strong> salvati. Se ne hai uno solo, crea il secondo dalla pagina Profilo (anche duplicando il primo e cambiando pochi campi).
+</div>
+`
+	},
+
 	// ============================================================
-	// CATEGORY: Fiscalità Italiana (Steps 11-14)
+	// CATEGORY: Fiscalità Italiana (Steps 14-18)
 	// ============================================================
 	{
 		id: 'fiscalita-italiana',
-		number: 11,
+		number: 14,
 		title: 'Fiscalità Italiana per Investitori',
 		category: 'Fiscalità Italiana',
 		icon: '🏛️',
@@ -1129,7 +1270,7 @@ Per compensare, dovresti vendere un'azione o un'obbligazione singola con 5.000�
 
 	{
 		id: 'fondi-pensione-tfr',
-		number: 12,
+		number: 15,
 		title: 'Fondi Pensione e TFR',
 		category: 'Fiscalità Italiana',
 		icon: '🏦',
@@ -1323,8 +1464,55 @@ Se muori dopo 10 anni con 120.000€ residui → <strong>eredi ricevono 120.000�
 	},
 
 	{
+		id: 'contenitori',
+		number: 16,
+		title: 'Contenitori Fiscali a Confronto',
+		category: 'Fiscalità Italiana',
+		icon: '📦',
+		summary:
+			"ETF vs Fondo Pensione vs TFR vs BTP a parita' di contributo: quale strumento lascia piu' soldi in tasca dopo le tasse, nel tuo profilo fiscale.",
+		appLink: '/contenitori/',
+		appLinkLabel: 'Confronta i contenitori',
+		content: `
+<h3>Lo stesso euro, contenitori diversi</h3>
+<p>In Italia il <strong>contenitore</strong> in cui metti i risparmi incide sul risultato quasi quanto la cifra che versi, perche' ognuno ha una fiscalita' propria. La pagina <strong>Contenitori fiscali</strong> confronta i quattro strumenti piu' usati — <strong>ETF/azioni, Fondo Pensione, TFR e BTP</strong> — a <strong>parita' di contributo mensile</strong>, e ti dice quale lascia piu' soldi in tasca dopo le tasse.</p>
+
+<h3>I parametri che imposti</h3>
+<ul>
+<li><strong>Contributo mensile</strong> e <strong>anni di accumulo</strong> (il totale versato e' lo stesso per tutti i contenitori)</li>
+<li><strong>Rendimento atteso annuo lordo</strong></li>
+<li><strong>Aliquota IRPEF marginale</strong> (serve per la deduzione del Fondo Pensione e per la tassazione separata del TFR)</li>
+<li><strong>Eta' al pensionamento</strong> e <strong>inflazione attesa</strong> (quest'ultima rivaluta il TFR)</li>
+</ul>
+
+<h3>Come vengono tassati i quattro contenitori</h3>
+<ul>
+<li><strong>ETF / Azioni</strong> — capital gain tassato al <strong>26%</strong>, ma <strong>solo alla vendita</strong> finale: nessuna tassa durante l'accumulo, nessun beneficio in ingresso.</li>
+<li><strong>BTP / Titoli di Stato</strong> — aliquota agevolata <strong>12,5%</strong> su cedole e plusvalenze. In cambio il rendimento atteso e' tipicamente piu' basso di un azionario.</li>
+<li><strong>Fondo Pensione</strong> — il piu' articolato: <strong>deduzione IRPEF</strong> sui contributi fino a <strong>5.300€/anno</strong>, rendimenti tassati al <strong>20%</strong> anno per anno, e prestazione finale tassata dal <strong>15% che scende fino al 9%</strong> (−0,3% per ogni anno di partecipazione oltre il 15°). In cambio: vincolo fino alla pensione (salvo RITA e anticipazioni).</li>
+<li><strong>TFR in azienda</strong> — rivalutazione <strong>1,5% + 75% dell'inflazione</strong>, poi tassazione separata all'uscita (stimata sulla media IRPEF degli ultimi anni). Da confrontare con la scelta di destinarlo al fondo pensione.</li>
+</ul>
+
+<h3>Cosa leggi nei risultati</h3>
+<p>Per ogni contenitore la tabella mostra contributi versati, rendimenti lordi, tasse totali, <strong>beneficio della deduzione</strong> e <strong>netto finale</strong>, con l'evidenza del <strong>contenitore vincente</strong> e un grafico a barre. Un pannello espandibile spiega le ipotesi di ciascuno.</p>
+
+<div class="example">
+<strong>Esempio:</strong> 400€/mese per 20 anni = <strong>96.000€ versati</strong>, rendimento 5% lordo, aliquota marginale 35%. Il Fondo Pensione gode di un <strong>beneficio da deduzione</strong> di circa 4.800€ × 35% = <strong>1.680€ l'anno</strong> (finche' resti sotto i 5.300€), oltre alla prestazione tassata al 15%→9%: e' spesso il piu' efficiente per il puro accumulo previdenziale. L'ETF resta imbattibile per <strong>flessibilita'</strong> (nessun vincolo) pagando il 26% solo alla fine; il BTP vince in sicurezza ma parte da un rendimento atteso piu' basso.
+</div>
+
+<div class="tip">
+<strong>Nota metodologica:</strong> il beneficio della deduzione del Fondo Pensione <strong>non</strong> e' sommato al netto finale, perche' arriva in busta paga anno per anno e puoi reinvestirlo separatamente. Inoltre il confronto assume lo <strong>stesso rendimento lordo</strong> per ETF, Fondo Pensione e BTP: nella realta' i BTP rendono meno di un azionario, quindi leggi i numeri come un confronto <em>fiscale</em>, non come una previsione di rendimento.
+</div>
+
+<div class="warning">
+<strong>Attenzione:</strong> non esiste un vincitore assoluto. Il contenitore giusto dipende dall'<strong>orizzonte</strong> (il vincolo del fondo pensione pesa meno se sei lontano dalla pensione), dall'<strong>aliquota marginale</strong> (piu' e' alta, piu' vale la deduzione) e dal <strong>bisogno di liquidita'</strong>. Molti piani FIRE combinano ETF (flessibilita') + Fondo Pensione (per la fascia dedotta) + una quota di BTP.
+</div>
+`
+	},
+
+	{
 		id: 'pensione-inps',
-		number: 13,
+		number: 17,
 		title: 'Pensione INPS',
 		category: 'Fiscalità Italiana',
 		icon: '🏛️',
@@ -1431,7 +1619,7 @@ La pensione INPS "vale" circa 120.000-150.000€ di patrimonio in meno da accumu
 
 	{
 		id: 'gap-pensionistico',
-		number: 14,
+		number: 18,
 		title: 'Il Gap Pensionistico',
 		category: 'Fiscalità Italiana',
 		icon: '🌉',
@@ -1523,11 +1711,11 @@ Se le tue spese sono 2.000€/mese, la RITA copre il 67%! Il portafoglio deve co
 	},
 
 	// ============================================================
-	// CATEGORY: Strategie Avanzate (Steps 15-19)
+	// CATEGORY: Strategie Avanzate (Steps 19-24)
 	// ============================================================
 	{
 		id: 'scenari-rischio',
-		number: 15,
+		number: 19,
 		title: 'Scenari di Rischio',
 		category: 'Strategie Avanzate',
 		icon: '⚠️',
@@ -1625,7 +1813,7 @@ Se le tue spese sono 2.000€/mese, la RITA copre il 67%! Il portafoglio deve co
 
 	{
 		id: 'ottimizzazione-fiscale-prelievo',
-		number: 16,
+		number: 20,
 		title: 'Ottimizzazione Fiscale del Prelievo',
 		category: 'Strategie Avanzate',
 		icon: '🧮',
@@ -1704,7 +1892,7 @@ Risparmio: 8.000€ × 12,5% = <strong>1.000€</strong> di tasse in meno (se BT
 
 	{
 		id: 'immobili-piano-fire',
-		number: 17,
+		number: 21,
 		title: 'Immobili nel Piano FIRE',
 		category: 'Strategie Avanzate',
 		icon: '🏠',
@@ -1791,7 +1979,7 @@ Differenza: <strong>240.000€</strong> in meno da accumulare!
 
 	{
 		id: 'debiti-e-fire',
-		number: 18,
+		number: 22,
 		title: 'Debiti e FIRE',
 		category: 'Strategie Avanzate',
 		icon: '💳',
@@ -1881,7 +2069,7 @@ Ma il rendimento del 5% non è garantito. In scenari sfavorevoli, l'Opzione A po
 
 	{
 		id: 'monitoraggio-ribilanciamento',
-		number: 19,
+		number: 23,
 		title: 'Monitoraggio e Ribilanciamento',
 		category: 'Strategie Avanzate',
 		icon: '⚖️',
@@ -1972,12 +2160,96 @@ Ma il rendimento del 5% non è garantito. In scenari sfavorevoli, l'Opzione A po
 		appLinkLabel: 'Vai alla pagina Performance'
 	},
 
+	{
+		id: 'assistente-ai',
+		number: 24,
+		title: 'Assistente AI (privacy e costi zero)',
+		category: 'Strategie Avanzate',
+		icon: '🤖',
+		summary:
+			"Un assistente AI opzionale, disattivato di default, che gira sul tuo dispositivo: zero costi, nessun dato inviato a server esterni. Spiega i tuoi numeri, non li inventa.",
+		content: `
+<h3>Un assistente che rispetta la privacy (e non costa nulla)</h3>
+<p>FIRE Planner puo' affiancarti un <strong>assistente AI opzionale</strong> che spiega in parole semplici i risultati gia' calcolati dal motore (FIRE number, tasso di successo Monte Carlo, fisco). E' <strong>disattivato di default</strong>: lo abiliti tu, quando vuoi, da <em>Impostazioni</em>.</p>
+
+<p>Coerente con il principio cardine dell'app — <strong>tutto resta sul tuo dispositivo</strong> — l'assistente NON usa servizi a pagamento e <strong>non invia i tuoi dati a nessun server</strong>. Per questo non ha alcun costo, ne' per te ne' per chi mette a disposizione l'app.</p>
+
+<h3>Come funziona: due modi, entrambi locali</h3>
+<ul>
+<li><strong>AI integrata nel browser</strong> (Chrome/Edge recenti, "Gemini Nano"): il modello e' gia' nel browser. Non scarica nulla dall'app e funziona anche sulla versione pubblica online. Qualita' adatta a spiegazioni semplici.</li>
+<li><strong>Ollama in locale</strong>: se installi <a href="https://ollama.com" target="_blank" rel="noopener">Ollama</a> sul tuo PC, l'app vi si collega su <code>http://localhost</code>. Qualita' superiore (modelli piu' grandi), ma richiede di eseguire l'app in locale (scaricando il sorgente da GitHub) perche' i browser bloccano le chiamate a localhost da un sito https.</li>
+</ul>
+
+<div class="tip">
+<strong>Perche' non scarichiamo un modello noi?</strong> Scaricare un modello "pesante" (diversi GB) consumerebbe banda e spazio. Abbiamo scelto di NON farlo: l'app usa solo l'AI che e' gia' sul tuo dispositivo (browser o Ollama). Se non c'e' nessun provider, l'assistente semplicemente non compare e l'app funziona identica.</div>
+
+<h3>Regola d'oro: spiega, non calcola</h3>
+<p>L'assistente <strong>non calcola mai</strong> numeri fiscali o finanziari: quelli li produce il motore deterministico dell'app. L'AI riceve i numeri gia' pronti e li <strong>spiega/commenta</strong>. Non inventa aliquote o coefficienti e non da' consigli operativi di investimento.</p>
+
+<div class="warning">
+<strong>Attenzione:</strong> l'assistente e' uno strumento educativo, <strong>non e' consulenza finanziaria</strong>. Le risposte di un'AI possono contenere errori: verifica sempre i numeri nelle sezioni dedicate dell'app e, per decisioni importanti, rivolgiti a un professionista.</div>
+
+<h3>Come attivarlo e usarlo</h3>
+<p>1) In <em>Impostazioni → Assistente AI</em> attiva l'interruttore e premi "Rileva provider": vedrai cosa e' disponibile sul tuo dispositivo. Se usi Ollama, l'indirizzo di default e' <code>http://localhost:11434</code> e il <strong>modello si sceglie da un menu a tendina</strong> tra quelli installati, con il piu' adatto all'app gia' <strong>selezionato di default</strong>.</p>
+<p>2) Apri la voce <em>Assistente AI</em> nel menu laterale: e' una <strong>chat</strong> che risponde basandosi sui tuoi numeri (FIRE number, fisco, pensione) e sui contenuti di questa guida.</p>
+
+<h3>Voce (opzionale)</h3>
+<p>Se il browser lo supporta, puoi <strong>dettare</strong> la domanda col microfono e farti <strong>leggere le risposte ad alta voce</strong> (sintesi vocale del browser). Tutto in locale, nessun audio inviato a server. Per una voce piu' naturale e' possibile, eseguendo l'app in locale, collegare motori TTS esterni (es. CosyVoice).</p>
+`,
+		appLink: '/assistente',
+		appLinkLabel: "Apri l'Assistente AI"
+	},
+
 	// ============================================================
-	// CATEGORY: Preparazione Finale (Step 20)
+	// CATEGORY: Preparazione Finale (Steps 25-26)
 	// ============================================================
 	{
+		id: 'community',
+		number: 25,
+		title: 'Community Benchmark',
+		category: 'Preparazione Finale',
+		icon: '🤝',
+		summary:
+			"Confronta il tuo percorso con altri utenti in forma anonima, via link. Nessun server: i dati lasciano il dispositivo solo se lo decidi tu.",
+		appLink: '/community/',
+		appLinkLabel: 'Vai alla Community',
+		content: `
+<h3>Confrontarsi con gli altri, restando anonimi</h3>
+<p>Il FIRE e' spesso un percorso solitario: pochi conoscenti sanno cosa sia un SWR. La pagina <strong>Community Benchmark</strong> ti fa confrontare il tuo percorso con quello di altri utenti dell'app — in forma <strong>completamente anonima</strong> e <strong>senza alcun server centrale</strong>.</p>
+
+<h3>Come avviene la condivisione (solo per scelta esplicita)</h3>
+<p>Coerente col principio dell'app — <strong>nessun dato lascia il dispositivo se non lo decidi tu</strong> — la condivisione funziona cosi':</p>
+<ul>
+<li><strong>Condividi il tuo scenario</strong>: l'app <strong>anonimizza</strong> il tuo profilo (niente nome, niente dati personali) e genera un <strong>link</strong>. Nel link finiscono solo dati aggregati: <strong>fascia d'eta'</strong>, <strong>regione</strong>, <strong>fascia di reddito</strong>, tasso di risparmio, FIRE Number, anni al FIRE, dimensione del portafoglio, allocazione e tasso di prelievo. Nessun importo puntuale identificativo, nessun nome.</li>
+<li><strong>Il link e' il veicolo</strong>: i dati viaggiano <strong>dentro il link stesso</strong> (codificati nell'indirizzo), non su un database centrale. Lo condividi dove vuoi — un forum, una chat — oppure lo tieni per te.</li>
+<li><strong>Importa scenari altrui</strong>: incolli un link ricevuto (o apri un link con i dati) e quello scenario entra nel tuo benchmark. Aprendo direttamente un link di condivisione, lo scenario viene aggiunto in automatico.</li>
+</ul>
+
+<h3>Cosa vedi</h3>
+<ul>
+<li><strong>Statistiche della community</strong>: tasso di risparmio medio, FIRE Number medio, anni al FIRE medi, portafoglio e allocazione medi.</li>
+<li><strong>Il tuo profilo vs la community</strong>: le tue metriche a confronto con le medie, colorate in verde/rosso.</li>
+<li><strong>Distribuzioni</strong> per <strong>tipo di FIRE</strong> (Lean/FIRE/Fat/Barista/Coast) e per <strong>regione</strong>.</li>
+<li><strong>Tabella</strong> di tutti gli scenari importati, con filtri per tipo, regione e fascia d'eta'.</li>
+</ul>
+
+<div class="warning">
+<strong>La privacy prima di tutto:</strong> gli scenari importati vivono <strong>solo nel tuo browser</strong> (memoria locale del dispositivo). Non esiste un server della community: se non condividi e non importi nulla, la pagina resta vuota. Nessuno puo' risalire a te dai dati anonimizzati, ma ricorda comunque di non inserire informazioni sensibili nei campi liberi del profilo prima di condividere.
+</div>
+
+<div class="example">
+<strong>Esempio d'uso:</strong> hai un tasso di risparmio del 42% e ti sembra alto. Importi una decina di scenari dalla community e scopri che la media e' 38%: sei sopra, ma non un caso isolato. Vedi anche che il tuo FIRE Number e' in linea con chi ha spese simili nella tua fascia d'eta'. E' un modo per <strong>tarare le aspettative</strong> e sentirsi meno soli nel percorso.
+</div>
+
+<div class="tip">
+<strong>Consiglio:</strong> usa il benchmark come stimolo, non come classifica. Ogni percorso FIRE ha vincoli diversi (stipendi, citta', famiglia): un tasso di risparmio piu' basso non e' un fallimento, e uno piu' alto non e' automaticamente sostenibile. Confronta le idee, non le persone.
+</div>
+`
+	},
+
+	{
 		id: 'checklist-finale',
-		number: 20,
+		number: 26,
 		title: 'Checklist Finale FIRE',
 		category: 'Preparazione Finale',
 		icon: '✅',
@@ -2056,45 +2328,6 @@ Ma il rendimento del 5% non è garantito. In scenari sfavorevoli, l'Opzione A po
 
 <p><strong>Congratulazioni per il percorso fatto. Ora vai e vivi la vita che hai scelto.</strong></p>
 `
-	},
-	{
-		id: 'assistente-ai',
-		number: 21,
-		title: 'Assistente AI (privacy e costi zero)',
-		category: 'Strategie Avanzate',
-		icon: '🤖',
-		summary:
-			"Un assistente AI opzionale, disattivato di default, che gira sul tuo dispositivo: zero costi, nessun dato inviato a server esterni. Spiega i tuoi numeri, non li inventa.",
-		content: `
-<h3>Un assistente che rispetta la privacy (e non costa nulla)</h3>
-<p>FIRE Planner puo' affiancarti un <strong>assistente AI opzionale</strong> che spiega in parole semplici i risultati gia' calcolati dal motore (FIRE number, tasso di successo Monte Carlo, fisco). E' <strong>disattivato di default</strong>: lo abiliti tu, quando vuoi, da <em>Impostazioni</em>.</p>
-
-<p>Coerente con il principio cardine dell'app — <strong>tutto resta sul tuo dispositivo</strong> — l'assistente NON usa servizi a pagamento e <strong>non invia i tuoi dati a nessun server</strong>. Per questo non ha alcun costo, ne' per te ne' per chi mette a disposizione l'app.</p>
-
-<h3>Come funziona: due modi, entrambi locali</h3>
-<ul>
-<li><strong>AI integrata nel browser</strong> (Chrome/Edge recenti, "Gemini Nano"): il modello e' gia' nel browser. Non scarica nulla dall'app e funziona anche sulla versione pubblica online. Qualita' adatta a spiegazioni semplici.</li>
-<li><strong>Ollama in locale</strong>: se installi <a href="https://ollama.com" target="_blank" rel="noopener">Ollama</a> sul tuo PC, l'app vi si collega su <code>http://localhost</code>. Qualita' superiore (modelli piu' grandi), ma richiede di eseguire l'app in locale (scaricando il sorgente da GitHub) perche' i browser bloccano le chiamate a localhost da un sito https.</li>
-</ul>
-
-<div class="tip">
-<strong>Perche' non scarichiamo un modello noi?</strong> Scaricare un modello "pesante" (diversi GB) consumerebbe banda e spazio. Abbiamo scelto di NON farlo: l'app usa solo l'AI che e' gia' sul tuo dispositivo (browser o Ollama). Se non c'e' nessun provider, l'assistente semplicemente non compare e l'app funziona identica.</div>
-
-<h3>Regola d'oro: spiega, non calcola</h3>
-<p>L'assistente <strong>non calcola mai</strong> numeri fiscali o finanziari: quelli li produce il motore deterministico dell'app. L'AI riceve i numeri gia' pronti e li <strong>spiega/commenta</strong>. Non inventa aliquote o coefficienti e non da' consigli operativi di investimento.</p>
-
-<div class="warning">
-<strong>Attenzione:</strong> l'assistente e' uno strumento educativo, <strong>non e' consulenza finanziaria</strong>. Le risposte di un'AI possono contenere errori: verifica sempre i numeri nelle sezioni dedicate dell'app e, per decisioni importanti, rivolgiti a un professionista.</div>
-
-<h3>Come attivarlo e usarlo</h3>
-<p>1) In <em>Impostazioni → Assistente AI</em> attiva l'interruttore e premi "Rileva provider": vedrai cosa e' disponibile sul tuo dispositivo. Se usi Ollama, l'indirizzo di default e' <code>http://localhost:11434</code> e il <strong>modello si sceglie da un menu a tendina</strong> tra quelli installati, con il piu' adatto all'app gia' <strong>selezionato di default</strong>.</p>
-<p>2) Apri la voce <em>Assistente AI</em> nel menu laterale: e' una <strong>chat</strong> che risponde basandosi sui tuoi numeri (FIRE number, fisco, pensione) e sui contenuti di questa guida.</p>
-
-<h3>Voce (opzionale)</h3>
-<p>Se il browser lo supporta, puoi <strong>dettare</strong> la domanda col microfono e farti <strong>leggere le risposte ad alta voce</strong> (sintesi vocale del browser). Tutto in locale, nessun audio inviato a server. Per una voce piu' naturale e' possibile, eseguendo l'app in locale, collegare motori TTS esterni (es. CosyVoice).</p>
-`,
-		appLink: '/assistente',
-		appLinkLabel: "Apri l'Assistente AI"
 	}
 ];
 
