@@ -99,7 +99,7 @@
 	<title>Guida Interattiva - FIRE Planner</title>
 	<meta
 		name="description"
-		content="Guida completa in 20 passi alla pianificazione FIRE per investitori italiani."
+		content={`Guida completa in ${guideSteps.length} passi alla pianificazione FIRE per investitori italiani.`}
 	/>
 </svelte:head>
 
@@ -110,7 +110,7 @@
 
 <Heading tag="h1" class="mb-2">Guida Interattiva</Heading>
 <p class="text-gray-600 dark:text-gray-400 mb-6">
-	20 passi per raggiungere l'indipendenza finanziaria in Italia. Una guida completa che copre
+	{guideSteps.length} passi per raggiungere l'indipendenza finanziaria in Italia. Una guida completa che copre
 	tutto: dai fondamenti del FIRE alla fiscalità italiana, dalle simulazioni alla checklist finale.
 </p>
 
