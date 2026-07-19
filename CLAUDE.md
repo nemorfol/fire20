@@ -18,11 +18,19 @@ npm run dev            # dev server (Vite)
 npm run build          # build statica in build/
 npm run preview        # preview della build
 npm run check          # svelte-check + type check (svelte-kit sync incluso)
+npm test               # Vitest (una passata, non-watch); npm run test:watch per il watch
 npm run generate-icons # rigenera le icone PWA
 ```
 
-- **Non esiste una test suite automatica.** Prima di un commit/PR esegui `npm run check`:
-  e' l'unico gate (type check + diagnostica Svelte). Niente deve regredire.
+- **Gate obbligatorio prima di un commit/PR: `npm run check` + `npm test`** (entrambi verdi).
+  La CI (`.github/workflows/ci.yml`) esegue in sequenza `npm run check`, `npm test` e
+  `npm run build` su ogni push a `main` e su ogni PR. Niente deve regredire.
+- **Test suite (Vitest, config in `vitest.config.ts`):** ~11 file `*.test.ts`. Coprono il
+  **motore fiscale/previdenziale** (`tax-italy`, `pension-italy`, `assumptions`, `withdrawal`,
+  `life-events`), il **Monte Carlo deterministico** (`monte-carlo` con PRNG seedato → risultati
+  riproducibili), le **statistiche** (`statistics`), le **migrazioni Dexie**
+  (`src/lib/db/migration.test.ts`, con `fake-indexeddb`) e utility varie (`llm`, `markdown`).
+  **Non** coperti: componenti Svelte, E2E/UI (nessun Playwright — vedi backlog nel piano).
 - Build di produzione: `@sveltejs/adapter-static` con `fallback: '200.html'` → e' una **SPA
   statica**, deployabile su qualsiasi hosting statico (Vercel, Netlify, GitHub Pages...).
 
@@ -35,7 +43,8 @@ npm run generate-icons # rigenera le icone PWA
 - **Apache ECharts 6** per i grafici.
 - **Dexie 4** come wrapper IndexedDB.
 - **PWA** via `@vite-pwa/sveltekit` (`generateSW`, autoUpdate). Lingua app: `it`.
-- **jStat** / **simple-statistics** per le distribuzioni statistiche.
+- **Statistiche** implementate in casa in `src/lib/engine/statistics.ts` (nessuna dipendenza
+  esterna: jStat/simple-statistics sono state rimosse perche' non usate).
 - **jsPDF**, **xlsx**, **PapaParse** per export/report.
 
 ## Architettura
@@ -95,6 +104,46 @@ modificare in isolamento). Moduli principali:
   dal dispositivo. I calcoli pesanti vanno in un Web Worker (vedi Monte Carlo) per non bloccare
   la UI.
 - **Persistenza**: passa sempre dai moduli in `src/lib/db/`, non toccare IndexedDB direttamente.
+
+## Invarianti da non rompere
+
+Consolidati del progetto (dettaglio nella sezione 0 di `docs/PIANO-INTERVENTI-2026-07.md`):
+
+1. **Tutto client-side.** Nessun backend, nessuna PII fuori dal dispositivo. Persistenza SOLO
+   via `src/lib/db/` (mai IndexedDB diretto).
+2. **Svelte 5 runes ovunque** (`$state`, `$derived`, `$effect`, `$props`). Niente `export let`
+   ne' store `$:` legacy.
+3. **`src/lib/engine/assumptions.ts` (`DEFAULT_2026`) e' l'unica fonte di aliquote/parametri
+   fiscali.** Ogni modifica richiede la fonte normativa citata nel commento. Nota: IRPEF 2026
+   con 2ª aliquota al **33% e' CORRETTA** (Legge di Bilancio 2026) — non "correggerla" al 35%.
+4. **Invarianti motore Monte Carlo / FIRE** (fix del 2026-06-08, commit `fa86c13`): prelievo
+   calcolato sulle **spese reali**; **floor dei rendimenti > -100%**; il fondo pensione
+   conteggiato tra i liquidi e' **intenzionale** (RITA); **bande di percentile** nei grafici.
+5. **Retrocompatibilita' profili IndexedDB.** Ogni nuovo campo `$bindable` su `Profile` rompe i
+   profili salvati vecchi (gotcha `props_invalid_value`, lezione delle issue #33/#37/#38):
+   normalizzare SEMPRE il campo in `loadProfileIntoState`, nello stato iniziale e nei default;
+   se serve una migrazione Dexie `.upgrade()`, testarla in `src/lib/db/migration.test.ts`.
+6. **Ogni feature utente richiede il suo capitolo in `src/lib/guida/steps.ts`.** Una feature
+   senza capitolo nella guida non e' completa.
+7. **Lingua italiana** per UI, commenti, commit; identita' git: **nemorfol**.
+
+## Fonti normative
+
+- `src/lib/engine/assumptions.ts` e' il **registro canonico** delle aliquote/soglie/coefficienti
+  (IRPEF, INPS, TFR, fondo pensione, capital gain): resta la fonte di verita' del codice.
+- La pagina **`/metodologia`** (`src/routes/metodologia/+page.svelte`) legge quei valori **a
+  runtime** e li mostra all'utente con le fonti: e' la vetrina della trasparenza, non
+  duplicare i numeri altrove.
+- `docs/PIANO-INTERVENTI-2026-07.md` e' il **backlog corrente** (fasi A-D con criteri di
+  accettazione): consultarlo prima di iniziare un intervento.
+
+## Moduli non menzionati altrove
+
+- **`src/lib/llm/`** — assistente AI **locale e opt-in** (Ollama o Chrome Prompt API): nessun
+  dato lascia il dispositivo, coerente col principio client-side.
+- **`src/lib/i18n/`** — infrastruttura di localizzazione (chiavi it/en). Oggi la UI e'
+  di fatto solo italiano; usare `t('...')` per le stringhe che gia' vi passano.
+- **`/metodologia`** — pagina che espone assunzioni e fonti (vedi sopra).
 
 ## Disclaimer
 
