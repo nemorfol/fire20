@@ -27,6 +27,17 @@ sua riga nella sezione «Non rilasciato».
   guida (capitolo «Fondi Pensione e TFR») alla funzionalità reale.
 - Test di caratterizzazione per `tfr-rules.ts` (`src/lib/engine/tfr-rules.test.ts`) che fissano il
   comportamento di eleggibilità e confronto destinazione.
+- **Modulo condiviso `inps-core.ts`** e test di coerenza `inps-coherence.test.ts`: unica fonte per
+  aliquote di computo (33% dipendente / 26,23% autonomo / 33,72% gestione separata), tasso di
+  rivalutazione del montante (1,5%, media PIL nominale, art. 1 c. 9 L. 335/1995) e primitiva di
+  capitalizzazione, importata sia da `pension-italy.ts` (Profilo → Pensione) sia da
+  `inps-simulator.ts` (`/pensione`). Nessun risultato utente cambia: il consolidamento è a parità
+  di numeri (i 164 test preesistenti restano verdi). Il test di coerenza documenta che i due
+  percorsi coincidono nella carriera piena (scarto < 2,5%) e fissa una **divergenza nota, non
+  ancora consolidata**, nello scenario «stop contributi all'età FIRE» (#37): la pagina `/pensione`
+  rivaluta il montante durante il gap fino alla pensione, mentre Profilo → Pensione lo congela,
+  con una differenza di stima dell'ordine del 25-30%. L'allineamento richiede una revisione — con
+  fonte — del modello di rivalutazione del montante ed è rimandato a un intervento dedicato.
 
 ### Modificato
 

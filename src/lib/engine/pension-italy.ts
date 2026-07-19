@@ -3,6 +3,12 @@
  * Implementa il metodo contributivo e i requisiti di accesso alla pensione.
  */
 import { getTransformationCoefficient } from './assumptions.js';
+import {
+	COMPUTATION_RATES,
+	DEFAULT_MONTANTE_REVALUATION,
+	SOCIAL_ALLOWANCE_MONTHLY_2026,
+	revalueMontante
+} from './inps-core.js';
 
 // Re-export per retrocompatibilita': altri moduli (es. pension-fund.ts)
 // importano getTransformationCoefficient da qui. La fonte unica e' ora
@@ -74,10 +80,11 @@ export interface PensionRequirements {
 }
 
 /**
- * Aliquota contributiva IVS per lavoratori dipendenti.
- * 33% dello stipendio lordo (di cui ~9.19% a carico del lavoratore).
+ * Aliquota di computo IVS per lavoratori dipendenti (33% dello stipendio
+ * lordo, di cui ~9,19% a carico del lavoratore). Fonte unica condivisa con
+ * `inps-simulator.ts`: `COMPUTATION_RATES.dipendente` in `inps-core.ts`.
  */
-const CONTRIBUTION_RATE = 0.33;
+const CONTRIBUTION_RATE = COMPUTATION_RATES.dipendente;
 
 /**
  * Calcola la pensione con il metodo contributivo INPS.
@@ -101,7 +108,7 @@ export function calculateContributivePension(
 		currentAge,
 		retirementAge,
 		inflationRate,
-		montanteRevaluationRate = 0.015,
+		montanteRevaluationRate = DEFAULT_MONTANTE_REVALUATION,
 		contributionEndAge
 	} = params;
 
@@ -130,7 +137,7 @@ export function calculateContributivePension(
 		const pastSalary = currentSalary / Math.pow(1 + salaryGrowthRate, yearsAgo);
 		const contribution = pastSalary * CONTRIBUTION_RATE;
 		// Rivaluta fino ad oggi
-		montante += contribution * Math.pow(1 + montanteRevaluationRate, yearsAgo);
+		montante += revalueMontante(contribution, yearsAgo, montanteRevaluationRate);
 	}
 
 	// Montante per gli anni futuri: si versano contributi solo fino alla fine
@@ -146,7 +153,7 @@ export function calculateContributivePension(
 		const contribution = futureSalary * CONTRIBUTION_RATE;
 		// Rivaluta dal versamento alla pensione
 		const yearsToGrow = yearsToRetirement - i;
-		montante += contribution * Math.pow(1 + montanteRevaluationRate, yearsToGrow);
+		montante += revalueMontante(contribution, yearsToGrow, montanteRevaluationRate);
 	}
 
 	// Coefficiente di trasformazione
@@ -239,7 +246,7 @@ export function getPensionRequirements(referenceYear: number = 2026): PensionReq
 			age: 64,
 			minContributionYears: 20,
 			minPensionMultiple: 3,
-			socialAllowanceMonthly: 534.41,
+			socialAllowanceMonthly: SOCIAL_ALLOWANCE_MONTHLY_2026,
 			description:
 				"Pensione anticipata contributiva: 64 anni, 20 anni di contributi, pensione >= 3 volte l'assegno sociale (534,41 €/mese nel 2026)"
 		}

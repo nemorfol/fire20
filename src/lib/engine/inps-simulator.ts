@@ -5,6 +5,7 @@
  */
 import { getTransformationCoefficient } from './assumptions.js';
 import { getPensionRequirements } from './pension-italy';
+import { COMPUTATION_RATES, revalueMontante, type ContractType } from './inps-core.js';
 
 export interface INPSSimulatorParams {
 	birthYear: number;
@@ -12,7 +13,7 @@ export interface INPSSimulatorParams {
 	firstEmploymentYear: number;
 	currentGrossSalary: number;
 	salaryGrowthRate: number; // annual % growth (e.g. 2 for 2%)
-	contractType: 'dipendente' | 'autonomo' | 'parasubordinato';
+	contractType: ContractType;
 	partTime: boolean;
 	partTimePercentage: number; // 50-100
 	existingContributionYears: number;
@@ -54,18 +55,9 @@ export interface INPSSimulatorResult {
 	ritaMaxAmount: number;
 }
 
-/** Aliquote contributive per tipo contratto */
-const CONTRIBUTION_RATES: Record<string, number> = {
-	dipendente: 0.33,
-	autonomo: 0.2623,
-	parasubordinato: 0.3372
-};
-
-/** Tasso medio di rivalutazione del montante (crescita PIL nominale) */
-const DEFAULT_GDP_REVALUATION = 0.015;
-
-/** Assegno sociale mensile 2026 */
-const SOCIAL_ALLOWANCE_MONTHLY = 534.41;
+// Aliquote di computo e tasso di rivalutazione del montante sono condivisi con
+// pension-italy.ts tramite inps-core.ts (COMPUTATION_RATES,
+// DEFAULT_MONTANTE_REVALUATION): fonte unica, per evitare copie divergenti (C4).
 
 /**
  * Calcola IRPEF + addizionali su reddito da pensione.
@@ -129,7 +121,7 @@ function projectMontante(
 	const currentYear = new Date().getFullYear();
 	const currentAge = currentYear - params.birthYear;
 	const retirementYear = params.birthYear + retirementAge;
-	const contributionRate = CONTRIBUTION_RATES[params.contractType] || 0.33;
+	const contributionRate = COMPUTATION_RATES[params.contractType] ?? COMPUTATION_RATES.dipendente;
 	const growthRate = params.salaryGrowthRate / 100;
 	const partTimeFactor = params.partTime ? params.partTimePercentage / 100 : 1;
 
@@ -145,7 +137,7 @@ function projectMontante(
 			const pastSalary = params.currentGrossSalary / Math.pow(1 + growthRate, yearsFromNow);
 			const contribution = pastSalary * contributionRate * partTimeFactor;
 			// Rivaluta fino ad oggi
-			montante += contribution * Math.pow(1 + DEFAULT_GDP_REVALUATION, yearsFromNow);
+			montante += revalueMontante(contribution, yearsFromNow);
 		}
 	}
 
@@ -161,7 +153,7 @@ function projectMontante(
 			params.contributionEndAge != null && ageThisYear >= params.contributionEndAge;
 		if (isInGap(year, params.careerGaps) || contribStopped) {
 			// Rivaluta il montante esistente ma non aggiungi contributi
-			montante *= 1 + DEFAULT_GDP_REVALUATION;
+			montante = revalueMontante(montante, 1);
 			continue;
 		}
 		const yearsFromNow = year - currentYear;
@@ -170,7 +162,7 @@ function projectMontante(
 		const contribution = futureSalary * contributionRate * partTimeFactor;
 		// Rivaluta dal versamento alla pensione
 		const yearsToGrow = retirementYear - year - 1;
-		montante += contribution * Math.pow(1 + DEFAULT_GDP_REVALUATION, Math.max(0, yearsToGrow));
+		montante += revalueMontante(contribution, yearsToGrow);
 		contributionYears++;
 	}
 
@@ -330,12 +322,9 @@ export function simulateINPSPension(params: INPSSimulatorParams): INPSSimulatorR
  * Calcola il costo del riscatto laurea (metodo agevolato Art. 2 D.Lgs. 184/1997).
  * Metodo agevolato: aliquota IVS * reddito minimo * anni da riscattare.
  */
-export function calculateRiscattoLaureaCost(
-	years: number,
-	contractType: 'dipendente' | 'autonomo' | 'parasubordinato'
-): number {
+export function calculateRiscattoLaureaCost(years: number, contractType: ContractType): number {
 	// Minimale INPS 2026 (approssimato)
 	const INPS_MINIMUM_INCOME = 18415;
-	const rate = CONTRIBUTION_RATES[contractType] || 0.33;
+	const rate = COMPUTATION_RATES[contractType] ?? COMPUTATION_RATES.dipendente;
 	return Math.round(INPS_MINIMUM_INCOME * rate * years);
 }
