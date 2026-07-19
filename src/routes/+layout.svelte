@@ -54,6 +54,57 @@
 
 	const iconClass = 'w-5 h-5 text-gray-500 dark:text-gray-400';
 
+	// Voci di navigazione raggruppate in sezioni logiche (issue C5 — discoverability).
+	// Le sezioni sono sempre visibili (non collassabili) e vivono dentro l'unico
+	// contenitore scrollabile della Sidebar, cosi' lo scroll a viewport bassi resta
+	// funzionante (invariante issue #32).
+	type NavItem = { labelKey: string; href: string; icon: typeof HomeSolid };
+	type NavSection = { titleKey: string; items: NavItem[] };
+	const navSections: NavSection[] = [
+		{
+			titleKey: 'nav.section.plan',
+			items: [
+				{ labelKey: 'nav.dashboard', href: '/', icon: HomeSolid },
+				{ labelKey: 'nav.profile', href: '/profilo/', icon: UserSolid },
+				{ labelKey: 'nav.calculator', href: '/calcolatore/', icon: ChartMixedDollarSolid }
+			]
+		},
+		{
+			titleKey: 'nav.section.simulate',
+			items: [
+				{ labelKey: 'nav.simulation', href: '/simulazione/', icon: ChartPieSolid },
+				{ labelKey: 'nav.scenarios', href: '/scenari/', icon: FolderSolid },
+				{ labelKey: 'nav.risks', href: '/rischi/', icon: ShieldCheckSolid },
+				{ labelKey: 'nav.profileCompare', href: '/confronto-profili/', icon: UsersOutline }
+			]
+		},
+		{
+			titleKey: 'nav.section.taxPension',
+			items: [
+				{ labelKey: 'nav.containers', href: '/contenitori/', icon: ScaleBalancedOutline },
+				{ labelKey: 'nav.pensionFund', href: '/fondo-pensione/', icon: BuildingSolid },
+				{ labelKey: 'nav.inpsPension', href: '/pensione/', icon: LandmarkOutline }
+			]
+		},
+		{
+			titleKey: 'nav.section.tools',
+			items: [
+				{ labelKey: 'nav.performance', href: '/performance/', icon: ChartLineUpOutline },
+				{ labelKey: 'nav.history', href: '/dati-storici/', icon: FileChartBarSolid },
+				{ labelKey: 'nav.community', href: '/community/', icon: UsersGroupSolid },
+				{ labelKey: 'nav.settings', href: '/impostazioni/', icon: CogSolid }
+			]
+		},
+		{
+			titleKey: 'nav.section.help',
+			items: [
+				{ labelKey: 'nav.guide', href: '/guida/', icon: BookOpenSolid },
+				{ labelKey: 'nav.assistant', href: '/assistente/', icon: MessagesSolid },
+				{ labelKey: 'nav.methodology', href: '/metodologia/', icon: FileLinesSolid }
+			]
+		}
+	];
+
 	function isActive(itemHref: string): boolean {
 		const path = page.url.pathname;
 		if (itemHref === '/') return path === '/';
@@ -165,144 +216,28 @@
 			divClass="max-h-[calc(100dvh-4rem)]"
 		>
 			<SidebarWrapper class="py-2">
-				<SidebarGroup>
-					<SidebarItem
-						label={t('nav.dashboard')}
-						href="/"
-						active={isActive('/')}
-						onclick={() => (sidebarOpen = false)}
-					>
-						{#snippet icon()}<HomeSolid class={iconClass} />{/snippet}
-					</SidebarItem>
-					<SidebarItem
-						label={t('nav.profile')}
-						href="/profilo/"
-						active={isActive('/profilo/')}
-						onclick={() => (sidebarOpen = false)}
-					>
-						{#snippet icon()}<UserSolid class={iconClass} />{/snippet}
-					</SidebarItem>
-					<SidebarItem
-						label={t('nav.calculator')}
-						href="/calcolatore/"
-						active={isActive('/calcolatore/')}
-						onclick={() => (sidebarOpen = false)}
-					>
-						{#snippet icon()}<ChartMixedDollarSolid class={iconClass} />{/snippet}
-					</SidebarItem>
-					<SidebarItem
-						label={t('nav.simulation')}
-						href="/simulazione/"
-						active={isActive('/simulazione/')}
-						onclick={() => (sidebarOpen = false)}
-					>
-						{#snippet icon()}<ChartPieSolid class={iconClass} />{/snippet}
-					</SidebarItem>
-					<SidebarItem
-						label={t('nav.scenarios')}
-						href="/scenari/"
-						active={isActive('/scenari/')}
-						onclick={() => (sidebarOpen = false)}
-					>
-						{#snippet icon()}<FolderSolid class={iconClass} />{/snippet}
-					</SidebarItem>
-					<SidebarItem
-						label={t('nav.risks')}
-						href="/rischi/"
-						active={isActive('/rischi/')}
-						onclick={() => (sidebarOpen = false)}
-					>
-						{#snippet icon()}<ShieldCheckSolid class={iconClass} />{/snippet}
-					</SidebarItem>
-					<SidebarItem
-						label={t('nav.performance')}
-						href="/performance/"
-						active={isActive('/performance/')}
-						onclick={() => (sidebarOpen = false)}
-					>
-						{#snippet icon()}<ChartLineUpOutline class={iconClass} />{/snippet}
-					</SidebarItem>
-					<SidebarItem
-						label={t('nav.history')}
-						href="/dati-storici/"
-						active={isActive('/dati-storici/')}
-						onclick={() => (sidebarOpen = false)}
-					>
-						{#snippet icon()}<FileChartBarSolid class={iconClass} />{/snippet}
-					</SidebarItem>
-					<SidebarItem
-						label={t('nav.pensionFund')}
-						href="/fondo-pensione/"
-						active={isActive('/fondo-pensione/')}
-						onclick={() => (sidebarOpen = false)}
-					>
-						{#snippet icon()}<BuildingSolid class={iconClass} />{/snippet}
-					</SidebarItem>
-					<SidebarItem
-						label={t('nav.inpsPension')}
-						href="/pensione/"
-						active={isActive('/pensione/')}
-						onclick={() => (sidebarOpen = false)}
-					>
-						{#snippet icon()}<LandmarkOutline class={iconClass} />{/snippet}
-					</SidebarItem>
-					<SidebarItem
-						label={t('nav.containers')}
-						href="/contenitori/"
-						active={isActive('/contenitori/')}
-						onclick={() => (sidebarOpen = false)}
-					>
-						{#snippet icon()}<ScaleBalancedOutline class={iconClass} />{/snippet}
-					</SidebarItem>
-					<SidebarItem
-						label={t('nav.profileCompare')}
-						href="/confronto-profili/"
-						active={isActive('/confronto-profili/')}
-						onclick={() => (sidebarOpen = false)}
-					>
-						{#snippet icon()}<UsersOutline class={iconClass} />{/snippet}
-					</SidebarItem>
-					<SidebarItem
-						label={t('nav.community')}
-						href="/community/"
-						active={isActive('/community/')}
-						onclick={() => (sidebarOpen = false)}
-					>
-						{#snippet icon()}<UsersGroupSolid class={iconClass} />{/snippet}
-					</SidebarItem>
-					<SidebarItem
-						label={t('nav.guide')}
-						href="/guida/"
-						active={isActive('/guida/')}
-						onclick={() => (sidebarOpen = false)}
-					>
-						{#snippet icon()}<BookOpenSolid class={iconClass} />{/snippet}
-					</SidebarItem>
-					<SidebarItem
-						label={t('nav.assistant')}
-						href="/assistente/"
-						active={isActive('/assistente/')}
-						onclick={() => (sidebarOpen = false)}
-					>
-						{#snippet icon()}<MessagesSolid class={iconClass} />{/snippet}
-					</SidebarItem>
-					<SidebarItem
-						label={t('nav.methodology')}
-						href="/metodologia/"
-						active={isActive('/metodologia/')}
-						onclick={() => (sidebarOpen = false)}
-					>
-						{#snippet icon()}<FileLinesSolid class={iconClass} />{/snippet}
-					</SidebarItem>
-					<SidebarItem
-						label={t('nav.settings')}
-						href="/impostazioni/"
-						active={isActive('/impostazioni/')}
-						onclick={() => (sidebarOpen = false)}
-					>
-						{#snippet icon()}<CogSolid class={iconClass} />{/snippet}
-					</SidebarItem>
-				</SidebarGroup>
+				{#each navSections as section, i (section.titleKey)}
+					<div class={i > 0 ? 'mt-3 border-t border-gray-200 pt-3 dark:border-gray-700' : ''}>
+						<h3
+							class="mb-1 px-2 text-xs font-semibold tracking-wider text-gray-400 uppercase dark:text-gray-500"
+						>
+							{t(section.titleKey)}
+						</h3>
+						<SidebarGroup>
+							{#each section.items as item (item.href)}
+								{@const Icon = item.icon}
+								<SidebarItem
+									label={t(item.labelKey)}
+									href={item.href}
+									active={isActive(item.href)}
+									onclick={() => (sidebarOpen = false)}
+								>
+									{#snippet icon()}<Icon class={iconClass} />{/snippet}
+								</SidebarItem>
+							{/each}
+						</SidebarGroup>
+					</div>
+				{/each}
 			</SidebarWrapper>
 		</Sidebar>
 

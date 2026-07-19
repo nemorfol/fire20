@@ -20,6 +20,12 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'nav.assistant': 'Assistente AI',
 		'nav.methodology': 'Metodologia e Fonti',
 		'nav.settings': 'Impostazioni',
+		// Navigation sections
+		'nav.section.plan': 'Pianifica',
+		'nav.section.simulate': 'Simula',
+		'nav.section.taxPension': 'Fisco e pensione',
+		'nav.section.tools': 'Strumenti',
+		'nav.section.help': 'Aiuto',
 		// Common
 		'common.save': 'Salva',
 		'common.cancel': 'Annulla',
@@ -122,6 +128,12 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'nav.assistant': 'AI Assistant',
 		'nav.methodology': 'Methodology & Sources',
 		'nav.settings': 'Settings',
+		// Navigation sections
+		'nav.section.plan': 'Plan',
+		'nav.section.simulate': 'Simulate',
+		'nav.section.taxPension': 'Tax & Pension',
+		'nav.section.tools': 'Tools',
+		'nav.section.help': 'Help',
 		// Common
 		'common.save': 'Save',
 		'common.cancel': 'Cancel',

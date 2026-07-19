@@ -41,6 +41,11 @@ sua riga nella sezione «Non rilasciato».
 
 ### Modificato
 
+- **Sidebar raggruppata in sezioni logiche** (Pianifica / Simula / Fisco e pensione / Strumenti /
+  Aiuto): le 17 voci del menu, prima in un elenco piatto, sono ora organizzate sotto intestazioni
+  sempre visibili per rendere le funzioni più facili da trovare. Le etichette di sezione passano da
+  `t('nav.section.*')` (chiavi it/en). Lo scroll a viewport bassi (issue #32) resta funzionante: le
+  sezioni vivono dentro l'unico contenitore scrollabile della sidebar.
 - **i18n solo-italiano**: nascosto il selettore lingua in Impostazioni (prometteva un inglese non
   mantenuto). L'infrastruttura `src/lib/i18n/` resta in piedi per una localizzazione futura; il
   locale residuo `'en'` eventualmente salvato in `localStorage` viene normalizzato a `'it'` così
