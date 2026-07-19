@@ -9,7 +9,8 @@ import { fileURLToPath } from 'url';
 import { deflateSync } from 'zlib';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const staticDir = join(__dirname, 'static');
+// Lo script vive in scripts/, la cartella static/ e' nella root del repo (un livello sopra).
+const staticDir = join(__dirname, '..', 'static');
 
 function createSvgIcon(size) {
   const fontSize = Math.round(size * 0.15);
