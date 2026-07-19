@@ -13,6 +13,7 @@
 		CloseCircleSolid
 	} from 'flowbite-svelte-icons';
 	import type { MonteCarloParams, MonteCarloResult } from '$lib/engine/monte-carlo';
+	import { runMonteCarloWorker } from '$lib/workers/monte-carlo-client';
 	import type { SimulationResult } from '$lib/db/index';
 	import { goldReturns } from '$lib/data/gold';
 	import {
@@ -184,41 +185,10 @@
 			}
 		}
 
-		// Terminate previous worker if still running
-		worker?.terminate();
-
 		try {
-			worker = new Worker(
-				new URL('$lib/workers/monte-carlo.worker.ts', import.meta.url),
-				{ type: 'module' }
-			);
-
-			worker.onmessage = (e: MessageEvent) => {
-				const data = e.data;
-				if (data.type === 'progress') {
-					progress = data.percent;
-				} else if (data.type === 'result') {
-					result = data.data as MonteCarloResult;
-					running = false;
-					progress = 100;
-					stopTimer();
-					showNotification('Simulazione completata con successo!');
-				} else if (data.type === 'error') {
-					running = false;
-					stopTimer();
-					showNotification(`Errore: ${data.message}`, 'error');
-				}
-			};
-
-			worker.onerror = (e) => {
-				running = false;
-				stopTimer();
-				showNotification(`Errore nel worker: ${e.message}`, 'error');
-			};
-
-			worker.postMessage({
-				type: 'run',
-				params: {
+			worker = runMonteCarloWorker(
+				worker,
+				{
 					initialPortfolio: params.initialPortfolio ?? 200000,
 					annualContribution: params.annualContribution ?? 20000,
 					annualExpenses: params.annualExpenses ?? 30000,
@@ -254,9 +224,31 @@
 					pensionAge: params.pensionAge,
 					otherIncome: params.otherIncome ?? 0,
 					otherIncomeEndAge: params.otherIncomeEndAge
-				} satisfies MonteCarloParams
-			});
-		} catch (err) {
+				} satisfies MonteCarloParams,
+				{
+					onProgress: (percent) => {
+						progress = percent;
+					},
+					onResult: (data) => {
+						result = data;
+						running = false;
+						progress = 100;
+						stopTimer();
+						showNotification('Simulazione completata con successo!');
+					},
+					onError: (message) => {
+						running = false;
+						stopTimer();
+						showNotification(`Errore: ${message}`, 'error');
+					},
+					onWorkerError: (e) => {
+						running = false;
+						stopTimer();
+						showNotification(`Errore nel worker: ${e.message}`, 'error');
+					}
+				}
+			);
+		} catch {
 			running = false;
 			stopTimer();
 			showNotification('Impossibile avviare il Web Worker', 'error');

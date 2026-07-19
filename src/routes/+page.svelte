@@ -1,4 +1,4 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import { onMount } from 'svelte';
 	import {
 		Heading,
@@ -35,7 +35,7 @@
 	import { getPreset } from '$lib/engine/assumptions';
 	import { formatCurrency, formatPercent, formatCompact, formatDate } from '$lib/utils/format';
 	import StatCard from '$lib/components/shared/StatCard.svelte';
-	import EChart from '$lib/components/simulazione/EChart.svelte';
+	import EChart from '$lib/components/shared/EChart.svelte';
 	import MarketTicker from '$lib/components/dashboard/MarketTicker.svelte';
 	import RebalanceAlert from '$lib/components/dashboard/RebalanceAlert.svelte';
 	import BenchmarkComparison from '$lib/components/dashboard/BenchmarkComparison.svelte';

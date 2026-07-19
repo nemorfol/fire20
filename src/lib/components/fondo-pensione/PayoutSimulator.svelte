@@ -1,11 +1,11 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import {
 		Card, Label, Input, Select, Button, Badge, Toggle, Alert,
 		Table, TableHead, TableHeadCell, TableBody, TableBodyRow, TableBodyCell,
 		Tabs, TabItem
 	} from 'flowbite-svelte';
 	import { ArrowRightOutline, ChartMixedDollarSolid, InfoCircleSolid } from 'flowbite-svelte-icons';
-	import EChart from '$lib/components/simulazione/EChart.svelte';
+	import EChart from '$lib/components/shared/EChart.svelte';
 	import { formatCurrency, formatPercent } from '$lib/utils/format';
 	import {
 		compareAllStrategies,

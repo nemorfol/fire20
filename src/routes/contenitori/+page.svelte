@@ -1,4 +1,4 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import {
 		Heading,
 		Breadcrumb,
@@ -23,7 +23,7 @@
 	} from 'flowbite-svelte-icons';
 	import CurrencyInput from '$lib/components/shared/CurrencyInput.svelte';
 	import PercentInput from '$lib/components/shared/PercentInput.svelte';
-	import EChart from '$lib/components/simulazione/EChart.svelte';
+	import EChart from '$lib/components/shared/EChart.svelte';
 	import { formatCurrency, formatCompact, formatPercent } from '$lib/utils/format';
 	import {
 		compareContainers,
@@ -257,7 +257,7 @@
 							{formatCurrency(totalTaxes(r))}
 						</TableBodyCell>
 						<TableBodyCell class="text-right text-emerald-600 dark:text-emerald-400">
-							{r.taxBenefitDeduction > 0 ? formatCurrency(r.taxBenefitDeduction) : '—'}
+							{r.taxBenefitDeduction > 0 ? formatCurrency(r.taxBenefitDeduction) : 'â€”'}
 						</TableBodyCell>
 						<TableBodyCell
 							class="text-right font-semibold {r.id === winnerId
@@ -327,19 +327,19 @@
 							<div class="flex justify-between border-b border-gray-100 dark:border-gray-800 py-1">
 								<span class="text-gray-500 dark:text-gray-400">Tasse durante accumulo</span>
 								<span class="font-medium text-red-600 dark:text-red-400">
-									{r.taxesDuringAccumulation > 0 ? formatCurrency(r.taxesDuringAccumulation) : '—'}
+									{r.taxesDuringAccumulation > 0 ? formatCurrency(r.taxesDuringAccumulation) : 'â€”'}
 								</span>
 							</div>
 							<div class="flex justify-between border-b border-gray-100 dark:border-gray-800 py-1">
 								<span class="text-gray-500 dark:text-gray-400">Tasse all'uscita</span>
 								<span class="font-medium text-red-600 dark:text-red-400">
-									{r.taxesOnExit > 0 ? formatCurrency(r.taxesOnExit) : '—'}
+									{r.taxesOnExit > 0 ? formatCurrency(r.taxesOnExit) : 'â€”'}
 								</span>
 							</div>
 							<div class="flex justify-between border-b border-gray-100 dark:border-gray-800 py-1">
 								<span class="text-gray-500 dark:text-gray-400">Beneficio deduzione</span>
 								<span class="font-medium text-emerald-600 dark:text-emerald-400">
-									{r.taxBenefitDeduction > 0 ? formatCurrency(r.taxBenefitDeduction) : '—'}
+									{r.taxBenefitDeduction > 0 ? formatCurrency(r.taxBenefitDeduction) : 'â€”'}
 								</span>
 							</div>
 							<div class="flex justify-between py-1">
@@ -367,7 +367,7 @@
 		{/snippet}
 		<span class="text-sm">
 			<strong>Note metodologiche:</strong> il beneficio della deduzione del fondo pensione
-			(fino a 5.300€/anno × aliquota marginale) non e' sommato al netto finale perche'
+			(fino a 5.300â‚¬/anno Ã— aliquota marginale) non e' sommato al netto finale perche'
 			arriva in busta paga anno per anno e puo' essere reinvestito separatamente
 			(attuale effettivo ~{formatPercent(marginalIrpefPct)} del versato).
 			Il confronto assume stesso rendimento lordo atteso per ETF, Fondo Pensione e BTP;

@@ -1,4 +1,4 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import { onMount } from 'svelte';
 	import {
 		Heading,
@@ -39,7 +39,7 @@
 	import { childTotalRemainingCost } from '$lib/engine/family';
 	import { blendedCapitalGainsRate } from '$lib/engine/tax-italy';
 	import { getPreset } from '$lib/engine/assumptions';
-	import EChart from '$lib/components/simulazione/EChart.svelte';
+	import EChart from '$lib/components/shared/EChart.svelte';
 	import { formatCurrency, formatCompact, formatPercent } from '$lib/utils/format';
 
 	// === Stato ===
@@ -330,7 +330,7 @@
 			case 'currency':
 				return formatCurrency(v);
 			case 'years':
-				if (!isFinite(v)) return '—';
+				if (!isFinite(v)) return 'â€”';
 				return `${Math.round(v)} anni`;
 			case 'percent':
 				// calculateSavingsRate restituisce una frazione 0..1
@@ -361,7 +361,7 @@
 
 		const a = row.valueA;
 		const b = row.valueB;
-		if (!isFinite(a) || !isFinite(b)) return { text: '—', color: 'gray' };
+		if (!isFinite(a) || !isFinite(b)) return { text: 'â€”', color: 'gray' };
 
 		const diff = a - b;
 		if (diff === 0) return { text: 'Uguale', color: 'gray' };
@@ -377,7 +377,7 @@
 			}
 			case 'percent': {
 				const sign = diff > 0 ? '+' : '-';
-				// diff e' una differenza tra frazioni 0..1 → punti percentuali
+				// diff e' una differenza tra frazioni 0..1 â†’ punti percentuali
 				text = `${sign}${(Math.abs(diff) * 100).toFixed(1)}pp`;
 				break;
 			}
@@ -398,8 +398,8 @@
 		}
 
 		// Colore: dal punto di vista del Profilo A
-		// higher-better: A > B → verde; A < B → rosso
-		// lower-better:  A < B → verde; A > B → rosso
+		// higher-better: A > B â†’ verde; A < B â†’ rosso
+		// lower-better:  A < B â†’ verde; A > B â†’ rosso
 		// neutral:       grigio
 		if (row.direction === 'neutral') return { text, color: 'gray' };
 		const aBetter =
@@ -447,7 +447,7 @@
 
 						let description: string;
 						if (row.format === 'currency' || row.format === 'monthly') {
-							description = `${who} e' avanti di ${formatCompact(absDiff)} € rispetto a ${loser}`;
+							description = `${who} e' avanti di ${formatCompact(absDiff)} â‚¬ rispetto a ${loser}`;
 						} else if (row.format === 'percent') {
 							description = `${who} e' avanti di ${(absDiff * 100).toFixed(1)} punti percentuali`;
 						} else if (row.format === 'years' || row.format === 'age') {
@@ -672,7 +672,7 @@
 					<TableHeadCell>Metrica</TableHeadCell>
 					<TableHeadCell class="text-right">{profileA.name || 'Profilo A'}</TableHeadCell>
 					<TableHeadCell class="text-right">{profileB.name || 'Profilo B'}</TableHeadCell>
-					<TableHeadCell class="text-right">Δ</TableHeadCell>
+					<TableHeadCell class="text-right">Î”</TableHeadCell>
 				</TableHead>
 				<TableBody>
 					{#each rows as row (row.label)}
@@ -689,7 +689,7 @@
 								{#if delta}
 									<Badge color={delta.color}>{delta.text}</Badge>
 								{:else}
-									<span class="text-gray-400">—</span>
+									<span class="text-gray-400">â€”</span>
 								{/if}
 							</TableBodyCell>
 						</TableBodyRow>
@@ -697,7 +697,7 @@
 				</TableBody>
 			</Table>
 			<p class="text-xs text-gray-500 dark:text-gray-400 mt-3">
-				Δ colorato dal punto di vista del Profilo A: verde = A e' meglio posizionato,
+				Î” colorato dal punto di vista del Profilo A: verde = A e' meglio posizionato,
 				rosso = B e' meglio posizionato, grigio = metrica neutra.
 			</p>
 		</Card>

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import EChart from './EChart.svelte';
+	import EChart from '$lib/components/shared/EChart.svelte';
 	import type { MonteCarloResult } from '$lib/engine/monte-carlo';
 	import { formatCompact, formatCurrency } from '$lib/utils/format';
 

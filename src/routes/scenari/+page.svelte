@@ -16,14 +16,15 @@
 	import { getAllProfiles } from '$lib/db/profiles';
 	import { getAllResults, createResult } from '$lib/db/results';
 	import { calculateNetWorth } from '$lib/engine/fire-calculator';
-	import type { MonteCarloParams, MonteCarloResult } from '$lib/engine/monte-carlo';
+	import type { MonteCarloParams } from '$lib/engine/monte-carlo';
+	import { runMonteCarloWorker } from '$lib/workers/monte-carlo-client';
 	import { sp500Returns } from '$lib/data/sp500';
 	import { bondReturns } from '$lib/data/bonds';
 	import { inflationUSReturns } from '$lib/data/inflation-us';
 	import { formatCurrency, formatPercent, formatDate } from '$lib/utils/format';
 	import ConfirmDialog from '$lib/components/shared/ConfirmDialog.svelte';
 	import ScenarioForm from '$lib/components/scenari/ScenarioForm.svelte';
-	import ScenarioComparison from '$lib/components/scenari/ScenarioComparison.svelte';
+	import SavedScenarioComparison from '$lib/components/scenari/SavedScenarioComparison.svelte';
 
 	// === State ===
 	let loading = $state(true);
@@ -246,20 +247,30 @@
 		runningScenarioId = scenario.id;
 		runProgress = 0;
 
-		worker?.terminate();
-
 		try {
-			worker = new Worker(
-				new URL('$lib/workers/monte-carlo.worker.ts', import.meta.url),
-				{ type: 'module' }
-			);
+			const mcParams = {
+				initialPortfolio: netWorth,
+				annualContribution,
+				annualExpenses,
+				withdrawalRate,
+				withdrawalStrategy: profile.simulation.withdrawalStrategy,
+				stockAllocation,
+				bondAllocation,
+				yearsToFire,
+				yearsInRetirement,
+				inflationRate,
+				simulationMode: 'historical',
+				iterations,
+				historicalStockReturns,
+				historicalBondReturns,
+				historicalInflation
+			} satisfies MonteCarloParams;
 
-			worker.onmessage = async (e: MessageEvent) => {
-				const data = e.data;
-				if (data.type === 'progress') {
-					runProgress = data.percent;
-				} else if (data.type === 'result') {
-					const mcResult = data.data as MonteCarloResult;
+			worker = runMonteCarloWorker(worker, mcParams, {
+				onProgress: (percent) => {
+					runProgress = percent;
+				},
+				onResult: async (mcResult) => {
 					const totalYears = yearsToFire + yearsInRetirement;
 					const finalYear = mcResult.percentiles.p5.length - 1;
 					try {
@@ -305,36 +316,15 @@
 						notify('Simulazione completata ma errore nel salvataggio', 'error');
 					}
 					runningScenarioId = null;
-				} else if (data.type === 'error') {
-					notify(`Errore simulazione: ${data.message}`, 'error');
+				},
+				onError: (message) => {
+					notify(`Errore simulazione: ${message}`, 'error');
+					runningScenarioId = null;
+				},
+				onWorkerError: () => {
+					notify('Errore nel worker della simulazione', 'error');
 					runningScenarioId = null;
 				}
-			};
-
-			worker.onerror = () => {
-				notify('Errore nel worker della simulazione', 'error');
-				runningScenarioId = null;
-			};
-
-			worker.postMessage({
-				type: 'run',
-				params: {
-					initialPortfolio: netWorth,
-					annualContribution,
-					annualExpenses,
-					withdrawalRate,
-					withdrawalStrategy: profile.simulation.withdrawalStrategy,
-					stockAllocation,
-					bondAllocation,
-					yearsToFire,
-					yearsInRetirement,
-					inflationRate,
-					simulationMode: 'historical',
-					iterations,
-					historicalStockReturns,
-					historicalBondReturns,
-					historicalInflation
-				} satisfies MonteCarloParams
 			});
 		} catch {
 			notify('Impossibile avviare la simulazione', 'error');
@@ -370,7 +360,7 @@
 
 {#if showComparison && selectedScenarios.length >= 2}
 	<!-- Comparison view -->
-	<ScenarioComparison
+	<SavedScenarioComparison
 		scenarios={selectedScenarios}
 		{profiles}
 		{results}

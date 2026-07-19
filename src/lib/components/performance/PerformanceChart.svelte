@@ -1,5 +1,5 @@
-<script lang="ts">
-	import EChart from '$lib/components/simulazione/EChart.svelte';
+﻿<script lang="ts">
+	import EChart from '$lib/components/shared/EChart.svelte';
 	import type { PortfolioSnapshot, CashFlow } from '$lib/engine/twr-calculator';
 	import { buildPortfolioCumulativeSeries, buildBenchmarkCumulativeSeries } from '$lib/engine/twr-calculator';
 	import { sp500Returns } from '$lib/data/sp500';

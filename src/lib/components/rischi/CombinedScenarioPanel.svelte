@@ -1,10 +1,10 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import { Card, Badge } from 'flowbite-svelte';
 	import { ExclamationCircleSolid } from 'flowbite-svelte-icons';
 	import type { YearlyProjection } from '$lib/engine/fire-calculator';
 	import type { RiskEvent } from '$lib/engine/risk-scenarios';
 	import { formatCurrency, formatCompact } from '$lib/utils/format';
-	import EChart from '$lib/components/simulazione/EChart.svelte';
+	import EChart from '$lib/components/shared/EChart.svelte';
 	import StatCard from '$lib/components/shared/StatCard.svelte';
 
 	let {

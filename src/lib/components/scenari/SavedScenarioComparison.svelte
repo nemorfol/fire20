@@ -1,10 +1,10 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import { Card, Badge, Button, Table, TableHead, TableHeadCell, TableBody, TableBodyRow, TableBodyCell } from 'flowbite-svelte';
 	import { ArrowLeftOutline } from 'flowbite-svelte-icons';
 	import type { Profile, Scenario, SimulationResult } from '$lib/db/index';
 	import { calculateFireNumber, calculateYearsToFire, calculateNetWorth } from '$lib/engine/fire-calculator';
 	import { formatCurrency, formatPercent } from '$lib/utils/format';
-	import EChart from '$lib/components/simulazione/EChart.svelte';
+	import EChart from '$lib/components/shared/EChart.svelte';
 
 	let {
 		scenarios = [] as Scenario[],

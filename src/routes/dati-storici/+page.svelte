@@ -1,11 +1,11 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import { Heading, Breadcrumb, BreadcrumbItem, Card, Select, Checkbox } from 'flowbite-svelte';
 	import * as echarts from 'echarts/core';
 	import { HeatmapChart } from 'echarts/charts';
 	import { VisualMapComponent } from 'echarts/components';
 	echarts.use([HeatmapChart, VisualMapComponent]);
 
-	import EChart from '$lib/components/simulazione/EChart.svelte';
+	import EChart from '$lib/components/shared/EChart.svelte';
 	import type { AnnualReturn } from '$lib/data/utils';
 	import { sp500Returns, sp500Stats } from '$lib/data/sp500';
 	import { bondReturns, bondStats } from '$lib/data/bonds';

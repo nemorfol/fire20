@@ -26,7 +26,7 @@
 	import RiskScenarioCard from '$lib/components/rischi/RiskScenarioCard.svelte';
 	import CustomScenarioForm from '$lib/components/rischi/CustomScenarioForm.svelte';
 	import StressTestResults from '$lib/components/rischi/StressTestResults.svelte';
-	import ScenarioComparison from '$lib/components/rischi/ScenarioComparison.svelte';
+	import RiskScenarioComparison from '$lib/components/rischi/RiskScenarioComparison.svelte';
 	import CombinedScenarioPanel from '$lib/components/rischi/CombinedScenarioPanel.svelte';
 
 	let profile = $state<Profile | undefined>(undefined);
@@ -233,7 +233,7 @@
 	{#if hasComparison}
 		<div class="mb-10">
 			<Heading tag="h2" class="text-xl mb-4">Confronto Scenari (side-by-side)</Heading>
-			<ScenarioComparison {baseline} scenarios={comparisonScenarios} />
+			<RiskScenarioComparison {baseline} scenarios={comparisonScenarios} />
 		</div>
 	{/if}
 

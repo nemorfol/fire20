@@ -1,8 +1,8 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import { Card } from 'flowbite-svelte';
 	import type { PensionAtAge } from '$lib/engine/inps-simulator';
 	import { formatCurrency } from '$lib/utils/format';
-	import EChart from '$lib/components/simulazione/EChart.svelte';
+	import EChart from '$lib/components/shared/EChart.svelte';
 
 	let {
 		pensionAtAge,
@@ -46,7 +46,7 @@
 			},
 			yAxis: {
 				type: 'value',
-				name: '€ mese',
+				name: 'â‚¬ mese',
 				axisLabel: { formatter: (v: number) => formatCurrency(v) }
 			},
 			series: [
