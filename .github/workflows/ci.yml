@@ -23,6 +23,9 @@ jobs:
       - name: Type check (svelte-check)
         run: npm run check
 
+      - name: Lint (ESLint)
+        run: npm run lint
+
       - name: Unit tests (Vitest)
         run: npm test
 

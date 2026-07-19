@@ -1,0 +1,12 @@
+# Solo file generati/artefatti: il codice e la documentazione vanno formattati.
+build/
+.svelte-kit/
+dist/
+coverage/
+node_modules/
+static/
+package-lock.json
+
+# Bozze personali locali e dati sensibili (gia' ignorati da git)
+FORUM*
+utils/

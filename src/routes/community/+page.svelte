@@ -308,7 +308,7 @@
 		{@const myIncome = profile.annualIncome + profile.otherIncome}
 		{@const mySavingsRate = myIncome > 0 ? Math.round(((myIncome - profile.annualExpenses) / myIncome) * 100) : 0}
 		{@const myPortfolio = Object.values(profile.portfolio).reduce((s, v) => s + (v || 0), 0)}
-		{@const myWr = (profile.simulation?.withdrawalRate || 0.04)}
+		{@const myWr = profile.simulation?.withdrawalRate || 0.04}
 		{@const myFireNumber = profile.fireExpenses > 0 ? Math.round(profile.fireExpenses / myWr) : 0}
 		<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
 			<div class="text-center">
