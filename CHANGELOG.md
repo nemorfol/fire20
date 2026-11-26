@@ -17,6 +17,12 @@ sua riga nella sezione «Non rilasciato».
 
 ### Aggiunto
 
+- **Preset storico «All-World in EUR»** (nuovo default del Monte Carlo storico): azioni come mix
+  a peso fisso di S&P 500 e MSCI World ex-USA, entrambi convertiti in lire/EUR coi cambi storici
+  e ribilanciati ogni anno, con BTP e inflazione ISTAT. Peso USA modificabile (default 70%, peso
+  attuale nell'MSCI World secondo i factsheet MSCI 2026). Bias dichiarato: il peso di oggi
+  applicato al 1970-2024 e' tendenzialmente ottimista. Il preset ex-USA resta disponibile, e
+  `getSeriesPreset` continua a usarlo per id sconosciuti. Guida e /metodologia aggiornate.
 - **Prelievi variabili nel Monte Carlo** (richiesta utenti): il pannello di _Simulazione_ ora
   permette di scegliere la strategia di prelievo (spesa fissa, Guyton-Klinger, VPW, CAPE-based,
   die-with-X con eredita' target e rendimento reale di pianificazione). Prima il motore le
