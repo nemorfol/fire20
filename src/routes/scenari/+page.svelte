@@ -288,7 +288,9 @@
 				iterations,
 				historicalStockReturns,
 				historicalBondReturns,
-				historicalInflation
+				historicalInflation,
+				// Serie US tutte 1928-2024 (allineate, USD): campionamento per anno
+				jointHistoricalSampling: true
 			} satisfies MonteCarloParams;
 
 			worker = runMonteCarloWorker(worker, mcParams, {

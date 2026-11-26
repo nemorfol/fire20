@@ -5,10 +5,11 @@
 	import type { MonteCarloParams, MonteCarloResult } from '$lib/engine/monte-carlo';
 	import { runMonteCarloWorker } from '$lib/workers/monte-carlo-client';
 	import type { SimulationResult } from '$lib/db/index';
-	import { goldReturns } from '$lib/data/gold';
 	import {
 		ALL_SERIES_PRESETS,
 		getSeriesPreset,
+		alignHistory,
+		type HistoricalAsset,
 		type SeriesPresetId
 	} from '$lib/data/default-series';
 	import { DEFAULT_2026, getPreset } from '$lib/engine/assumptions';
@@ -59,13 +60,12 @@
 	let worker: Worker | null = null;
 	let timerInterval: ReturnType<typeof setInterval> | null = null;
 
-	// Historical returns as decimals - default IT-centric (MSCI World + BTP + ISTAT).
-	// L'utente puo' switchare al preset US classico (S&P 500 + bond US + CPI USA).
+	// Preset di serie storiche: default IT tutto in lire/EUR (ex-USA + oro convertiti
+	// coi cambi storici, BTP, ISTAT); alternativa US tutta in USD. Le serie vengono
+	// allineate per anno al momento del run (finestra comune alle asset class usate).
 	let seriesPresetId = $state<SeriesPresetId>('it-default');
-	let historicalStockReturns = $derived(getSeriesPreset(seriesPresetId).stocks);
-	let historicalBondReturns = $derived(getSeriesPreset(seriesPresetId).bonds);
-	const historicalGoldReturns = goldReturns.map((r) => r.value / 100);
-	let historicalInflation = $derived(getSeriesPreset(seriesPresetId).inflation);
+	/** Finestra storica effettivamente usata dall'ultimo run (per trasparenza) */
+	let historyWindow = $state<{ from: number; to: number } | null>(null);
 
 	onMount(() => {
 		loadPreviousResults();
@@ -158,17 +158,38 @@
 		startTimer();
 
 		// Add historical data for non-parametric modes
+		historyWindow = null;
 		if (params.simulationMode !== 'parametric') {
-			params.historicalStockReturns = historicalStockReturns;
-			params.historicalBondReturns = historicalBondReturns;
-			params.historicalInflation = historicalInflation;
+			// Asset class effettivamente in portafoglio: determinano la finestra comune.
+			const required: HistoricalAsset[] = [];
+			if (params.assetClasses) {
+				for (const ac of params.assetClasses) {
+					if (
+						ac.allocation > 0 &&
+						(ac.name === 'stocks' || ac.name === 'bonds' || ac.name === 'gold')
+					) {
+						required.push(ac.name);
+					}
+				}
+			} else {
+				if ((params.stockAllocation ?? 0) > 0 || params.glidePathEnabled) required.push('stocks');
+				if ((params.bondAllocation ?? 0) > 0 || params.glidePathEnabled) required.push('bonds');
+			}
+			const h = alignHistory(getSeriesPreset(seriesPresetId), required);
+			if (h.years.length > 0) {
+				historyWindow = { from: h.years[0], to: h.years[h.years.length - 1] };
+			}
+			params.historicalStockReturns = h.stocks;
+			params.historicalBondReturns = h.bonds;
+			params.historicalInflation = h.inflation;
+			params.jointHistoricalSampling = true;
 
-			// Attach historical returns to multi-asset configs
+			// Attach historical returns to multi-asset configs (allineate per anno)
 			if (params.assetClasses) {
 				const histMap: Record<string, number[]> = {
-					stocks: historicalStockReturns,
-					bonds: historicalBondReturns,
-					gold: historicalGoldReturns
+					stocks: h.stocks,
+					bonds: h.bonds,
+					gold: h.gold
 				};
 				for (const ac of params.assetClasses) {
 					if (histMap[ac.name]) {
@@ -201,6 +222,7 @@
 					historicalStockReturns: params.historicalStockReturns,
 					historicalBondReturns: params.historicalBondReturns,
 					historicalInflation: params.historicalInflation,
+					jointHistoricalSampling: params.jointHistoricalSampling,
 					useCorrelation: params.useCorrelation,
 					assetClasses: params.assetClasses,
 					correlationMatrix: params.correlationMatrix,
@@ -400,6 +422,13 @@
 			</label>
 			<p class="text-xs text-gray-600 dark:text-gray-400">
 				{getSeriesPreset(seriesPresetId).description}
+				{#if historyWindow}
+					<br /><span class="font-medium"
+						>Ultima simulazione: anni {historyWindow.from}-{historyWindow.to} ({historyWindow.to -
+							historyWindow.from +
+							1} anni), valuta {getSeriesPreset(seriesPresetId).currency}.</span
+					>
+				{/if}
 			</p>
 		</div>
 		<select

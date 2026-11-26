@@ -11,7 +11,8 @@
 	echarts.use([HeatmapChart, VisualMapComponent]);
 
 	import EChart from '$lib/components/shared/EChart.svelte';
-	import type { AnnualReturn } from '$lib/data/utils';
+	import { computeStats, type AnnualReturn } from '$lib/data/utils';
+	import { internationalReturnsEur, goldReturnsEur } from '$lib/data/default-series';
 	import { sp500Returns, sp500Stats } from '$lib/data/sp500';
 	import { bondReturns, bondStats } from '$lib/data/bonds';
 	import { goldReturns, goldStats } from '$lib/data/gold';
@@ -25,7 +26,14 @@
 	const datasets = [
 		{ key: 'sp500', label: 'S&P 500', data: sp500Returns, stats: sp500Stats, unit: '%' },
 		{ key: 'bonds', label: 'Obbligazioni USA', data: bondReturns, stats: bondStats, unit: '%' },
-		{ key: 'gold', label: 'Oro', data: goldReturns, stats: goldStats, unit: '%' },
+		{ key: 'gold', label: 'Oro (USD)', data: goldReturns, stats: goldStats, unit: '%' },
+		{
+			key: 'goldEur',
+			label: 'Oro (EUR, cambio storico)',
+			data: goldReturnsEur,
+			stats: computeStats(goldReturnsEur),
+			unit: '%'
+		},
 		{
 			key: 'inflUS',
 			label: 'Inflazione USA',
@@ -42,9 +50,16 @@
 		},
 		{
 			key: 'intl',
-			label: 'Azioni Internazionali',
+			label: 'MSCI World ex-USA (USD)',
 			data: internationalReturns,
 			stats: internationalStats,
+			unit: '%'
+		},
+		{
+			key: 'intlEur',
+			label: 'MSCI World ex-USA (lire/EUR, cambio storico)',
+			data: internationalReturnsEur,
+			stats: computeStats(internationalReturnsEur),
 			unit: '%'
 		},
 		{ key: 'cape', label: 'CAPE Ratio', data: capeRatios, stats: capeStats, unit: '' }

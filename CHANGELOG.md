@@ -56,6 +56,22 @@ sua riga nella sezione «Non rilasciato».
   la UI resta coerente. Uniformate le voci sidebar «Assistente AI» e «Metodologia e Fonti», ora
   passano da `t('nav.*')` come le altre (aggiunte le chiavi it/en).
 
+### Corretto
+
+- **Serie storiche Monte Carlo: coerenza valutaria e abbinamento per anno.** Il preset
+  italiano usava l'MSCI World ex-USA **in USD** deflazionato con l'inflazione **ISTAT** (in
+  lire/EUR) senza conversione di cambio: il rendimento reale azionario 1970-2024 risultava
+  sottostimato di circa 2 punti l'anno (circa 2,4% invece di circa 4,4%). Ora azioni ex-USA e oro sono
+  convertiti in lire/EUR con i cambi storici di dicembre (Federal Reserve H.10/G.5 via FRED;
+  parità di Bretton Woods 625 ITL/USD per il 1969-70; tasso irrevocabile 1936,27 ITL/EUR), nuovo
+  modulo `src/lib/data/fx.ts`. Inoltre azioni, obbligazioni, oro e inflazione venivano campionati
+  **in modo indipendente**, con finestre diverse (1970, 1991, 1960): ora sono allineati sulla
+  finestra comune alle asset class in portafoglio (`alignHistory`) e campionati **congiuntamente**
+  (stesso anno storico, o blocco di 5 anni, per tutte le serie; nuovo parametro
+  `jointHistoricalSampling`), anche in _Scenari_. Etichette dei preset corrette ("World ex-USA",
+  valuta esplicita); la pagina _Simulazione_ mostra la finestra di anni usata; _Dati Storici_
+  espone anche le serie convertite in EUR. Guida aggiornata.
+
 ---
 
 ## Igiene documentale e tecnica — 2026-07-19

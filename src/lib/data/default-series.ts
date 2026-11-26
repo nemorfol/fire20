@@ -1,15 +1,24 @@
 /**
- * Scelta della "serie storica di default" per il calcolatore. Per un risparmiatore
- * italiano, la combinazione piu' rappresentativa e':
- *   - Equity: MSCI World (proxy: international.ts) -> world stock index
- *   - Bond: BTP 7-10y (proxy: btp.ts) -> obbligazionario IT
- *   - Inflazione: ISTAT CPI (inflation-it.ts)
+ * Preset di serie storiche per le modalita' "historical" / "block-bootstrap" del
+ * Monte Carlo.
  *
- * Manteniamo i dataset US (sp500, bonds, inflation-us) come "preset alternativo"
- * per chi vuole il classico set Bogleheads. L'utente potra' switchare nel
- * pannello configurazione del Monte Carlo.
+ * Due regole di coerenza (rigore metodologico):
+ *
+ * 1. UNA SOLA VALUTA per preset. Rendimenti e inflazione devono essere nella
+ *    stessa moneta, altrimenti il rendimento reale e' falsato. Il preset italiano
+ *    e' tutto in lire/EUR: le serie quotate in USD (azioni ex-USA, oro) sono
+ *    convertite con i cambi storici (`fx.ts`) nella prospettiva di un investitore
+ *    italiano NON coperto dal rischio cambio, e deflazionate con l'ISTAT. Il
+ *    preset USA e' tutto in USD (prospettiva di un investitore americano).
+ *    Senza conversione (USD deflazionato con ISTAT) il rendimento reale azionario
+ *    1970-2024 risultava sottostimato di circa 2 punti l'anno.
+ *
+ * 2. ALLINEAMENTO PER ANNO. Le serie vengono ritagliate sulla finestra comune
+ *    (`alignHistory`) e campionate congiuntamente: ogni anno simulato usa
+ *    azioni, obbligazioni, oro e inflazione dello STESSO anno storico.
  */
 
+import type { AnnualReturn } from './utils';
 import { internationalReturns } from './international';
 import { btpReturns } from './btp';
 import { inflationITReturns } from './inflation-it';
@@ -17,46 +26,60 @@ import { sp500Returns } from './sp500';
 import { bondReturns } from './bonds';
 import { inflationUSReturns } from './inflation-us';
 import { goldReturns } from './gold';
+import { convertUsdReturnsToEur } from './fx';
 
 export type SeriesPresetId = 'it-default' | 'us-classic';
+
+/** Asset class con serie storica propria */
+export type HistoricalAsset = 'stocks' | 'bonds' | 'gold';
 
 export interface SeriesPreset {
 	id: SeriesPresetId;
 	label: string;
 	description: string;
-	stocks: number[]; // decimali (0.07 = 7%)
-	bonds: number[];
-	inflation: number[];
-	gold: number[];
+	/** Valuta comune a TUTTE le serie del preset (rendimenti e inflazione) */
+	currency: 'EUR' | 'USD';
+	/** Serie annue in percentuale, con l'anno di calendario */
+	series: Record<HistoricalAsset | 'inflation', AnnualReturn[]>;
 }
 
-const toDecimals = (xs: { value: number }[]) => xs.map((x) => x.value / 100);
+/** Serie azionaria ex-USA convertita in lire/EUR (non coperta dal cambio) */
+export const internationalReturnsEur = convertUsdReturnsToEur(internationalReturns);
+/** Oro convertito in lire/EUR (non coperto dal cambio) */
+export const goldReturnsEur = convertUsdReturnsToEur(goldReturns);
 
-/** Preset IT-centric (MSCI World + BTP + inflazione ISTAT) */
+/** Preset IT-centric, tutto in lire/EUR */
 export const SERIES_IT_DEFAULT: SeriesPreset = {
 	id: 'it-default',
-	label: 'Italiano (MSCI World + BTP + ISTAT)',
+	label: 'Italiano in EUR (MSCI World ex-USA + BTP + ISTAT)',
 	description:
-		'Default IT-centric: MSCI World ex-USA (1970-2024), BTP 7-10y (1991-2024 stimati), ' +
-		"inflazione ISTAT (1960-2024). Piu' rappresentativo di un portafoglio italiano EUR.",
-	stocks: toDecimals(internationalReturns),
-	bonds: toDecimals(btpReturns),
-	inflation: toDecimals(inflationITReturns),
-	gold: toDecimals(goldReturns)
+		'Tutto in lire/euro: azioni MSCI World ex-USA (1970-2024) e oro convertiti da USD ' +
+		'con i cambi storici (investitore non coperto), BTP 7-10y (1991-2024, stimati), ' +
+		'inflazione ISTAT. Anni campionati congiuntamente sulla finestra comune.',
+	currency: 'EUR',
+	series: {
+		stocks: internationalReturnsEur,
+		bonds: btpReturns,
+		gold: goldReturnsEur,
+		inflation: inflationITReturns
+	}
 };
 
-/** Preset US classic (S&P 500 + bond aggregato US + inflazione US) */
+/** Preset US classic (S&P 500 + Treasury 10y + CPI USA), tutto in USD */
 export const SERIES_US_CLASSIC: SeriesPreset = {
 	id: 'us-classic',
-	label: 'Bogleheads classico (S&P 500 + US Bonds + CPI USA)',
+	label: 'Bogleheads classico in USD (S&P 500 + Treasury + CPI USA)',
 	description:
-		'Preset USA: S&P 500 (1928-2024), bond aggregato USA, inflazione CPI US. ' +
-		'Comodo per backtest Trinity / replicate degli studi americani, ma poco ' +
-		'rappresentativo del rischio cambio per un risparmiatore EUR.',
-	stocks: toDecimals(sp500Returns),
-	bonds: toDecimals(bondReturns),
-	inflation: toDecimals(inflationUSReturns),
-	gold: toDecimals(goldReturns)
+		'Tutto in dollari: S&P 500 e Treasury 10y (1928-2024), oro (1971-2024), CPI USA. ' +
+		'Prospettiva di un investitore americano: utile per replicare gli studi USA (Trinity), ' +
+		'non include il rischio cambio di chi spende in euro.',
+	currency: 'USD',
+	series: {
+		stocks: sp500Returns,
+		bonds: bondReturns,
+		gold: goldReturns,
+		inflation: inflationUSReturns
+	}
 };
 
 export const ALL_SERIES_PRESETS: SeriesPreset[] = [SERIES_IT_DEFAULT, SERIES_US_CLASSIC];
@@ -64,4 +87,52 @@ export const ALL_SERIES_PRESETS: SeriesPreset[] = [SERIES_IT_DEFAULT, SERIES_US_
 export function getSeriesPreset(id: SeriesPresetId | string | undefined): SeriesPreset {
 	if (id === 'us-classic') return SERIES_US_CLASSIC;
 	return SERIES_IT_DEFAULT;
+}
+
+/** Serie allineate per anno, in decimali (0.07 = 7%) */
+export interface AlignedHistory {
+	/** Anni di calendario della finestra comune (contigui) */
+	years: number[];
+	stocks: number[];
+	bonds: number[];
+	/** Vuoto se l'oro non e' richiesto e non copre la finestra */
+	gold: number[];
+	inflation: number[];
+}
+
+/**
+ * Ritaglia le serie del preset sulla finestra di anni CONTIGUI coperta
+ * dall'inflazione e da tutte le asset class richieste (quelle con allocazione > 0).
+ * Le serie non richieste sono incluse solo se coprono l'intera finestra, altrimenti
+ * restituite vuote (il motore usa il rendimento atteso, irrilevante se allocazione 0).
+ */
+export function alignHistory(preset: SeriesPreset, required: HistoricalAsset[]): AlignedHistory {
+	const maps = {
+		stocks: new Map(preset.series.stocks.map((r) => [r.year, r.value])),
+		bonds: new Map(preset.series.bonds.map((r) => [r.year, r.value])),
+		gold: new Map(preset.series.gold.map((r) => [r.year, r.value])),
+		inflation: new Map(preset.series.inflation.map((r) => [r.year, r.value]))
+	};
+	const keys: (HistoricalAsset | 'inflation')[] = ['inflation', ...new Set(required)];
+	const covered = (y: number) => keys.every((k) => maps[k].has(y));
+
+	// Finestra contigua piu' lunga, a partire dall'anno piu' recente all'indietro
+	const lastYear = Math.max(...preset.series.inflation.map((r) => r.year));
+	let end = lastYear;
+	while (end > 1800 && !covered(end)) end--;
+	let start = end;
+	while (covered(start - 1)) start--;
+	const years: number[] = [];
+	if (covered(end)) for (let y = start; y <= end; y++) years.push(y);
+
+	const take = (k: HistoricalAsset | 'inflation') =>
+		years.every((y) => maps[k].has(y)) ? years.map((y) => maps[k].get(y)! / 100) : [];
+
+	return {
+		years,
+		stocks: take('stocks'),
+		bonds: take('bonds'),
+		gold: take('gold'),
+		inflation: take('inflation')
+	};
 }
