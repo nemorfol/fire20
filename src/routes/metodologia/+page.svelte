@@ -3,6 +3,7 @@
 	import { DEFAULT_2026 } from '$lib/engine/assumptions';
 	import {
 		SERIES_IT_DEFAULT,
+		SERIES_IT_WORLD,
 		SERIES_US_CLASSIC,
 		ALLWORLD_US_WEIGHT_DEFAULT,
 		alignHistory
@@ -14,6 +15,7 @@
 	const eur = (x: number) => x.toLocaleString('it-IT') + ' €';
 	const win = (ys: number[]) => `${ys[0]}-${ys[ys.length - 1]}`;
 	const winIT = win(alignHistory(SERIES_IT_DEFAULT, ['stocks', 'bonds']).years);
+	const winWorld = win(alignHistory(SERIES_IT_WORLD, ['stocks', 'bonds']).years);
 	const winUS = win(alignHistory(SERIES_US_CLASSIC, ['stocks', 'bonds']).years);
 
 	// Ogni voce: valore usato dal motore + fonte normativa. I valori sono letti
@@ -76,15 +78,27 @@
 			fonte: 'Medie nazionali indicative (variano per regione/comune)'
 		},
 		{
-			voce: 'Serie storiche Monte Carlo (preset All-World, predefinito)',
+			voce: 'Serie storiche Monte Carlo (preset MSCI World, predefinito)',
+			valore: `azioni MSCI World (rendimento lordo, pesi per capitalizzazione: peso USA storico di ogni anno), convertite in lire/EUR coi cambi storici; prima del 31/03/1986 back-test MSCI · BTP, oro, ISTAT come sotto · finestra azioni+BTP ${winWorld}`,
+			fonte:
+				'MSCI World Index factsheet (USD, gross, 30/10/2026) per 2012-2025; Wikipedia "MSCI World" (Gross Annual Return) per 1970-2011, coerente con i factsheet MSCI'
+		},
+		{
+			voce: 'Titoli di Stato italiani (BTP ~10 anni)',
+			valore: '1970-2020 rendimento totale MISURATO (JST bond_tr, Italia; anni \'80 titoli a 3-5 anni) · 2021 stima da yield e duration · 2022-2025 proxy ETF BTP 10Y + TER',
+			fonte:
+				'Jordà-Schularick-Taylor Macrohistory Database R6 (CC BY-NC-SA 4.0); Jordà et al. (2019), QJE 134(3); justETF (LU1598691217)'
+		},
+		{
+			voce: 'Serie storiche Monte Carlo (preset mix a peso fisso)',
 			valore: `azioni a peso fisso ${Math.round(ALLWORLD_US_WEIGHT_DEFAULT * 100)}% S&P 500 / ${100 - Math.round(ALLWORLD_US_WEIGHT_DEFAULT * 100)}% MSCI World ex-USA, ribilanciate ogni anno, tutto convertito in lire/EUR; BTP, ISTAT come il preset IT · peso USA di oggi applicato al passato: stima tendenzialmente ottimista`,
 			fonte:
 				'Peso USA: factsheet MSCI World (USD 30/06/2026: 72,45%; EUR 27/02/2026: 70,11%); S&P 500: NYU Stern (Damodaran)'
 		},
 		{
 			voce: 'Serie storiche Monte Carlo (preset IT ex-USA)',
-			valore: `tutto in lire/EUR: MSCI World ex-USA e oro convertiti da USD coi cambi storici, BTP 7-10y (stimati), inflazione ISTAT · finestra azioni+BTP ${winIT}`,
-			fonte: 'MSCI (total return USD); ISTAT CPI; World Gold Council; BTP: stima da rendimenti 10y'
+			valore: `tutto in lire/EUR: MSCI World ex-USA (net) e oro convertiti da USD coi cambi storici, BTP ~10 anni, inflazione ISTAT · finestra azioni+BTP ${winIT}`,
+			fonte: 'MSCI (total return net USD; 2024-2025 factsheet 30/10/2026); inflazione World Bank FP.CPI.TOTL.ZG / ISTAT NIC (2024 +1,0%, 2025 +1,5%); oro: Damodaran'
 		},
 		{
 			voce: 'Cambi storici (conversione USD → EUR)',
@@ -94,7 +108,7 @@
 		{
 			voce: 'Serie storiche Monte Carlo (preset USA)',
 			valore: `tutto in USD: S&P 500, Treasury 10y, CPI USA · finestra ${winUS}`,
-			fonte: 'NYU Stern (Damodaran); BLS CPI-U'
+			fonte: 'NYU Stern (Damodaran, histretSP del 5/1/2026); BLS CPI-U'
 		},
 		{
 			voce: 'Campionamento storico',

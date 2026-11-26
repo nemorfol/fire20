@@ -17,6 +17,30 @@ sua riga nella sezione «Non rilasciato».
 
 ### Aggiunto
 
+- **Preset «MSCI World in EUR, pesi storici»** (nuovo default del Monte Carlo storico): l'indice
+  MSCI World vero (gross, 1970-2025), pesato per capitalizzazione e quindi con il peso USA storico
+  di ogni anno, convertito in lire/EUR. Elimina il look-ahead del peso USA fisso. Il mix a peso
+  fisso resta come opzione di sensibilita'.
+- **BTP misurati dal 1970**: rendimenti totali dei titoli di Stato italiani ~10 anni dal
+  Jordà-Schularick-Taylor Macrohistory Database R6 (1970-2020, licenza CC BY-NC-SA 4.0, vedi
+  `src/lib/data/LICENSE-JST.md`), poi stima 2021 e proxy ETF BTP 10Y 2022-2025. I preset italiani
+  con azioni e BTP coprono ora il 1970-2025 invece del 1991-2024.
+- **Bootstrap ricentrato** sui rendimenti reali attesi (forma storica, media dichiarata),
+  **scelta del periodo storico** (tutto / dal 1991 / dal 1999) e **verifica per sottoperiodi**.
+- **Successo con spesa minima** per le strategie di prelievo variabili: quota di simulazioni con
+  spesa reale mai sotto una soglia (default 80% delle spese).
+
+### Corretto
+
+- Inflazione Italia 2024: 0,98% (World Bank; ISTAT NIC +1,0%) invece del 2,4% errato.
+- S&P 500, Treasury 10y e oro riallineati per intero a Damodaran (histretSP del 5/1/2026); oro ora
+  dalla stessa fonte. Tutte le serie estese al 2025 (cambio EUR/USD dicembre 2025 1,1710, CPI USA
+  2,7%, ISTAT 2025 1,53%, MSCI ex-USA 2024-2025 dal factsheet).
+
+### Modificato
+
+- La strategia «Spesa fissa» si chiama ora «Spesa reale fissa (senza guardrail)».
+
 - **Capital gain alla vendita nel Monte Carlo** (`capitalGainsTaxMode: 'realization'`, default
   nella UI): il motore tiene il costo di carico e paga l'aliquota solo sulla quota di
   plusvalenza di cio' che vende, con vendita lorda G = N / (1 - aliquota x quota di

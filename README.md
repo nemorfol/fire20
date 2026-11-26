@@ -161,6 +161,8 @@ I contributi sono benvenuti: il progetto **accetta Pull Request su GitHub**.
 
 Distribuito con licenza [MIT](LICENSE): sei libero di usare, modificare e distribuire il codice, mantenendo l'avviso di copyright.
 
+**Eccezione per i dati di terze parti:** l'estratto del Jordà-Schularick-Taylor Macrohistory Database (`src/lib/data/jst-italia.ts`, rendimenti dei titoli di Stato italiani 1970-2020) è distribuito con licenza **CC BY-NC-SA 4.0** (solo uso non commerciale). Dettagli e citazioni in [`src/lib/data/LICENSE-JST.md`](src/lib/data/LICENSE-JST.md).
+
 ---
 
 _Disclaimer: Questa applicazione e' uno strumento educativo e di simulazione. Non costituisce consulenza finanziaria. Consulta un professionista qualificato prima di prendere decisioni di investimento._

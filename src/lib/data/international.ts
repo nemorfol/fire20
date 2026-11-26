@@ -1,6 +1,8 @@
 /**
- * Rendimenti annuali MSCI World ex-USA (1970-2024).
- * Fonte: MSCI, dati storici reali (rendimento totale in USD).
+ * Rendimenti annuali MSCI World ex-USA (1970-2025).
+ * Fonte: MSCI, dati storici reali (rendimento totale NETTO in USD).
+ * 2024-2025: factsheet MSCI World ex USA Index (USD, net), dati al 30/10/2026,
+ * tabella "Annual performance" (2023 17,94 coincide con la serie esistente).
  */
 
 export interface AnnualReturn {
@@ -63,7 +65,8 @@ export const internationalReturns: AnnualReturn[] = [
 	{ year: 2021, value: 12.62 },
 	{ year: 2022, value: -16.0 },
 	{ year: 2023, value: 17.94 },
-	{ year: 2024, value: 4.65 }
+	{ year: 2024, value: 4.7 },
+	{ year: 2025, value: 31.85 }
 ];
 
 function computeStats(data: AnnualReturn[]) {

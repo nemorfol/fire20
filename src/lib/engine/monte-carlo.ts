@@ -194,6 +194,15 @@ export interface MonteCarloParams {
 	 */
 	levelIncomeWithPension?: boolean;
 	/**
+	 * Spesa reale minima accettabile (euro di oggi). Con le strategie variabili il
+	 * portafoglio quasi non si esaurisce (VPW e CAPE-based prelevano una
+	 * percentuale del capitale residuo: successo 100% per costruzione), quindi il
+	 * "successo" classico non misura il rischio. Se > 0 il risultato riporta
+	 * `spending.floorSuccessRate`: quota di simulazioni in cui la spesa reale non
+	 * scende MAI sotto questa soglia (tolleranza 0,5%).
+	 */
+	minAcceptableSpending?: number;
+	/**
 	 * Quota del portafoglio ESENTE da bollo titoli (tipicamente i BFP). 0..1.
 	 * Default 0. Viene sottratta dalla base del bollo (i BFP non lo scontano).
 	 */
@@ -255,6 +264,13 @@ export interface MonteCarloResult {
 		 * obiettivo (annualExpenses, tolleranza 0,5%). 0 se annualExpenses = 0.
 		 */
 		belowTargetRate: number;
+		/** Soglia usata per floorSuccessRate (euro di oggi); 0 = non calcolato */
+		floor?: number;
+		/**
+		 * Quota di simulazioni con spesa reale SEMPRE >= `floor` (tolleranza 0,5%).
+		 * Misura di successo adatta alle strategie variabili.
+		 */
+		floorSuccessRate?: number;
 	};
 }
 
@@ -946,8 +962,17 @@ export function runMonteCarloSimulation(params: MonteCarloParams): MonteCarloRes
 			? allSpending.filter((sp) => sp.some((v) => v < target * 0.995)).length / iterations
 			: 0;
 
+	const floor = Math.max(0, params.minAcceptableSpending ?? 0);
+	const floorSuccessRate =
+		floor > 0 && params.yearsInRetirement > 0
+			? allSpending.filter((sp) => sp.every((v) => v >= floor * 0.995)).length / iterations
+			: undefined;
+
 	return {
 		spending: {
+			floor: floor > 0 ? Math.round(floor) : 0,
+			floorSuccessRate:
+				floorSuccessRate === undefined ? undefined : Math.round(floorSuccessRate * 10000) / 10000,
 			p10: spendP10,
 			p50: spendP50,
 			p90: spendP90,

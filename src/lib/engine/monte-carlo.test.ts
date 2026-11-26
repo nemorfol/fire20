@@ -392,3 +392,59 @@ describe('Monte Carlo - reddito livellato con la pensione (levelIncomeWithPensio
 		expect(on.spending!.p50[0]).toBeCloseTo((off.spending!.p50[0] * 700_000) / 300_000, 0);
 	});
 });
+
+describe('Monte Carlo - successo con spesa minima (minAcceptableSpending)', () => {
+	// Due anni storici alternati: +30% e -20% nominali, inflazione 0
+	const varParams: MonteCarloParams = {
+		...baseParams,
+		initialPortfolio: 1_000_000,
+		annualContribution: 0,
+		annualExpenses: 40_000,
+		stockAllocation: 1,
+		bondAllocation: 0,
+		yearsToFire: 0,
+		yearsInRetirement: 30,
+		currentAge: 60,
+		simulationMode: 'historical',
+		jointHistoricalSampling: true,
+		iterations: 400,
+		historicalStockReturns: [0.3, -0.2],
+		historicalBondReturns: [0, 0],
+		historicalInflation: [0, 0],
+		withdrawalStrategy: 'cape-based',
+		capeRatio: 25
+	};
+
+	it('CAPE-based: portafoglio mai esaurito (100%) ma la soglia di spesa misura il rischio', () => {
+		const r = runMonteCarloSimulation({ ...varParams, minAcceptableSpending: 30_000 });
+		expect(r.successRate).toBe(1);
+		const f = r.spending!.floorSuccessRate!;
+		expect(r.spending!.floor).toBe(30_000);
+		expect(f).toBeGreaterThan(0);
+		expect(f).toBeLessThan(1);
+	});
+
+	it('soglia 0 o assente: metrica non calcolata (retrocompatibile)', () => {
+		const r = runMonteCarloSimulation(varParams);
+		expect(r.spending!.floorSuccessRate).toBeUndefined();
+		expect(r.spending!.floor).toBe(0);
+	});
+
+	it('soglia piu alta -> successo con spesa minima non superiore', () => {
+		const lo = runMonteCarloSimulation({ ...varParams, minAcceptableSpending: 20_000 });
+		const hi = runMonteCarloSimulation({ ...varParams, minAcceptableSpending: 35_000 });
+		expect(hi.spending!.floorSuccessRate!).toBeLessThanOrEqual(lo.spending!.floorSuccessRate!);
+	});
+
+	it('spesa fissa sostenibile: soglia pari alle spese sempre rispettata', () => {
+		const r = runMonteCarloSimulation({
+			...varParams,
+			withdrawalStrategy: 'fixed',
+			historicalStockReturns: [0.05],
+			historicalBondReturns: [0],
+			historicalInflation: [0],
+			minAcceptableSpending: 40_000
+		});
+		expect(r.spending!.floorSuccessRate).toBe(1);
+	});
+});

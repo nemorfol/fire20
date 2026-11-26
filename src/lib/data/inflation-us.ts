@@ -1,6 +1,7 @@
 /**
- * Inflazione annua USA (CPI-U) 1928-2024.
+ * Inflazione annua USA (CPI-U) 1928-2025.
  * Fonte: Bureau of Labor Statistics, dati storici reali.
+ * 2025: +2,7% dicembre su dicembre (comunicato BLS del 13/01/2026).
  */
 
 export interface AnnualReturn {
@@ -105,7 +106,8 @@ export const inflationUSReturns: AnnualReturn[] = [
 	{ year: 2021, value: 7.04 },
 	{ year: 2022, value: 6.45 },
 	{ year: 2023, value: 3.35 },
-	{ year: 2024, value: 2.9 }
+	{ year: 2024, value: 2.9 },
+	{ year: 2025, value: 2.7 }
 ];
 
 function computeStats(data: AnnualReturn[]) {

@@ -738,8 +738,12 @@
 						ISTAT
 					</a>
 				</li>
-				<li>Oro: World Gold Council</li>
-				<li>Azioni Internazionali: MSCI World ex-USA</li>
+				<li>Oro: NYU Stern (Damodaran)</li>
+				<li>Azioni mondiali: MSCI World (gross) e MSCI World ex-USA (net)</li>
+				<li>
+					Titoli di Stato italiani: Jordà-Schularick-Taylor Macrohistory Database (CC BY-NC-SA
+					4.0)
+				</li>
 				<li>Correlazioni: Morningstar / Vanguard</li>
 			</ul>
 		</div>

@@ -12,7 +12,13 @@
 
 	import EChart from '$lib/components/shared/EChart.svelte';
 	import { computeStats, type AnnualReturn } from '$lib/data/utils';
-	import { internationalReturnsEur, goldReturnsEur } from '$lib/data/default-series';
+	import {
+		internationalReturnsEur,
+		goldReturnsEur,
+		msciWorldReturnsEur
+	} from '$lib/data/default-series';
+	import { msciWorldReturns } from '$lib/data/msci-world';
+	import { btpReturns } from '$lib/data/btp';
 	import { sp500Returns, sp500Stats } from '$lib/data/sp500';
 	import { bondReturns, bondStats } from '$lib/data/bonds';
 	import { goldReturns, goldStats } from '$lib/data/gold';
@@ -60,6 +66,27 @@
 			label: 'MSCI World ex-USA (lire/EUR, cambio storico)',
 			data: internationalReturnsEur,
 			stats: computeStats(internationalReturnsEur),
+			unit: '%'
+		},
+		{
+			key: 'world',
+			label: 'MSCI World (USD, gross)',
+			data: msciWorldReturns,
+			stats: computeStats(msciWorldReturns),
+			unit: '%'
+		},
+		{
+			key: 'worldEur',
+			label: 'MSCI World (lire/EUR, cambio storico)',
+			data: msciWorldReturnsEur,
+			stats: computeStats(msciWorldReturnsEur),
+			unit: '%'
+		},
+		{
+			key: 'btp',
+			label: 'Titoli di Stato italiani ~10 anni (JST 1970-2020 + proxy)',
+			data: btpReturns,
+			stats: computeStats(btpReturns),
 			unit: '%'
 		},
 		{ key: 'cape', label: 'CAPE Ratio', data: capeRatios, stats: capeStats, unit: '' }
