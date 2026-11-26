@@ -1,24 +1,30 @@
 /**
- * Test di COERENZA tra i due percorsi di stima della pensione INPS (intervento C4):
+ * Test di COERENZA tra i due percorsi di stima della pensione INPS (C4 + E1):
  *
  *  - `pension-italy.ts` -> `calculateContributivePension`
  *      usato da `PensionCalculator.svelte` (Profilo -> Pensione);
  *  - `inps-simulator.ts` -> `simulateINPSPension`
  *      usato da `/pensione` e `INPSSimulator.svelte`.
  *
- * Entrambi implementano il metodo contributivo (montante -> coefficiente di
- * trasformazione), ma con modelli di input diversi (eta' vs anno solare). Dopo
- * il consolidamento (inps-core.ts) condividono aliquota di computo, tasso di
- * rivalutazione, coefficienti e la primitiva di capitalizzazione del montante.
- *
- * Questo test documenta DOVE i due percorsi coincidono (carriera piena) e DOVE
- * divergono in modo NOTO e non ancora consolidato (stop contributi all'eta' FIRE,
- * issue #37): serve sia da guardia di regressione sia da documentazione viva.
+ * Dopo l'intervento E1 entrambi usano il MODELLO UNICO di capitalizzazione del
+ * montante (`capitalizeMontante` in inps-core.ts, L. 335/1995 art. 1 c. 8-9):
+ * contributi accreditati anno per anno e rivalutazione dell'INTERO montante
+ * ogni anno fino alla decorrenza, anche negli anni senza versamenti (gap di
+ * carriera, stop contributi all'eta' FIRE #37). Convenzione anno in corso
+ * condivisa: l'anno corrente conta come anno di contribuzione allo stipendio
+ * attuale. Con lo stesso input i due percorsi devono quindi COINCIDERE in
+ * TUTTI gli scenari, incluso lo stop-FIRE (la divergenza fino a ~28%
+ * documentata prima di E1 e' stata eliminata).
  */
 import { describe, it, expect } from 'vitest';
 import { calculateContributivePension } from './pension-italy';
 import { simulateINPSPension, type INPSSimulatorParams } from './inps-simulator';
-import { COMPUTATION_RATES, DEFAULT_MONTANTE_REVALUATION, revalueMontante } from './inps-core';
+import {
+	COMPUTATION_RATES,
+	DEFAULT_MONTANTE_REVALUATION,
+	capitalizeMontante,
+	revalueMontante
+} from './inps-core';
 
 const CURRENT_YEAR = new Date().getFullYear();
 
@@ -65,10 +71,6 @@ function bothPaths(o: {
 	return { pensionItaly: pi.monthlyPension, inpsSimulator: point?.monthlyGross ?? 0 };
 }
 
-function pctDiff(a: number, b: number): number {
-	return b === 0 ? 0 : Math.abs((a - b) / b) * 100;
-}
-
 describe('inps-core: primitive condivise (fonte unica)', () => {
 	it('aliquote di computo allineate alle fonti (L.335/1995, gestione separata)', () => {
 		expect(COMPUTATION_RATES.dipendente).toBe(0.33);
@@ -85,13 +87,64 @@ describe('inps-core: primitive condivise (fonte unica)', () => {
 	});
 });
 
-describe('Coerenza pension-italy vs inps-simulator: carriera piena (nessuno stop)', () => {
-	// Con contribuzione fino alla pensione i due modelli coincidono a meno di uno
-	// scarto piccolo (~0,5-2%) dovuto alla diversa indicizzazione dell'anno in
-	// corso (eta' vs anno solare) e allo sfasamento di un anno nella crescita
-	// dello stipendio. Nessun parametro fiscale diverge tra i due percorsi.
-	const TOL = 2.5; // %
+describe('inps-core: capitalizeMontante (modello unico, L.335/1995 art.1 c.8-9)', () => {
+	const r = 0.015;
 
+	it('il contributo dell anno Y si rivaluta per (R-1-Y) anni (contribuzione dell anno esclusa, c.8)', () => {
+		// Contributi di 1.000 negli anni 0..9, decorrenza nell'anno 27:
+		// forma chiusa Somma( 1000 * (1+r)^(26 - y) ).
+		let expected = 0;
+		for (let y = 0; y < 10; y++) expected += 1000 * Math.pow(1 + r, 26 - y);
+		const got = capitalizeMontante({
+			startYear: 0,
+			retirementYear: 27,
+			rate: r,
+			contributionForYear: (y) => (y < 10 ? 1000 : 0)
+		});
+		expect(got).toBeCloseTo(expected, 6);
+	});
+
+	it('il montante si rivaluta ANCHE negli anni senza contributi (gap FIRE)', () => {
+		// Stessi contributi, decorrenza 17 anni piu' tardi senza nuovi versamenti:
+		// l'intero montante si capitalizza per i 17 anni di gap.
+		const at10 = capitalizeMontante({
+			startYear: 0,
+			retirementYear: 10,
+			rate: r,
+			contributionForYear: () => 1000
+		});
+		const at27 = capitalizeMontante({
+			startYear: 0,
+			retirementYear: 27,
+			rate: r,
+			contributionForYear: (y) => (y < 10 ? 1000 : 0)
+		});
+		// NB: at10 non include la rivalutazione dell'anno 9 sul contributo dell'anno 9
+		// (esclusa per c.8), ma da li' in poi tutto il montante cresce di (1+r)^17.
+		expect(at27).toBeCloseTo(at10 * Math.pow(1 + r, 17), 6);
+	});
+
+	it('initialMontante (estratto conto) viene rivalutato da startYear alla decorrenza', () => {
+		const got = capitalizeMontante({
+			startYear: 0,
+			retirementYear: 17,
+			rate: r,
+			initialMontante: 10000,
+			contributionForYear: () => 0
+		});
+		expect(got).toBeCloseTo(10000 * Math.pow(1 + r, 17), 6);
+	});
+});
+
+// Con il modello unico i due percorsi devono coincidere al centesimo (stessa
+// primitiva, stessa convenzione anno in corso): tolleranza solo di floating point.
+function expectCoherent(r: { pensionItaly: number; inpsSimulator: number }) {
+	expect(r.pensionItaly).toBeGreaterThan(0);
+	expect(r.inpsSimulator).toBeGreaterThan(0);
+	expect(r.pensionItaly).toBeCloseTo(r.inpsSimulator, 1);
+}
+
+describe('Coerenza pension-italy vs inps-simulator: carriera piena (nessuno stop)', () => {
 	it('carriera media (41 anni, stipendio 35k, crescita 1%)', () => {
 		const r = bothPaths({
 			birthYear: CURRENT_YEAR - 41,
@@ -100,9 +153,10 @@ describe('Coerenza pension-italy vs inps-simulator: carriera piena (nessuno stop
 			growthPct: 1,
 			retirementAge: 67
 		});
-		expect(r.pensionItaly).toBeGreaterThan(0);
-		expect(r.inpsSimulator).toBeGreaterThan(0);
-		expect(pctDiff(r.pensionItaly, r.inpsSimulator)).toBeLessThan(TOL);
+		expectCoherent(r);
+		// Golden E1 (ricalcolato): prima di E1 pension-italy dava 2.617,59 e
+		// inps-simulator 2.599,91 (blocco passato rivalutato solo fino ad oggi).
+		expect(r.pensionItaly).toBeCloseTo(2974.91, 1);
 	});
 
 	it('carriera lunga giovane (31 anni, stipendio 30k, crescita 2%)', () => {
@@ -113,13 +167,16 @@ describe('Coerenza pension-italy vs inps-simulator: carriera piena (nessuno stop
 			growthPct: 2,
 			retirementAge: 67
 		});
-		expect(pctDiff(r.pensionItaly, r.inpsSimulator)).toBeLessThan(TOL);
+		expectCoherent(r);
+		// Golden E1: prima 3.215,76 / 3.159,26.
+		expect(r.pensionItaly).toBeCloseTo(3387.82, 1);
 	});
 
 	it('reddito alto sopra il massimale (150k): coerenti tra loro', () => {
 		// NB: nessuno dei due applica il massimale contributivo (122.295 EUR,
 		// assumptions.inps.massimale) alla base di computo: e' un limite CONDIVISO
-		// e quindi i due percorsi restano coerenti fra loro anche in questo caso.
+		// e quindi i due percorsi restano coerenti fra loro anche in questo caso
+		// (l'applicazione del cap e' l'intervento E4).
 		const r = bothPaths({
 			birthYear: CURRENT_YEAR - 46,
 			firstEmploymentYear: CURRENT_YEAR - 21,
@@ -127,25 +184,18 @@ describe('Coerenza pension-italy vs inps-simulator: carriera piena (nessuno stop
 			growthPct: 1,
 			retirementAge: 67
 		});
-		expect(pctDiff(r.pensionItaly, r.inpsSimulator)).toBeLessThan(TOL);
+		expectCoherent(r);
+		// Golden E1: prima 10.545,39 / 10.487,87.
+		expect(r.pensionItaly).toBeCloseTo(12130.82, 1);
 	});
 });
 
-describe('DIVERGENZA NOTA: stop contributi all eta FIRE (#37) — non consolidata', () => {
-	// Quando i contributi si fermano all'eta' FIRE (contributionEndAge) e resta un
-	// lungo "gap" fino alla pensione, i due percorsi DIVERGONO in modo rilevante:
-	//   - inps-simulator RIVALUTA l'intero montante ogni anno del gap (montante
-	//     capitalizzato fino alla pensione, coerente con art.1 c.9 L.335/1995);
-	//   - pension-italy NON rivaluta il montante gia' accumulato durante il gap
-	//     (lo "congela"), sottostimando la pensione.
-	//
-	// Nessuno dei due modelli e' pienamente corretto (entrambi rivalutano il
-	// blocco "passato" solo fino ad oggi, non fino alla pensione), quindi in
-	// mancanza di una base normativa che indichi con certezza QUALE dei due sia
-	// esatto, il comportamento di entrambi e' stato MANTENUTO invariato (vedi
-	// report C4). Questo test fissa la divergenza attuale come guardia: se un
-	// domani si allinea il modello del montante, aggiornare qui e nel CHANGELOG.
-	it('pension-italy sottostima rispetto a inps-simulator (gap FIRE lungo)', () => {
+describe('Coerenza nello scenario stop contributi all eta FIRE (#37) — consolidato con E1', () => {
+	// Prima di E1 qui c'era una DIVERGENZA documentata fino a ~28%: pension-italy
+	// congelava il montante nel gap, inps-simulator lo rivalutava (e per giunta
+	// double-contava la rivalutazione dei contributi futuri gia' capitalizzati
+	// fino alla decorrenza). Col modello unico i due percorsi coincidono.
+	it('stop a 50, pensione a 67 (~17 anni di gap): stessi numeri dai due percorsi', () => {
 		const r = bothPaths({
 			birthYear: CURRENT_YEAR - 41,
 			firstEmploymentYear: CURRENT_YEAR - 16,
@@ -154,13 +204,24 @@ describe('DIVERGENZA NOTA: stop contributi all eta FIRE (#37) — non consolidat
 			retirementAge: 67,
 			contributionEndAge: 50 // FIRE a 50, ~17 anni di gap fino a 67
 		});
-		expect(r.pensionItaly).toBeGreaterThan(0);
-		expect(r.inpsSimulator).toBeGreaterThan(0);
-		// pension-italy piu' bassa di inps-simulator
-		expect(r.pensionItaly).toBeLessThan(r.inpsSimulator);
-		// divergenza materiale (ordine di grandezza ~25-30%): documentata, non un bug latente
-		const gap = pctDiff(r.pensionItaly, r.inpsSimulator);
-		expect(gap).toBeGreaterThan(15);
-		expect(gap).toBeLessThan(40);
+		expectCoherent(r);
+		// Golden E1 (ricalcolato): prima pension-italy 1.686,78 (montante congelato
+		// nel gap) e inps-simulator 2.163,22 (doppia rivalutazione dei contributi
+		// futuri). Il modello corretto sta in mezzo.
+		expect(r.pensionItaly).toBeCloseTo(2108.06, 1);
+	});
+
+	it('lo stop riduce comunque la pensione rispetto alla carriera piena', () => {
+		const base = {
+			birthYear: CURRENT_YEAR - 41,
+			firstEmploymentYear: CURRENT_YEAR - 16,
+			salary: 40000,
+			growthPct: 1,
+			retirementAge: 67
+		};
+		const full = bothPaths(base);
+		const stopped = bothPaths({ ...base, contributionEndAge: 50 });
+		expect(stopped.pensionItaly).toBeLessThan(full.pensionItaly);
+		expect(stopped.inpsSimulator).toBeLessThan(full.inpsSimulator);
 	});
 });

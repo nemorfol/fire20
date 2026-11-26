@@ -43,12 +43,10 @@ sua riga nella sezione «Non rilasciato».
   rivalutazione del montante (1,5%, media PIL nominale, art. 1 c. 9 L. 335/1995) e primitiva di
   capitalizzazione, importata sia da `pension-italy.ts` (Profilo → Pensione) sia da
   `inps-simulator.ts` (`/pensione`). Nessun risultato utente cambia: il consolidamento è a parità
-  di numeri (i 164 test preesistenti restano verdi). Il test di coerenza documenta che i due
-  percorsi coincidono nella carriera piena (scarto < 2,5%) e fissa una **divergenza nota, non
-  ancora consolidata**, nello scenario «stop contributi all'età FIRE» (#37): la pagina `/pensione`
-  rivaluta il montante durante il gap fino alla pensione, mentre Profilo → Pensione lo congela,
-  con una differenza di stima dell'ordine del 25-30%. L'allineamento richiede una revisione — con
-  fonte — del modello di rivalutazione del montante ed è rimandato a un intervento dedicato.
+  di numeri (i 164 test preesistenti restano verdi). Il test di coerenza documentava una
+  **divergenza nota** nello scenario «stop contributi all'età FIRE» (#37), dell'ordine del
+  25-30% tra i due percorsi: è stata poi eliminata dall'intervento E1 (vedi «Corretto» qui
+  sotto), e oggi il test verifica che i due percorsi coincidano in tutti gli scenari.
 
 ### Modificato
 
@@ -109,6 +107,18 @@ sua riga nella sezione «Non rilasciato».
   `jointHistoricalSampling`), anche in _Scenari_. Etichette dei preset corrette ("World ex-USA",
   valuta esplicita); la pagina _Simulazione_ mostra la finestra di anni usata; _Dati Storici_
   espone anche le serie convertite in EUR. Guida aggiornata.
+- **Rivalutazione del montante contributivo INPS fino alla decorrenza** (intervento E1): per
+  l'art. 1, commi 8-9, L. 335/1995 il montante si rivaluta su base composta ogni anno al tasso
+  di capitalizzazione (media quinquennale del PIL nominale) **anche negli anni senza nuovi
+  contributi**, fino alla decorrenza della pensione. Il nuovo modello unico
+  (`capitalizeMontante` in `inps-core.ts`) è ora usato da entrambi i percorsi, che con lo stesso
+  input danno la stessa stima. **Le stime pensionistiche cambiano**: con stop dei contributi
+  all'età FIRE, Profilo → Pensione non congela più il montante nel gap → valori **più alti**
+  di prima (es. stop a 50 e pensione a 67: da ~1.687 a ~2.108 €/mese lordi, +25%); `/pensione`
+  non conta più due volte la rivalutazione dei contributi futuri → in quello scenario scende
+  leggermente (da ~2.163 a ~2.108 €/mese, −2,5%). Anche a carriera piena le stime salgono
+  (+5-15% a seconda dell'anzianità), perché il blocco già maturato ora si rivaluta fino alla
+  decorrenza e non solo fino ad oggi. Il tasso resta la stima prudenziale dell'1,5% annuo.
 
 ---
 

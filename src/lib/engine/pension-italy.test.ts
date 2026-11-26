@@ -98,6 +98,12 @@ describe('calculateContributivePension', () => {
 		expect(stopAt50.annualPension).toBeLessThan(full.annualPension);
 		// stop all'età pensione = comportamento pieno (nessuna differenza)
 		expect(stopAt67.annualPension).toBeCloseTo(full.annualPension, 2);
+		// Golden E1 (modello unico, L.335/1995 art.1 c.8-9: l'INTERO montante si
+		// rivaluta ogni anno fino alla decorrenza, anche nel gap senza contributi).
+		// Prima di E1: full 26.631,34 e stop@50 13.782,80 €/anno (il blocco passato
+		// era rivalutato solo fino ad oggi e il montante congelato nel gap).
+		expect(full.annualPension).toBeCloseTo(29121.13, 1);
+		expect(stopAt50.annualPension).toBeCloseTo(16399.81, 1);
 	});
 
 	it('pensione positiva e crescente con lo stipendio', () => {
