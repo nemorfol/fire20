@@ -16,6 +16,7 @@
 	import { untrack } from 'svelte';
 	import type { MonteCarloParams, AssetClassConfig } from '$lib/engine/monte-carlo';
 	import { goldStats } from '$lib/data/gold';
+	import { currentCAPE } from '$lib/data/cape';
 	import {
 		correlationMatrix as fullCorrMatrix,
 		assetLabels,
@@ -79,6 +80,49 @@
 	let annualExpenses = $state(d.annualExpenses ?? 30000);
 	let withdrawalRate = $state(4.0);
 	let inflationRate = $state(2.0);
+
+	// Strategia di prelievo in pensione (fissa o variabile)
+	type Strategy = MonteCarloParams['withdrawalStrategy'];
+	let withdrawalStrategy = $state<Strategy>('fixed');
+	let targetBequest = $state(0);
+	let capeRatio = $state(currentCAPE);
+	let plannedRealReturn = $state(3.0);
+
+	const strategyOptions: { value: Strategy; name: string; description: string }[] = [
+		{
+			value: 'fixed',
+			name: 'Spesa fissa (regola del 4%)',
+			description:
+				"Prelevi ogni anno le spese annue in pensione, rivalutate con l'inflazione realizzata. Spesa stabile, ma il portafoglio puo' esaurirsi."
+		},
+		{
+			value: 'guyton-klinger',
+			name: 'Guyton-Klinger (guardrail)',
+			description:
+				"Parte da portafoglio al FIRE x tasso di prelievo e lo rivaluta con l'inflazione; taglia del 10% se il tasso corrente supera il 120% di quello iniziale, aumenta del 10% sotto l'80%."
+		},
+		{
+			value: 'vpw',
+			name: "VPW (percentuale per eta')",
+			description:
+				"Prelevi una percentuale del portafoglio CORRENTE che cresce con l'eta' (dal 3,3% a 40 anni al 25% a 95). Non si esaurisce mai, ma la spesa segue i mercati."
+		},
+		{
+			value: 'cape-based',
+			name: 'CAPE-based',
+			description:
+				'Prelevi portafoglio corrente x (2% + 0,5 / CAPE). Nel Monte Carlo il CAPE resta fisso al valore indicato: equivale a una percentuale costante del portafoglio corrente.'
+		},
+		{
+			value: 'amortized',
+			name: 'Die-with-X (ammortamento)',
+			description:
+				"Ogni anno ricalcola la rata che consuma il portafoglio fino a lasciare l'importo scelto alla fine dell'orizzonte simulato, a un rendimento reale di pianificazione."
+		}
+	];
+	const strategyDescription = $derived(
+		strategyOptions.find((o) => o.value === withdrawalStrategy)?.description ?? ''
+	);
 
 	// Redditi in pensione (opzionali): pensione INPS + altri redditi riducono il
 	// prelievo netto dal portafoglio nella fase di decumulo. 0 = non considerati.
@@ -228,7 +272,12 @@
 				annualExpenses,
 				withdrawalRate: withdrawalRate / 100,
 				inflationRate: inflationRate / 100,
-				withdrawalStrategy: 'fixed',
+				withdrawalStrategy,
+				// Orizzonte della simulazione = eta' finale per VPW/ammortamento
+				lifeExpectancy: currentAge + yearsToFire + yearsToSimulate,
+				capeRatio,
+				targetBequest,
+				plannedRealReturn: plannedRealReturn / 100,
 				currentAge,
 				annualPension: pensionAnnual,
 				pensionAge: pensionStartAge,
@@ -262,7 +311,12 @@
 				annualExpenses,
 				withdrawalRate: withdrawalRate / 100,
 				inflationRate: inflationRate / 100,
-				withdrawalStrategy: 'fixed',
+				withdrawalStrategy,
+				// Orizzonte della simulazione = eta' finale per VPW/ammortamento
+				lifeExpectancy: currentAge + yearsToFire + yearsToSimulate,
+				capeRatio,
+				targetBequest,
+				plannedRealReturn: plannedRealReturn / 100,
 				currentAge,
 				annualPension: pensionAnnual,
 				pensionAge: pensionStartAge,
@@ -369,6 +423,60 @@
 					step={0.5}
 				/>
 			</div>
+		</div>
+
+		<!-- Strategia di prelievo in pensione (fissa o variabile) -->
+		<div
+			class="space-y-3 rounded-lg border border-indigo-200 bg-indigo-50 p-4 dark:border-indigo-800 dark:bg-indigo-900/20"
+		>
+			<div>
+				<Label for="withdrawal-strategy" class="mb-2">Strategia di prelievo in pensione</Label>
+				<Select id="withdrawal-strategy" items={strategyOptions} bind:value={withdrawalStrategy} />
+				<p class="mt-2 text-xs text-indigo-800 dark:text-indigo-300">{strategyDescription}</p>
+			</div>
+			{#if withdrawalStrategy === 'guyton-klinger'}
+				<p class="text-xs text-indigo-800 dark:text-indigo-300">
+					Il prelievo iniziale usa il <strong>tasso di prelievo</strong> impostato sopra ({withdrawalRate}%),
+					non le spese annue: le spese restano il riferimento per l'indicatore «anni sotto le spese
+					obiettivo».
+				</p>
+			{/if}
+			{#if withdrawalStrategy === 'cape-based'}
+				<div class="max-w-xs">
+					<Label for="cape-ratio" class="mb-2">CAPE (fisso nella simulazione)</Label>
+					<Input id="cape-ratio" type="number" bind:value={capeRatio} min={5} max={60} step={0.5} />
+					<Helper class="mt-1 text-xs">Default: CAPE S&amp;P 500 attuale ({currentCAPE}).</Helper>
+				</div>
+			{/if}
+			{#if withdrawalStrategy === 'amortized'}
+				<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+					<div>
+						<Label for="target-bequest" class="mb-2"
+							>Da lasciare a fine orizzonte (&euro; di oggi)</Label
+						>
+						<Input
+							id="target-bequest"
+							type="number"
+							bind:value={targetBequest}
+							min={0}
+							step={10000}
+						/>
+					</div>
+					<div>
+						<Label for="planned-real-return" class="mb-2"
+							>Rendimento reale di pianificazione (%)</Label
+						>
+						<Input
+							id="planned-real-return"
+							type="number"
+							bind:value={plannedRealReturn}
+							min={-2}
+							max={8}
+							step={0.5}
+						/>
+					</div>
+				</div>
+			{/if}
 		</div>
 
 		<!-- Redditi in pensione (opzionali): riducono il prelievo netto dal portafoglio -->

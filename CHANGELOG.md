@@ -17,6 +17,13 @@ sua riga nella sezione «Non rilasciato».
 
 ### Aggiunto
 
+- **Prelievi variabili nel Monte Carlo** (richiesta utenti): il pannello di _Simulazione_ ora
+  permette di scegliere la strategia di prelievo (spesa fissa, Guyton-Klinger, VPW, CAPE-based,
+  die-with-X con eredita' target e rendimento reale di pianificazione). Prima il motore le
+  supportava, ma la UI passava sempre `fixed`. Nuovo riquadro **Spesa reale in pensione** (euro di
+  oggi): banda P10-P90 e mediana anno per anno, spesa nell'anno peggiore (mediana e 1 caso su 10),
+  quota di simulazioni con almeno un anno sotto le spese obiettivo (`MonteCarloResult.spending`).
+  Il risultato salvato registra la strategia effettiva. Guida aggiornata.
 - **Link contestuali tra sezioni** (discoverability): da _Profilo_ un aggancio a _Confronto profili_
   quando esistono 2+ profili salvati; da _Scenari_ un aggancio a _Community_ per condividere lo
   scenario in forma anonima. Migliorato l'empty state di _Community_ (quando manca un profilo, ora
@@ -58,6 +65,12 @@ sua riga nella sezione «Non rilasciato».
 
 ### Corretto
 
+- **Die-with-X: eredita' target non indicizzata** (Monte Carlo e proiettore deterministico):
+  l'importo da lasciare, in euro di oggi, veniva confrontato col portafoglio in euro correnti. Ora
+  e' rivalutato con l'inflazione (cumulata sul percorso). Nel Monte Carlo la formula di
+  ammortamento (rata posticipata) era applicata a un prelievo che avviene dopo il rendimento
+  dell'anno (rata anticipata): a rendimenti in linea col piano la spesa reale calava di circa il 15%
+  in 30 anni invece di restare costante. Corretto scontando il portafoglio di un periodo.
 - **Serie storiche Monte Carlo: coerenza valutaria e abbinamento per anno.** Il preset
   italiano usava l'MSCI World ex-USA **in USD** deflazionato con l'inflazione **ISTAT** (in
   lire/EUR) senza conversione di cambio: il rendimento reale azionario 1970-2024 risultava

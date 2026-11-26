@@ -23,6 +23,7 @@
 	import FanChart from '$lib/components/simulazione/FanChart.svelte';
 	import HistogramChart from '$lib/components/simulazione/HistogramChart.svelte';
 	import SummaryTable from '$lib/components/simulazione/SummaryTable.svelte';
+	import SpendingChart from '$lib/components/simulazione/SpendingChart.svelte';
 	import ScenarioTabs from '$lib/components/simulazione/ScenarioTabs.svelte';
 	import PreviousResults from '$lib/components/simulazione/PreviousResults.svelte';
 
@@ -208,6 +209,10 @@
 					annualExpenses: params.annualExpenses ?? 30000,
 					withdrawalRate: params.withdrawalRate ?? 0.04,
 					withdrawalStrategy: params.withdrawalStrategy ?? 'fixed',
+					lifeExpectancy: params.lifeExpectancy,
+					capeRatio: params.capeRatio,
+					targetBequest: params.targetBequest,
+					plannedRealReturn: params.plannedRealReturn,
 					stockAllocation: params.stockAllocation ?? 0.7,
 					bondAllocation: params.bondAllocation ?? 0.3,
 					yearsToFire: params.yearsToFire ?? 10,
@@ -304,7 +309,7 @@
 				})),
 				params: {
 					withdrawalRate: (lastParams.withdrawalRate ?? 0.04) * 100,
-					withdrawalStrategy: 'fixed',
+					withdrawalStrategy: lastParams.withdrawalStrategy ?? 'fixed',
 					stockAllocation: (lastParams.stockAllocation ?? 0.7) * 100,
 					bondAllocation: (lastParams.bondAllocation ?? 0.3) * 100,
 					glidePathEnabled: false,
@@ -477,6 +482,18 @@
 			<div class="mb-8">
 				<FanChart {result} />
 			</div>
+
+			<!-- Spesa reale in pensione (decisiva per le strategie variabili) -->
+			{#if result.spending && result.spending.p50.length > 0}
+				<div class="mb-8">
+					<SpendingChart
+						spending={result.spending}
+						strategy={lastParams?.withdrawalStrategy ?? 'fixed'}
+						targetExpenses={lastParams?.annualExpenses ?? 0}
+						yearsToFire={lastParams?.yearsToFire ?? 0}
+					/>
+				</div>
+			{/if}
 
 			<!-- Histogram + Summary Table -->
 			<div class="mb-8 grid grid-cols-1 gap-8 xl:grid-cols-2">
