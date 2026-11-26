@@ -1,7 +1,12 @@
 <script lang="ts">
 	import { Heading, Breadcrumb, BreadcrumbItem, Card, Alert, Badge } from 'flowbite-svelte';
 	import { DEFAULT_2026 } from '$lib/engine/assumptions';
-	import { SERIES_IT_DEFAULT, SERIES_US_CLASSIC, alignHistory } from '$lib/data/default-series';
+	import {
+		SERIES_IT_DEFAULT,
+		SERIES_US_CLASSIC,
+		ALLWORLD_US_WEIGHT_DEFAULT,
+		alignHistory
+	} from '$lib/data/default-series';
 	import { ITL_PER_EUR } from '$lib/data/fx';
 
 	const a = DEFAULT_2026;
@@ -71,7 +76,13 @@
 			fonte: 'Medie nazionali indicative (variano per regione/comune)'
 		},
 		{
-			voce: 'Serie storiche Monte Carlo (preset IT)',
+			voce: 'Serie storiche Monte Carlo (preset All-World, predefinito)',
+			valore: `azioni a peso fisso ${Math.round(ALLWORLD_US_WEIGHT_DEFAULT * 100)}% S&P 500 / ${100 - Math.round(ALLWORLD_US_WEIGHT_DEFAULT * 100)}% MSCI World ex-USA, ribilanciate ogni anno, tutto convertito in lire/EUR; BTP, ISTAT come il preset IT · peso USA di oggi applicato al passato: stima tendenzialmente ottimista`,
+			fonte:
+				'Peso USA: factsheet MSCI World (USD 30/06/2026: 72,45%; EUR 27/02/2026: 70,11%); S&P 500: NYU Stern (Damodaran)'
+		},
+		{
+			voce: 'Serie storiche Monte Carlo (preset IT ex-USA)',
 			valore: `tutto in lire/EUR: MSCI World ex-USA e oro convertiti da USD coi cambi storici, BTP 7-10y (stimati), inflazione ISTAT · finestra azioni+BTP ${winIT}`,
 			fonte: 'MSCI (total return USD); ISTAT CPI; World Gold Council; BTP: stima da rendimenti 10y'
 		},

@@ -8,6 +8,7 @@
 	import {
 		ALL_SERIES_PRESETS,
 		getSeriesPreset,
+		ALLWORLD_US_WEIGHT_DEFAULT,
 		alignHistory,
 		type HistoricalAsset,
 		type SeriesPresetId
@@ -69,7 +70,12 @@
 	// Preset di serie storiche: default IT tutto in lire/EUR (ex-USA + oro convertiti
 	// coi cambi storici, BTP, ISTAT); alternativa US tutta in USD. Le serie vengono
 	// allineate per anno al momento del run (finestra comune alle asset class usate).
-	let seriesPresetId = $state<SeriesPresetId>('it-default');
+	let seriesPresetId = $state<SeriesPresetId>('it-allworld');
+	/** Peso USA (%) del preset All-World: default = peso attuale nell'MSCI World */
+	let allWorldUsPct = $state(Math.round(ALLWORLD_US_WEIGHT_DEFAULT * 100));
+	const activePreset = $derived(
+		getSeriesPreset(seriesPresetId, Math.min(100, Math.max(0, allWorldUsPct || 0)) / 100)
+	);
 	/** Finestra storica effettivamente usata dall'ultimo run (per trasparenza) */
 	let historyWindow = $state<{ from: number; to: number } | null>(null);
 	// #41: dati del fondo pensione dal profilo e piano usato nell'ultima simulazione
@@ -191,7 +197,7 @@
 				if ((params.stockAllocation ?? 0) > 0 || params.glidePathEnabled) required.push('stocks');
 				if ((params.bondAllocation ?? 0) > 0 || params.glidePathEnabled) required.push('bonds');
 			}
-			const h = alignHistory(getSeriesPreset(seriesPresetId), required);
+			const h = alignHistory(activePreset, required);
 			if (h.years.length > 0) {
 				historyWindow = { from: h.years[0], to: h.years[h.years.length - 1] };
 			}
@@ -462,12 +468,12 @@
 				Serie storica di riferimento
 			</label>
 			<p class="text-xs text-gray-600 dark:text-gray-400">
-				{getSeriesPreset(seriesPresetId).description}
+				{activePreset.description}
 				{#if historyWindow}
 					<br /><span class="font-medium"
 						>Ultima simulazione: anni {historyWindow.from}-{historyWindow.to} ({historyWindow.to -
 							historyWindow.from +
-							1} anni), valuta {getSeriesPreset(seriesPresetId).currency}.</span
+							1} anni), valuta {activePreset.currency}.</span
 					>
 				{/if}
 				{#if lastFundPlan}
@@ -492,6 +498,20 @@
 				<option value={preset.id}>{preset.label}</option>
 			{/each}
 		</select>
+		{#if seriesPresetId === 'it-allworld'}
+			<label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+				Peso USA
+				<input
+					type="number"
+					min="0"
+					max="100"
+					step="5"
+					bind:value={allWorldUsPct}
+					class="w-20 rounded-md border border-gray-300 bg-white px-2 py-2 text-sm dark:border-gray-600 dark:bg-gray-700"
+				/>
+				%
+			</label>
+		{/if}
 	</div>
 </div>
 
@@ -504,8 +524,8 @@
 			{progress}
 			{elapsedTime}
 			{profileLoaded}
-			seriesLabel={getSeriesPreset(seriesPresetId).label}
-			seriesDescription={getSeriesPreset(seriesPresetId).description}
+			seriesLabel={activePreset.label}
+			seriesDescription={activePreset.description}
 			defaults={simDefaults}
 		/>
 	{:else}

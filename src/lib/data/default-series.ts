@@ -28,7 +28,7 @@ import { inflationUSReturns } from './inflation-us';
 import { goldReturns } from './gold';
 import { convertUsdReturnsToEur } from './fx';
 
-export type SeriesPresetId = 'it-default' | 'us-classic';
+export type SeriesPresetId = 'it-allworld' | 'it-default' | 'us-classic';
 
 /** Asset class con serie storica propria */
 export type HistoricalAsset = 'stocks' | 'bonds' | 'gold';
@@ -65,6 +65,76 @@ export const SERIES_IT_DEFAULT: SeriesPreset = {
 	}
 };
 
+/** S&P 500 convertito in lire/EUR (non coperto dal cambio), 1970-2024 */
+export const sp500ReturnsEur = convertUsdReturnsToEur(sp500Returns);
+
+/**
+ * Peso USA di default nel preset All-World: 70%, arrotondamento del peso USA
+ * nell'MSCI World (factsheet MSCI World USD al 30/06/2026: 72,45%; MSCI World
+ * EUR al 27/02/2026: 70,11%). E' il peso di OGGI, non quello storico.
+ */
+export const ALLWORLD_US_WEIGHT_DEFAULT = 0.7;
+
+/**
+ * Mix a peso FISSO ribilanciato ogni anno di due serie (percentuali), sugli anni
+ * coperti da entrambe: r = w * r_A + (1 - w) * r_B.
+ */
+export function blendAnnualReturns(
+	a: AnnualReturn[],
+	b: AnnualReturn[],
+	weightA: number
+): AnnualReturn[] {
+	const w = Math.min(1, Math.max(0, weightA));
+	const mapB = new Map(b.map((r) => [r.year, r.value]));
+	const out: AnnualReturn[] = [];
+	for (const { year, value } of a) {
+		const vb = mapB.get(year);
+		if (vb === undefined) continue;
+		out.push({ year, value: Math.round((w * value + (1 - w) * vb) * 1e4) / 1e4 });
+	}
+	return out;
+}
+
+/**
+ * Preset "All-World in EUR": azioni globali come mix a peso fisso di S&P 500
+ * (proxy degli USA) e MSCI World ex-USA, entrambi convertiti in lire/EUR coi
+ * cambi storici, ribilanciato ogni anno; BTP, oro in EUR, inflazione ISTAT.
+ *
+ * Perche' a peso fisso: risponde a "come sarebbe andato un ETF con i pesi di
+ * oggi". Non disponiamo di una serie verificata dei pesi storici di
+ * capitalizzazione USA/ex-USA, e non la stimiamo.
+ *
+ * BIAS DICHIARATO: applicare il peso USA attuale (~70%) a tutto il 1970-2024
+ * sovrappesa a posteriori il mercato che ha reso di piu' (gli USA erano tra il
+ * ~30% e il ~65% del mondo sviluppato nel periodo). Il risultato e' quindi
+ * tendenzialmente OTTIMISTA; il preset ex-USA e' all'opposto pessimista.
+ * Conviene confrontare entrambi e provare un peso USA piu' basso (es. 50%).
+ */
+export function buildAllWorldEurPreset(usWeight = ALLWORLD_US_WEIGHT_DEFAULT): SeriesPreset {
+	const w = Math.min(1, Math.max(0, usWeight));
+	const pct = Math.round(w * 100);
+	return {
+		id: 'it-allworld',
+		label: 'All-World in EUR (S&P 500 + MSCI World ex-USA + BTP + ISTAT)',
+		description:
+			`Azioni globali a peso fisso ${pct}% USA (S&P 500) / ${100 - pct}% resto del mondo ` +
+			'(MSCI World ex-USA), ribilanciate ogni anno e convertite in lire/euro coi cambi ' +
+			'storici (1970-2024); BTP 7-10y (1991-2024, stimati), oro in EUR, inflazione ISTAT. ' +
+			"Peso USA di oggi applicato al passato: tendenzialmente ottimista, perche' gli USA " +
+			"sono il mercato che ha reso di piu' (prova anche un peso piu' basso).",
+		currency: 'EUR',
+		series: {
+			stocks: blendAnnualReturns(sp500ReturnsEur, internationalReturnsEur, w),
+			bonds: btpReturns,
+			gold: goldReturnsEur,
+			inflation: inflationITReturns
+		}
+	};
+}
+
+/** Preset All-World col peso USA di default */
+export const SERIES_IT_ALLWORLD: SeriesPreset = buildAllWorldEurPreset();
+
 /** Preset US classic (S&P 500 + Treasury 10y + CPI USA), tutto in USD */
 export const SERIES_US_CLASSIC: SeriesPreset = {
 	id: 'us-classic',
@@ -82,10 +152,27 @@ export const SERIES_US_CLASSIC: SeriesPreset = {
 	}
 };
 
-export const ALL_SERIES_PRESETS: SeriesPreset[] = [SERIES_IT_DEFAULT, SERIES_US_CLASSIC];
+export const ALL_SERIES_PRESETS: SeriesPreset[] = [
+	SERIES_IT_ALLWORLD,
+	SERIES_IT_DEFAULT,
+	SERIES_US_CLASSIC
+];
 
-export function getSeriesPreset(id: SeriesPresetId | string | undefined): SeriesPreset {
+/**
+ * Preset per id. `usWeight` vale solo per 'it-allworld' (peso USA, 0..1).
+ * Id sconosciuti o mancanti (risultati salvati prima del preset All-World)
+ * restano sul preset ex-USA, come prima.
+ */
+export function getSeriesPreset(
+	id: SeriesPresetId | string | undefined,
+	usWeight?: number
+): SeriesPreset {
 	if (id === 'us-classic') return SERIES_US_CLASSIC;
+	if (id === 'it-allworld') {
+		return usWeight === undefined || usWeight === ALLWORLD_US_WEIGHT_DEFAULT
+			? SERIES_IT_ALLWORLD
+			: buildAllWorldEurPreset(usWeight);
+	}
 	return SERIES_IT_DEFAULT;
 }
 

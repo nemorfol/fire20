@@ -3,8 +3,14 @@ import { convertUsdReturnsToEur, eurPerUsd, ITL_PER_EUR } from './fx';
 import {
 	SERIES_IT_DEFAULT,
 	SERIES_US_CLASSIC,
+	SERIES_IT_ALLWORLD,
+	ALLWORLD_US_WEIGHT_DEFAULT,
 	alignHistory,
-	internationalReturnsEur
+	blendAnnualReturns,
+	buildAllWorldEurPreset,
+	getSeriesPreset,
+	internationalReturnsEur,
+	sp500ReturnsEur
 } from './default-series';
 import { internationalReturns } from './international';
 import { inflationITReturns } from './inflation-it';
@@ -95,5 +101,47 @@ describe('alignHistory - finestra comune per anno', () => {
 			10
 		);
 		expect(h.bonds[i]).toBeCloseTo(-0.168, 10);
+	});
+});
+
+describe('preset All-World in EUR (S&P 500 + ex-USA a peso fisso)', () => {
+	it('mix a peso fisso: r = w * r_A + (1 - w) * r_B sugli anni comuni', () => {
+		const out = blendAnnualReturns(
+			[
+				{ year: 2000, value: 10 },
+				{ year: 2001, value: -20 }
+			],
+			[{ year: 2001, value: 0 }],
+			0.7
+		);
+		expect(out).toEqual([{ year: 2001, value: -14 }]);
+	});
+
+	it('tutto in EUR, finestra azioni 1970-2024 e default 70% USA', () => {
+		expect(SERIES_IT_ALLWORLD.currency).toBe('EUR');
+		expect(ALLWORLD_US_WEIGHT_DEFAULT).toBe(0.7);
+		const h = alignHistory(SERIES_IT_ALLWORLD, ['stocks']);
+		expect([h.years[0], h.years[h.years.length - 1]]).toEqual([1970, 2024]);
+	});
+
+	it('peso 0 = ex-USA in EUR, peso 1 = S&P 500 in EUR', () => {
+		expect(buildAllWorldEurPreset(0).series.stocks).toEqual(internationalReturnsEur);
+		expect(buildAllWorldEurPreset(1).series.stocks).toEqual(sp500ReturnsEur);
+	});
+
+	it('rendimento reale cresce col peso USA (1970-2024): ex-USA < 50% < 70%', () => {
+		const infl = geo(inflationITReturns, 1970, 2024);
+		const real = (w: number) =>
+			(1 + geo(buildAllWorldEurPreset(w).series.stocks, 1970, 2024)) / (1 + infl) - 1;
+		expect(real(0)).toBeLessThan(real(0.5));
+		expect(real(0.5)).toBeLessThan(real(0.7));
+		expect(real(0.7)).toBeGreaterThan(0.05);
+		expect(real(0.7)).toBeLessThan(0.075);
+	});
+
+	it('getSeriesPreset: id sconosciuto resta sul preset ex-USA (retrocompatibile)', () => {
+		expect(getSeriesPreset(undefined).id).toBe('it-default');
+		expect(getSeriesPreset('it-allworld')).toBe(SERIES_IT_ALLWORLD);
+		expect(getSeriesPreset('it-allworld', 0.5).description).toContain('50% USA');
 	});
 });
