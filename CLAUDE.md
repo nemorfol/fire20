@@ -117,8 +117,9 @@ Consolidati del progetto (dettaglio nella sezione 0 di `docs/PIANO-INTERVENTI-20
    fiscali.** Ogni modifica richiede la fonte normativa citata nel commento. Nota: IRPEF 2026
    con 2ª aliquota al **33% e' CORRETTA** (Legge di Bilancio 2026) — non "correggerla" al 35%.
 4. **Invarianti motore Monte Carlo / FIRE** (fix del 2026-06-08, commit `fa86c13`): prelievo
-   calcolato sulle **spese reali**; **floor dei rendimenti > -100%**; il fondo pensione
-   conteggiato tra i liquidi e' **intenzionale** (RITA); **bande di percentile** nei grafici.
+   calcolato sulle **spese reali**; **floor dei rendimenti > -100%**; **bande di percentile** nei
+   grafici. Il fondo pensione **non** e' tra i liquidi: e' un asset differito che diventa reddito
+   via RITA/prestazione (`src/lib/engine/rita.ts`, #41, superata la scelta del 2026-06-08).
 5. **Retrocompatibilita' profili IndexedDB.** Ogni nuovo campo `$bindable` su `Profile` rompe i
    profili salvati vecchi (gotcha `props_invalid_value`, lezione delle issue #33/#37/#38):
    normalizzare SEMPRE il campo in `loadProfileIntoState`, nello stato iniziale e nei default;

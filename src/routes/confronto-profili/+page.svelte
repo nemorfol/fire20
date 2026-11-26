@@ -32,10 +32,12 @@
 		calculateNetWorth,
 		calculateLiquidNetWorth,
 		calculateIlliquidNetWorth,
+		liquidMonthlyContributions,
 		projectPortfolio,
 		type ProjectionParams,
 		type YearlyProjection
 	} from '$lib/engine/fire-calculator';
+	import { pensionFundPlanFromProfile } from '$lib/engine/rita';
 	import { childTotalRemainingCost } from '$lib/engine/family';
 	import { blendedCapitalGainsRate } from '$lib/engine/tax-italy';
 	import { getPreset } from '$lib/engine/assumptions';
@@ -61,13 +63,27 @@
 		profiles.map((p) => ({ value: p.id, name: p.name || `Profilo ${p.id}` }))
 	);
 
+	// #41: piano del fondo pensione (asset differito: RITA o prestazione)
+	function fundPlan(p: Profile) {
+		return pensionFundPlanFromProfile(p, {
+			currentAge: currentYear - p.birthYear,
+			retirementAge: p.retirementAge,
+			pensionAge: p.pension.pensionAge,
+			lifeExpectancy: p.lifeExpectancy,
+			nominalReturn: p.simulation.expectedReturn,
+			inflationRate: p.simulation.inflationRate,
+			assumptions: getPreset(p.assumptionsId)
+		});
+	}
+
 	// === Helper: costruisce ProjectionParams per un profilo ===
 	function buildProjectionParams(p: Profile): ProjectionParams {
-		const totalContributions = Object.values(p.monthlyContributions).reduce(
-			(s, v) => s + (v || 0),
-			0
+		// I versamenti al fondo pensione alimentano il fondo, non il portafoglio (#41)
+		const totalContributions = liquidMonthlyContributions(
+			p.monthlyContributions as unknown as Record<string, number>
 		);
 		return {
+			pensionFundPlan: fundPlan(p),
 			initialPortfolio: calculateLiquidNetWorth(p.portfolio as unknown as Record<string, number>),
 			annualContribution: totalContributions * 12,
 			annualExpenses: p.fireExpenses,
@@ -134,12 +150,12 @@
 			children: p.children,
 			mortgage: p.mortgage,
 			baseYear: currentYear,
-			currentAge
+			currentAge,
+			pensionFundIncomeByAge: fundPlan(p).incomeByAge
 		});
 
-		const totalContributions = Object.values(p.monthlyContributions).reduce(
-			(s, v) => s + (v || 0),
-			0
+		const totalContributions = liquidMonthlyContributions(
+			p.monthlyContributions as unknown as Record<string, number>
 		);
 		const annualSavings = totalContributions * 12;
 

@@ -313,11 +313,21 @@ Se il numero ti sembra troppo basso o troppo alto, verifica <em>Profilo → Pens
 </div>
 
 <div class="tip">
-<strong>Patrimonio liquido vs illiquido:</strong> nel tab <em>Profilo → Patrimonio</em> gli asset sono divisi in due gruppi. Solo i <strong>liquidi</strong> (ETF, azioni, obbligazioni, cash, oro, cripto, fondo pensione) entrano nel calcolo del FIRE Number perché sono prelevabili al 4%. Gli <strong>illiquidi</strong> (immobili, TFR) non vengono inclusi: producono reddito (che va in "Altri redditi") o hanno vincoli di prelievo. Questo evita il doppio conteggio classico: se conti il valore di un immobile come "patrimonio da prelevare" E il suo affitto come reddito, stai sommando due benefici dello stesso asset.
+<strong>Patrimonio liquido vs illiquido:</strong> nel tab <em>Profilo → Patrimonio</em> gli asset sono divisi in due gruppi. Solo i <strong>liquidi</strong> (ETF, azioni, obbligazioni, BFP, conti deposito, cash, oro, cripto) entrano nel patrimonio di partenza perché sono prelevabili al 4%. Il <strong>fondo pensione</strong> ha un gruppo a parte: è un asset <em>differito</em> (vedi il box qui sotto). Gli <strong>illiquidi</strong> (immobili, TFR) non vengono inclusi: producono reddito (che va in "Altri redditi") o hanno vincoli di prelievo. Questo evita il doppio conteggio classico: se conti il valore di un immobile come "patrimonio da prelevare" E il suo affitto come reddito, stai sommando due benefici dello stesso asset.
+</div>
+
+<div class="tip">
+<strong>Fondo pensione come asset differito (RITA a tre fasi).</strong> Il montante del fondo pensione <em>non</em> si può prelevare al 4% da subito, quindi non è nel patrimonio di partenza. Il calcolatore lo fa crescere a parte: i versamenti mensili al fondo indicati nel profilo lo alimentano finché lavori e non finiscono nel portafoglio. Il fondo rende quanto il portafoglio, con i rendimenti tassati al 20%. Poi lo trasforma in reddito:
+<ul>
+<li><strong>RITA Caso 1</strong>: lasci il lavoro e hai almeno 20 anni di contributi. Puoi incassare il fondo in rate fino a <strong>5 anni</strong> prima della pensione di vecchiaia.</li>
+<li><strong>RITA Caso 2</strong>: sei inoccupato da <strong>oltre 24 mesi</strong>. Puoi anticipare fino a <strong>10 anni</strong> prima, senza il requisito dei 20 anni: è il caso tipico di chi fa FIRE presto.</li>
+<li>Se nessuno dei due casi si applica prima della pensione (per esempio FIRE a ridosso dei 67 anni), il fondo diventa <strong>prestazione</strong> all'età di pensione: 50% in capitale e 50% in rendita.</li>
+</ul>
+Il calcolatore sceglie il caso che parte prima. Gli incassi netti abbassano il FIRE Number come la pensione INPS: il ponte diventa a <strong>tre fasi</strong>, FIRE &rarr; RITA &rarr; INPS. Nella tabella anno per anno trovi la colonna <em>Fondo pens. (RITA)</em>. Nella vista dettagliata trovi anche il montante residuo. Ipotesi prudenziali: ritenuta del 15% su tutta la rata (per legge scende fino al 9% con gli anni di adesione e non colpisce i rendimenti già tassati nel fondo), nessun risparmio IRPEF dai contributi dedotti, requisito dei 5 anni di adesione considerato soddisfatto. Con l'interruttore nel riquadro viola puoi escludere del tutto il fondo. Gli stessi incassi entrano nella <strong>Simulazione Monte Carlo</strong>, negli <strong>Scenari</strong>, negli <strong>Stress test</strong>, nel <strong>Confronto profili</strong> e nella dashboard.
 </div>
 
 <div class="warning">
-<strong>Avviso "FIRE molto vicino: controlla le ipotesi":</strong> quando il calcolatore stima che manca <strong>1 anno o meno</strong> al FIRE, mostra un riquadro giallo che invita a verificare le ipotesi più ottimistiche. Un FIRE "troppo presto" spesso dipende da: il <strong>fondo pensione</strong> conteggiato tra i liquidi (vedi sopra) ma in realtà prelevabile solo via <strong>RITA</strong> in prossimità della pensione, quindi <em>oggi</em> non ancora disponibile per vivere di rendita; il <strong>valore attuale della pensione INPS</strong> e di <strong>altri redditi</strong> (affitti, dividendi) che abbassano il FIRE Number. Il riquadro confronta anche il FIRE Number "classico" (spese / SWR, senza questi aiuti) con quello ridotto effettivamente usato, così vedi di quanto le rendite future stanno abbassando il target. Se l'avviso compare, apri la <strong>Simulazione Monte Carlo</strong> per testare la robustezza del piano contro i ribassi di mercato.
+<strong>Avviso "FIRE molto vicino: controlla le ipotesi":</strong> quando il calcolatore stima che manca <strong>1 anno o meno</strong> al FIRE, mostra un riquadro giallo che invita a verificare le ipotesi più ottimistiche. Un FIRE "troppo presto" spesso dipende da: gli incassi futuri del <strong>fondo pensione</strong> (RITA o prestazione, vedi sopra), di cui conviene verificare requisiti e date; il <strong>valore attuale della pensione INPS</strong> e di <strong>altri redditi</strong> (affitti, dividendi) che abbassano il FIRE Number. Il riquadro confronta anche il FIRE Number "classico" (spese / SWR, senza questi aiuti) con quello ridotto effettivamente usato, così vedi di quanto le rendite future stanno abbassando il target. Se l'avviso compare, apri la <strong>Simulazione Monte Carlo</strong> per testare la robustezza del piano contro i ribassi di mercato.
 </div>
 
 <div class="tip">
@@ -1298,7 +1308,7 @@ Per compensare, dovresti vendere un'azione o un'obbligazione singola con 5.000�
 		category: 'Fiscalità Italiana',
 		icon: '🏦',
 		summary:
-			'I vantaggi fiscali dei fondi pensione, le 5 nuove strategie di erogazione 2026 (rendita vitalizia, durata definita, prelievi liberi, frazionata, capitale 60%), TFR, RITA e extradeducibilità.',
+			'I vantaggi fiscali dei fondi pensione, le 5 nuove strategie di erogazione 2026 (rendita vitalizia, durata definita, prelievi liberi, frazionata, capitale fino al 50%), TFR, RITA e extradeducibilità.',
 		appLink: '/fondo-pensione/',
 		appLinkLabel: 'Vai al Simulatore Fondo Pensione',
 		content: `
@@ -1372,8 +1382,9 @@ Contributo annuo: 5.300€. Aliquota marginale: 35%.<br><br>
 <h3>La RITA: Ponte verso la Pensione</h3>
 <p>La <strong>RITA</strong> (Rendita Integrativa Temporanea Anticipata) è fondamentale per il FIRE. Permette di riscattare il fondo pensione anticipatamente:</p>
 <ul>
-<li><strong>5 anni prima</strong> della pensione di vecchiaia se hai perso il lavoro (anche volontariamente!) da almeno 24 mesi e hai almeno 20 anni di contribuzione</li>
-<li><strong>10 anni prima</strong> della pensione se hai perso il lavoro da almeno 24 mesi</li>
+<li><strong>Caso 1 - fino a 5 anni prima</strong> della pensione di vecchiaia: basta aver cessato l'attività lavorativa (anche volontariamente) e avere almeno 20 anni di contributi nei regimi obbligatori</li>
+<li><strong>Caso 2 - fino a 10 anni prima</strong> della pensione: serve un'inoccupazione superiore a 24 mesi, non servono i 20 anni di contributi</li>
+<li>In entrambi i casi servono almeno 5 anni di partecipazione alla previdenza complementare (D.Lgs. 252/2005, art. 11, c. 4)</li>
 <li>Tassazione: stessa aliquota agevolata del 9-15%</li>
 </ul>
 
@@ -1449,11 +1460,11 @@ Se muori dopo 10 anni con 120.000€ residui → <strong>eredi ricevono 120.000�
 <strong>Attenzione:</strong> L'erogazione frazionata costa mediamente il <strong>40-65% in più di tasse</strong> rispetto alle altre opzioni. Su un montante di 200.000€ con 25 anni di partecipazione, la differenza può essere di <strong>5.000-8.000€ in più di tasse</strong>. Sconsigliata nella maggior parte dei casi.
 </div>
 
-<h3>5. Capitale (ora fino al 60%)</h3>
-<p>La quota richiedibile in un'unica soluzione è stata alzata dal 50% al <strong>60%</strong>. Il restante 40% va in una delle forme di rendita sopra. Se la rendita annua risultante è inferiore al 50% dell'assegno sociale (~267€/mese nel 2026), puoi richiedere il <strong>100% in capitale</strong>.</p>
+<h3>5. Capitale (fino al 50%)</h3>
+<p>La quota richiedibile in un'unica soluzione resta il <strong>50%</strong>. La Legge di Bilancio 2026 l'aveva alzata al 60%, ma l'innalzamento è stato soppresso dall'art. 16-ter della L. 112/2026 (conversione del decreto Lavoro 2026). Il restante 50% va in una delle forme di rendita sopra. Se la rendita annua risultante è inferiore al 50% dell'assegno sociale (~267€/mese nel 2026), puoi richiedere il <strong>100% in capitale</strong>.</p>
 <ul>
 <li><strong>Tassazione</strong>: 15% → 9%</li>
-<li><strong>Strategia FIRE</strong>: ritira il 60% come capitale per coprire i primi anni di FIRE, e lascia il 40% come rendita a durata definita o prelievi liberi</li>
+<li><strong>Strategia FIRE</strong>: ritira il 50% come capitale per coprire i primi anni di FIRE, e lascia il resto come rendita a durata definita o prelievi liberi</li>
 </ul>
 
 <div class="example">
@@ -1462,8 +1473,8 @@ Se muori dopo 10 anni con 120.000€ residui → <strong>eredi ricevono 120.000�
 - Rendita vitalizia: ~800€/mese netti iniziali, rivalutata ~1,5-2%/anno, a vita, nulla agli eredi<br>
 - Rendita durata definita: ~750€/mese iniziali, ricalcolata in base ai rendimenti, <strong>eredi ok</strong><br>
 - <strong>Prelievi liberi: prelevi ~9.000-10.000€/anno quando serve, capitale resta investito</strong><br>
-- 60% capitale (120.000€ netti ~112.000€) + 40% in rendita rivalutata (~340€/mese iniziali)<br><br>
-<strong>Nota:</strong> a parita' di montante e contributi dedotti, le tasse totali pagate sono le stesse per tutte le opzioni tranne la frazionata (piu' cara del 40-65%). Per un FIRE seeker, i <strong>prelievi liberi</strong> o il <strong>mix capitale 60% + rendita durata definita</strong> sono generalmente le opzioni migliori per flessibilita' ed eredita'.
+- 50% capitale (100.000€, netti ~93.000€) + 50% in rendita rivalutata (~420€/mese iniziali)<br><br>
+<strong>Nota:</strong> a parita' di montante e contributi dedotti, le tasse totali pagate sono le stesse per tutte le opzioni tranne la frazionata (piu' cara del 40-65%). Per un FIRE seeker, i <strong>prelievi liberi</strong> o il <strong>mix capitale 50% + rendita durata definita</strong> sono generalmente le opzioni migliori per flessibilita' ed eredita'.
 </div>
 
 <div class="tip">

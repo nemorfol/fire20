@@ -5,7 +5,11 @@
 	import GestptfImport from '$lib/components/profilo/GestptfImport.svelte';
 	import type { PortfolioAllocation, MonthlyContributions } from '$lib/db/index';
 	import type { PortfolioImport } from '$lib/utils/broker-import';
-	import { LIQUID_ASSET_KEYS, ILLIQUID_ASSET_KEYS } from '$lib/engine/fire-calculator';
+	import {
+		LIQUID_ASSET_KEYS,
+		ILLIQUID_ASSET_KEYS,
+		DEFERRED_ASSET_KEYS
+	} from '$lib/engine/fire-calculator';
 
 	let {
 		portfolio = $bindable<PortfolioAllocation>({
@@ -56,9 +60,11 @@
 	// Cast di convenienza dalle costanti readonly
 	const liquidKeys = LIQUID_ASSET_KEYS as readonly (keyof PortfolioAllocation)[];
 	const illiquidKeys = ILLIQUID_ASSET_KEYS as readonly (keyof PortfolioAllocation)[];
+	const deferredKeys = DEFERRED_ASSET_KEYS as readonly (keyof PortfolioAllocation)[];
 
 	let liquidTotal = $derived(liquidKeys.reduce((s, k) => s + (portfolio[k] || 0), 0));
 	let illiquidTotal = $derived(illiquidKeys.reduce((s, k) => s + (portfolio[k] || 0), 0));
+	let deferredTotal = $derived(deferredKeys.reduce((s, k) => s + (portfolio[k] || 0), 0));
 
 	function formatEur(v: number): string {
 		return v.toLocaleString('it-IT', {
@@ -82,7 +88,7 @@
 	) {
 		// Lo snapshot e' completo (tutte le 11 categorie): in "replace" rimpiazza,
 		// in "add" somma. Copre sia gli asset liquidi sia quelli illiquidi.
-		for (const k of [...liquidKeys, ...illiquidKeys]) {
+		for (const k of [...liquidKeys, ...deferredKeys, ...illiquidKeys]) {
 			const v = assets[k];
 			if (v == null) continue;
 			portfolio[k] = mode === 'add' ? (portfolio[k] || 0) + v : v;
@@ -95,8 +101,9 @@
 		<Heading tag="h4" class="mb-2 text-lg">Patrimonio attuale</Heading>
 		<p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
 			Gli asset <strong>liquidi</strong> sono usati per il calcolo del FIRE Number (prelievo al 4%).
-			Gli asset <strong>illiquidi</strong> (immobili, TFR) producono reddito o hanno vincoli di prelievo:
-			non fanno parte del capitale da cui si attinge per le spese correnti.
+			Il <strong>fondo pensione</strong> e' un asset differito: diventa reddito solo con la RITA o
+			la prestazione. Gli asset <strong>illiquidi</strong> (immobili, TFR) producono reddito o hanno vincoli
+			di prelievo: non fanno parte del capitale da cui si attinge per le spese correnti.
 		</p>
 
 		<div class="mb-6">
@@ -126,6 +133,37 @@
 				(come i titoli di stato) ed esenti da imposta di bollo; i conti deposito al 26% con bollo 0,2%
 				annuo.
 			</p>
+		</div>
+
+		<div class="mb-6">
+			<div class="mb-3 flex items-baseline justify-between">
+				<Heading tag="h5" class="text-base font-semibold text-violet-600 dark:text-violet-400">
+					Fondo pensione — RITA (non prelevabile al 4%)
+				</Heading>
+				<span class="text-sm font-semibold text-violet-600 tabular-nums dark:text-violet-400">
+					{formatEur(deferredTotal)}
+				</span>
+			</div>
+			<p class="mb-3 text-xs text-gray-500 dark:text-gray-400">
+				Il montante cresce a parte (con i versamenti mensili indicati sotto) e non entra nel
+				patrimonio liquido. Dopo la cessazione del lavoro si puo' incassare come <strong
+					>RITA</strong
+				>: fino a 5 anni prima della pensione di vecchiaia con almeno 20 anni di contributi, fino a
+				10 anni prima dopo oltre 24 mesi di inoccupazione. Altrimenti diventa prestazione all'eta'
+				di pensione. Il Calcolatore conteggia questi incassi come reddito futuro.
+			</p>
+			<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+				{#each deferredKeys as key}
+					<div>
+						<CurrencyInput
+							bind:value={portfolio[key]}
+							label={assetLabels[key]}
+							id="portfolio-{key}"
+							step={1000}
+						/>
+					</div>
+				{/each}
+			</div>
 		</div>
 
 		<div>
@@ -165,7 +203,7 @@
 			Quanto investi ogni mese in ciascuna categoria di asset.
 		</p>
 		<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-			{#each [...liquidKeys, ...illiquidKeys] as key}
+			{#each [...liquidKeys, ...deferredKeys, ...illiquidKeys] as key}
 				<div>
 					<CurrencyInput
 						bind:value={monthlyContributions[key]}

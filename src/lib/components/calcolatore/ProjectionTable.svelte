@@ -79,6 +79,7 @@
 		{ key: 'portfolio', label: 'Portafoglio' },
 		{ key: 'contributions', label: 'Contributi' },
 		{ key: 'pensionIncome', label: 'Pensione' },
+		{ key: 'pensionFundIncome', label: 'Fondo pens. (RITA)' },
 		{ key: 'returns', label: 'Rendimenti' },
 		{ key: 'withdrawals', label: 'Prelievi' },
 		{ key: 'taxes', label: 'Tasse' }
@@ -176,6 +177,13 @@
 							{(row.pensionIncome ?? 0) > 0 ? formatCurrency(row.pensionIncome ?? 0) : ''}
 						</TableBodyCell>
 						<TableBodyCell
+							class="tabular-nums {(row.pensionFundIncome ?? 0) > 0
+								? 'text-violet-600 dark:text-violet-400'
+								: ''}"
+						>
+							{(row.pensionFundIncome ?? 0) > 0 ? formatCurrency(row.pensionFundIncome ?? 0) : ''}
+						</TableBodyCell>
+						<TableBodyCell
 							class="tabular-nums {row.returns >= 0
 								? 'text-green-600 dark:text-green-400'
 								: 'text-red-600 dark:text-red-400'}"
@@ -196,7 +204,7 @@
 
 					{#if detailedView && expandedRows.has(row.year)}
 						<TableBodyRow class="bg-gray-50 dark:bg-gray-900/40">
-							<TableBodyCell colspan={9} class="p-0">
+							<TableBodyCell colspan={10} class="p-0">
 								<div class="grid grid-cols-1 gap-4 p-4 text-sm md:grid-cols-2 lg:grid-cols-3">
 									<!-- Entrate -->
 									<div>
@@ -233,6 +241,26 @@
 													<dt class="text-gray-500 dark:text-gray-400">Pensione INPS</dt>
 													<dd class="text-blue-600 tabular-nums dark:text-blue-400">
 														+{formatCurrency(row.pensionIncome ?? 0)}
+													</dd>
+												</div>
+											{/if}
+											{#if (row.pensionFundIncome ?? 0) > 0}
+												<div class="flex justify-between">
+													<dt class="text-gray-500 dark:text-gray-400">
+														Fondo pensione (RITA / prestazione, netto)
+													</dt>
+													<dd class="text-violet-600 tabular-nums dark:text-violet-400">
+														+{formatCurrency(row.pensionFundIncome ?? 0)}
+													</dd>
+												</div>
+											{/if}
+											{#if (row.pensionFundBalance ?? 0) > 0}
+												<div class="flex justify-between">
+													<dt class="text-gray-500 dark:text-gray-400">
+														Montante fondo pensione (fuori portafoglio)
+													</dt>
+													<dd class="tabular-nums">
+														{formatCurrency(row.pensionFundBalance ?? 0)}
 													</dd>
 												</div>
 											{/if}

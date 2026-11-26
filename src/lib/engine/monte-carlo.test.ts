@@ -249,4 +249,20 @@ describe('Monte Carlo - strategie di prelievo variabili e spesa reale', () => {
 		const s = r.spending!.p50;
 		expect(Math.abs(s[29] - s[0])).toBeLessThanOrEqual(1);
 	});
+
+	it('fondo pensione (#41): gli incassi RITA riducono il prelievo negli anni previsti', () => {
+		// Eta' nella convenzione del deterministico: 56 = primo anno di FIRE
+		const base = runMonteCarloSimulation({ ...flat, annualExpenses: 60_000 });
+		const withRita = runMonteCarloSimulation({
+			...flat,
+			annualExpenses: 60_000,
+			pensionFundIncomeByAge: { 58: 20_000, 59: 20_000 }
+		});
+		const gap = (y: number) => withRita.percentiles.p50[y] - base.percentiles.p50[y];
+		// anno MC 1 (eta' 56) e 2 (57): nessuna differenza
+		expect(gap(1)).toBeCloseTo(0, -1);
+		// dopo gli anni 3 e 4 (eta' 58, 59) il portafoglio e' piu' alto di ~2 x 20k rivalutati
+		expect(gap(4)).toBeGreaterThan(40_000);
+		expect(gap(4)).toBeLessThan(46_000);
+	});
 });

@@ -156,7 +156,7 @@
 				return 'blue';
 			case 'vitalizia':
 				return 'purple';
-			case 'capitale-60':
+			case 'capitale':
 				return 'yellow';
 			case 'frazionata':
 				return 'red';
@@ -231,7 +231,7 @@
 				type="number"
 				bind:value={capitalPercentage}
 				min={0}
-				max={60}
+				max={50}
 				step={5}
 			/>
 		</div>

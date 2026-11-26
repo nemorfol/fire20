@@ -9,11 +9,13 @@
 	import type { Profile } from '$lib/db/index';
 	import { getAllProfiles } from '$lib/db/profiles';
 	import {
-		calculateNetWorth,
+		calculateLiquidNetWorth,
+		liquidMonthlyContributions,
 		projectPortfolio,
 		type ProjectionParams,
 		type YearlyProjection
 	} from '$lib/engine/fire-calculator';
+	import { pensionFundPlanFromProfile } from '$lib/engine/rita';
 	import {
 		PREDEFINED_RISK_EVENTS,
 		applyRiskEvent,
@@ -50,18 +52,24 @@
 	let hasCombined = $derived(combinedData.length > 0 && combinedEvents.length > 0);
 	let canCombine = $derived(selectedEventIds.size >= 2);
 
-	function getNetWorth(p: Profile): number {
-		const port = p.portfolio as unknown as Record<string, number>;
-		return calculateNetWorth(port);
-	}
-
 	function buildProjectionParams(p: Profile): ProjectionParams {
-		const totalContributions = Object.values(p.monthlyContributions).reduce(
-			(s, v) => s + (v || 0),
-			0
+		// Solo patrimonio LIQUIDO (immobili, TFR e fondo pensione non sono
+		// prelevabili al 4%); il fondo pensione entra come reddito futuro (#41).
+		const totalContributions = liquidMonthlyContributions(
+			p.monthlyContributions as unknown as Record<string, number>
 		);
+		const currentAge = new Date().getFullYear() - p.birthYear;
 		return {
-			initialPortfolio: getNetWorth(p),
+			initialPortfolio: calculateLiquidNetWorth(p.portfolio as unknown as Record<string, number>),
+			pensionFundPlan: pensionFundPlanFromProfile(p, {
+				currentAge,
+				retirementAge: p.retirementAge,
+				pensionAge: p.pension?.pensionAge ?? 67,
+				lifeExpectancy: p.lifeExpectancy,
+				nominalReturn: p.simulation.expectedReturn,
+				inflationRate: p.simulation.inflationRate,
+				assumptions: getPreset(p.assumptionsId)
+			}),
 			annualContribution: totalContributions * 12,
 			annualExpenses: p.fireExpenses,
 			expectedReturn: p.simulation.expectedReturn,

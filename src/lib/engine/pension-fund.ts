@@ -9,7 +9,7 @@ import { getTransformationCoefficient } from './pension-italy';
 // ─── Tipi di prestazione ───────────────────────────────────────────────────────
 
 export type PayoutStrategy =
-	'vitalizia' | 'durata-definita' | 'prelievi-liberi' | 'frazionata' | 'capitale-60';
+	'vitalizia' | 'durata-definita' | 'prelievi-liberi' | 'frazionata' | 'capitale';
 
 export interface PayoutSimulationParams {
 	/** Montante accumulato nel fondo pensione */
@@ -26,7 +26,7 @@ export interface PayoutSimulationParams {
 	inflationRate: number;
 	/** Per rendita vitalizia: reversibilita' al coniuge */
 	reversibile: boolean;
-	/** Per erogazione in capitale: percentuale (0-60%) */
+	/** Per erogazione in capitale: percentuale (0-50%, vedi MAX_CAPITAL_PCT) */
 	capitalPercentage: number;
 	/**
 	 * Base imponibile: contributi versati (dedotti) + TFR conferito.
@@ -255,6 +255,15 @@ const SOCIAL_ALLOWANCE_MONTHLY_2026 = 534.41;
  * separata della rendita vitalizia. Tipicamente 1-1.5%.
  */
 const ANNUITY_INSURER_SPREAD = 0.0125;
+
+/**
+ * Quota massima della prestazione liquidabile in capitale (art. 11, c. 3,
+ * D.Lgs. 252/2005): 50%. La L. 199/2025 (Bilancio 2026) l'aveva portata al 60%,
+ * ma l'innalzamento e' stato soppresso dall'art. 16-ter della L. 112/2026
+ * (conversione del D.L. 62/2026, "decreto Lavoro"). Eccezione: 100% se la
+ * rendita sarebbe inferiore al 50% dell'assegno sociale.
+ */
+export const MAX_CAPITAL_PCT = 50;
 
 /**
  * Frazione del montante soggetta a tassazione in fase di prestazione.
@@ -573,8 +582,8 @@ function simulateCapitale(params: PayoutSimulationParams): PayoutSimulationResul
 	const revaluationRate =
 		annuityRevaluationRate ?? Math.max(0, expectedReturnRate - ANNUITY_INSURER_SPREAD);
 
-	// Massimo 60% in capitale, il resto in rendita
-	const capPct = Math.min(60, Math.max(0, capitalPercentage)) / 100;
+	// Massimo 50% in capitale, il resto in rendita
+	const capPct = Math.min(MAX_CAPITAL_PCT, Math.max(0, capitalPercentage)) / 100;
 
 	// Controlla se l'importo della rendita e' inferiore al 50% dell'assegno sociale
 	// Se si', si puo' richiedere il 100% in capitale
@@ -644,7 +653,7 @@ function simulateCapitale(params: PayoutSimulationParams): PayoutSimulationResul
 	}
 
 	return {
-		strategy: 'capitale-60',
+		strategy: 'capitale',
 		strategyName: fullCapitalAllowed
 			? 'Capitale 100%'
 			: `Capitale ${Math.round(effectiveCapPct * 100)}% + Rendita`,
@@ -660,7 +669,7 @@ function simulateCapitale(params: PayoutSimulationParams): PayoutSimulationResul
 		pros,
 		cons: [
 			'Perdi la rendita sulla parte in capitale',
-			effectiveCapPct < 1 ? 'Massimo 60% in capitale (il resto obbligatoriamente in rendita)' : '',
+			effectiveCapPct < 1 ? 'Massimo 50% in capitale (il resto obbligatoriamente in rendita)' : '',
 			'Il capitale ricevuto va reinvestito autonomamente',
 			'Rischio di consumare il capitale troppo velocemente'
 		].filter(Boolean)
@@ -685,7 +694,7 @@ export function simulatePayout(
 			return simulatePrelieriLiberi(params);
 		case 'frazionata':
 			return simulateFrazionata(params);
-		case 'capitale-60':
+		case 'capitale':
 			return simulateCapitale(params);
 	}
 }
@@ -699,7 +708,7 @@ export function compareAllStrategies(params: PayoutSimulationParams): PayoutSimu
 		'durata-definita',
 		'prelievi-liberi',
 		'frazionata',
-		'capitale-60'
+		'capitale'
 	];
 	return strategies.map((s) => simulatePayout(params, s));
 }

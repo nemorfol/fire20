@@ -27,10 +27,13 @@
 		calculateYearsToFire,
 		calculateSavingsRate,
 		calculateNetWorth,
+		calculateLiquidNetWorth,
+		liquidMonthlyContributions,
 		projectPortfolio,
 		type ProjectionParams,
 		type YearlyProjection
 	} from '$lib/engine/fire-calculator';
+	import { pensionFundPlanFromProfile } from '$lib/engine/rita';
 	import { blendedCapitalGainsRate } from '$lib/engine/tax-italy';
 	import { getPreset } from '$lib/engine/assumptions';
 	import { formatCurrency, formatPercent, formatCompact, formatDate } from '$lib/utils/format';
@@ -191,12 +194,28 @@
 			if (profiles.length > 0) {
 				profile = profiles[0];
 				// Generate projections
-				const totalContributions = Object.values(profile.monthlyContributions).reduce(
-					(s, v) => s + (v || 0),
-					0
+				// Proiezione sul solo patrimonio LIQUIDO (immobili, TFR e fondo
+				// pensione non sono prelevabili al 4%); il fondo pensione entra come
+				// reddito futuro (RITA / prestazione), come nel Calcolatore (#41).
+				const totalContributions = liquidMonthlyContributions(
+					profile.monthlyContributions as unknown as Record<string, number>
 				);
+				const currentAge = new Date().getFullYear() - profile.birthYear;
 				const params: ProjectionParams = {
-					initialPortfolio: getNetWorth(profile),
+					initialPortfolio: calculateLiquidNetWorth(
+						profile.portfolio as unknown as Record<string, number>
+					),
+					annualPension: (profile.pension?.estimatedMonthly || 0) * 13,
+					pensionAge: profile.pension?.pensionAge,
+					pensionFundPlan: pensionFundPlanFromProfile(profile, {
+						currentAge,
+						retirementAge: profile.retirementAge,
+						pensionAge: profile.pension?.pensionAge ?? 67,
+						lifeExpectancy: profile.lifeExpectancy,
+						nominalReturn: profile.simulation.expectedReturn,
+						inflationRate: profile.simulation.inflationRate,
+						assumptions: getPreset(profile.assumptionsId)
+					}),
 					annualContribution: totalContributions * 12,
 					annualExpenses: profile.fireExpenses,
 					expectedReturn: profile.simulation.expectedReturn,
@@ -206,7 +225,7 @@
 						getPreset(profile.assumptionsId).capital
 					),
 					withdrawalRate: profile.simulation.withdrawalRate,
-					currentAge: new Date().getFullYear() - profile.birthYear,
+					currentAge,
 					retirementAge: profile.retirementAge,
 					lifeExpectancy: profile.lifeExpectancy,
 					startYear: new Date().getFullYear()

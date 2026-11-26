@@ -111,6 +111,12 @@ export interface MonteCarloParams {
 	otherIncome?: number;
 	/** Eta' fino a cui otherIncome continua (incluso). Default: nessun limite. */
 	otherIncomeEndAge?: number;
+	/**
+	 * Incassi netti del fondo pensione per eta' (RITA / prestazione, euro di
+	 * oggi), da `planPensionFund` in rita.ts. Eta' nella convenzione del
+	 * proiettore deterministico (riga = anno in cui si compie quell'eta'). #41
+	 */
+	pensionFundIncomeByAge?: Record<number, number>;
 	/** Rapporto CAPE (per CAPE-based) */
 	capeRatio?: number;
 	/** Usa rendimenti correlati (Cholesky) per modalita' parametrica */
@@ -431,6 +437,12 @@ function runSingleSimulation(params: MonteCarloParams): {
 		}
 	}
 
+	// Fondo pensione (#41): l'anno `year` del MC (eta' currentAge + year)
+	// corrisponde alla riga di eta' currentAge + year + 1 del deterministico
+	// (il primo anno di FIRE e' retirementAge + 1 in entrambi i motori).
+	const pensionFundIncomeAt = (year: number): number =>
+		params.pensionFundIncomeByAge?.[(params.currentAge ?? 40) + year + 1] ?? 0;
+
 	for (let year = 0; year < totalYears; year++) {
 		const isRetired = year >= params.yearsToFire;
 		const retirementYear = isRetired ? year - params.yearsToFire : 0;
@@ -510,6 +522,7 @@ function runSingleSimulation(params: MonteCarloParams): {
 			if (ageAccum >= (params.pensionAge ?? Infinity)) {
 				portfolio += (params.annualPension ?? 0) * cumulativeInflation;
 			}
+			portfolio += pensionFundIncomeAt(year) * cumulativeInflation;
 		}
 
 		// Applica rendimenti, al netto del capital gain sui rendimenti POSITIVI
@@ -625,9 +638,9 @@ function runSingleSimulation(params: MonteCarloParams): {
 					? (params.annualPension ?? 0) * cumulativeInflation
 					: 0;
 			const otherIncomeNow =
-				ageNow <= (params.otherIncomeEndAge ?? Infinity)
-					? (params.otherIncome ?? 0) * cumulativeInflation
-					: 0;
+				(ageNow <= (params.otherIncomeEndAge ?? Infinity) ? (params.otherIncome ?? 0) : 0) *
+					cumulativeInflation +
+				pensionFundIncomeAt(year) * cumulativeInflation;
 
 			previousWithdrawal = withdrawal;
 			// Spesa effettiva: il prelievo della strategia, ma non oltre quanto
@@ -641,7 +654,8 @@ function runSingleSimulation(params: MonteCarloParams): {
 			const pensionNow =
 				ageNow >= (params.pensionAge ?? Infinity) ? (params.annualPension ?? 0) : 0;
 			const otherNow =
-				ageNow <= (params.otherIncomeEndAge ?? Infinity) ? (params.otherIncome ?? 0) : 0;
+				(ageNow <= (params.otherIncomeEndAge ?? Infinity) ? (params.otherIncome ?? 0) : 0) +
+				pensionFundIncomeAt(year);
 			realSpending.push(pensionNow + otherNow);
 		}
 
