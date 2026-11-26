@@ -145,6 +145,20 @@
 				</p>
 			</div>
 		{/if}
+		{#if isVariable && sp.floorSuccessRate !== undefined && (sp.floor ?? 0) > 0}
+			<div class="col-span-2 rounded-lg bg-indigo-50 p-3 lg:col-span-4 dark:bg-indigo-900/20">
+				<p class="text-xs text-indigo-700 dark:text-indigo-300">
+					Successo con spesa minima: spesa reale mai sotto {formatCurrency(sp.floor ?? 0)}
+				</p>
+				<p class="text-2xl font-bold text-indigo-800 dark:text-indigo-200">
+					{pct(sp.floorSuccessRate)}
+				</p>
+				<p class="mt-1 text-xs text-indigo-700 dark:text-indigo-300">
+					E' il "tasso di successo" adatto alle strategie variabili: il portafoglio non si esaurisce
+					quasi mai, ma la spesa puo' scendere.
+				</p>
+			</div>
+		{/if}
 	</div>
 
 	<EChart {options} height="320px" />

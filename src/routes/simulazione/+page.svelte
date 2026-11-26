@@ -10,6 +10,9 @@
 		getSeriesPreset,
 		ALLWORLD_US_WEIGHT_DEFAULT,
 		alignHistory,
+		recenterHistory,
+		meanRealReturn,
+		ROBUSTNESS_WINDOWS,
 		type HistoricalAsset,
 		type SeriesPresetId
 	} from '$lib/data/default-series';
@@ -67,10 +70,10 @@
 	let worker: Worker | null = null;
 	let timerInterval: ReturnType<typeof setInterval> | null = null;
 
-	// Preset di serie storiche: default IT tutto in lire/EUR (ex-USA + oro convertiti
-	// coi cambi storici, BTP, ISTAT); alternativa US tutta in USD. Le serie vengono
+	// Preset di serie storiche: default MSCI World (pesi storici) in lire/EUR con BTP
+	// JST, oro in EUR e ISTAT; alternative: mix a peso fisso, ex-USA, US in USD. Le serie vengono
 	// allineate per anno al momento del run (finestra comune alle asset class usate).
-	let seriesPresetId = $state<SeriesPresetId>('it-allworld');
+	let seriesPresetId = $state<SeriesPresetId>('it-world');
 	/** Peso USA (%) del preset All-World: default = peso attuale nell'MSCI World */
 	let allWorldUsPct = $state(Math.round(ALLWORLD_US_WEIGHT_DEFAULT * 100));
 	const activePreset = $derived(
@@ -78,6 +81,28 @@
 	);
 	/** Finestra storica effettivamente usata dall'ultimo run (per trasparenza) */
 	let historyWindow = $state<{ from: number; to: number } | null>(null);
+	/** Primo anno storico ammesso (0 = tutto lo storico disponibile) */
+	let historyFromYear = $state(0);
+	// Bootstrap ricentrato: forma storica, media = ipotesi dichiarate dall'utente
+	let recenterEnabled = $state(false);
+	let recenterStocksPct = $state(5.0);
+	let recenterBondsPct = $state(1.5);
+	/** Rendimenti reali medi storici della finestra usata (prima della ricentratura) */
+	let historyMeans = $state<{ stocks?: number; bonds?: number } | null>(null);
+
+	// Verifica di robustezza per sottoperiodi
+	type RobustnessRow = {
+		label: string;
+		from?: number;
+		to?: number;
+		successRate?: number;
+		floorSuccessRate?: number;
+		medianFinalValue?: number;
+		note?: string;
+	};
+	let robustnessRows = $state<RobustnessRow[]>([]);
+	let robustnessRunning = $state(false);
+	let robustnessWorker: Worker | null = null;
 	// #41: dati del fondo pensione dal profilo e piano usato nell'ultima simulazione
 	let fundProfile = $state<PensionFundProfileData | null>(null);
 	let lastFundPlan = $state<PensionFundPlan | null>(null);
@@ -87,6 +112,7 @@
 		loadProfileDefaults();
 		return () => {
 			worker?.terminate();
+			robustnessWorker?.terminate();
 			if (timerInterval) clearInterval(timerInterval);
 		};
 	});
@@ -179,47 +205,11 @@
 		lastParams = params;
 		startTimer();
 
-		// Add historical data for non-parametric modes
-		historyWindow = null;
-		if (params.simulationMode !== 'parametric') {
-			// Asset class effettivamente in portafoglio: determinano la finestra comune.
-			const required: HistoricalAsset[] = [];
-			if (params.assetClasses) {
-				for (const ac of params.assetClasses) {
-					if (
-						ac.allocation > 0 &&
-						(ac.name === 'stocks' || ac.name === 'bonds' || ac.name === 'gold')
-					) {
-						required.push(ac.name);
-					}
-				}
-			} else {
-				if ((params.stockAllocation ?? 0) > 0 || params.glidePathEnabled) required.push('stocks');
-				if ((params.bondAllocation ?? 0) > 0 || params.glidePathEnabled) required.push('bonds');
-			}
-			const h = alignHistory(activePreset, required);
-			if (h.years.length > 0) {
-				historyWindow = { from: h.years[0], to: h.years[h.years.length - 1] };
-			}
-			params.historicalStockReturns = h.stocks;
-			params.historicalBondReturns = h.bonds;
-			params.historicalInflation = h.inflation;
-			params.jointHistoricalSampling = true;
-
-			// Attach historical returns to multi-asset configs (allineate per anno)
-			if (params.assetClasses) {
-				const histMap: Record<string, number[]> = {
-					stocks: h.stocks,
-					bonds: h.bonds,
-					gold: h.gold
-				};
-				for (const ac of params.assetClasses) {
-					if (histMap[ac.name]) {
-						ac.historicalReturns = histMap[ac.name];
-					}
-				}
-			}
-		}
+		// Serie storiche per le modalita' non parametriche
+		robustnessRows = [];
+		const attached = attachHistory(params, historyFromYear || undefined);
+		historyWindow = attached.window;
+		historyMeans = attached.means;
 
 		// #41: fondo pensione come asset differito. Il piano (RITA o prestazione) e'
 		// ricalcolato con le eta' del pannello; il rendimento del fondo e' quello
@@ -242,82 +232,194 @@
 		}
 
 		try {
-			worker = runMonteCarloWorker(
-				worker,
-				{
-					initialPortfolio: params.initialPortfolio ?? 200000,
-					annualContribution: params.annualContribution ?? 20000,
-					annualExpenses: params.annualExpenses ?? 30000,
-					withdrawalRate: params.withdrawalRate ?? 0.04,
-					withdrawalStrategy: params.withdrawalStrategy ?? 'fixed',
-					lifeExpectancy: params.lifeExpectancy,
-					capeRatio: params.capeRatio,
-					targetBequest: params.targetBequest,
-					plannedRealReturn: params.plannedRealReturn,
-					stockAllocation: params.stockAllocation ?? 0.7,
-					bondAllocation: params.bondAllocation ?? 0.3,
-					yearsToFire: params.yearsToFire ?? 10,
-					yearsInRetirement: params.yearsInRetirement ?? 30,
-					inflationRate: params.inflationRate ?? 0.02,
-					simulationMode: params.simulationMode ?? 'historical',
-					iterations: params.iterations ?? 10000,
-					expectedStockReturn: params.expectedStockReturn,
-					stockStdDev: params.stockStdDev,
-					expectedBondReturn: params.expectedBondReturn,
-					bondStdDev: params.bondStdDev,
-					historicalStockReturns: params.historicalStockReturns,
-					historicalBondReturns: params.historicalBondReturns,
-					historicalInflation: params.historicalInflation,
-					jointHistoricalSampling: params.jointHistoricalSampling,
-					useCorrelation: params.useCorrelation,
-					assetClasses: params.assetClasses,
-					correlationMatrix: params.correlationMatrix,
-					glidePathEnabled: params.glidePathEnabled,
-					glidePathStartEquity: params.glidePathStartEquity,
-					glidePathEndEquity: params.glidePathEndEquity,
-					stampDutyRate: params.stampDutyRate ?? DEFAULT_2026.capital.stampDuty,
-					ivafeRate: params.ivafeRate ?? DEFAULT_2026.capital.ivafe,
-					foreignBrokerShare: params.foreignBrokerShare ?? 0,
-					capitalGainsTaxRate: params.capitalGainsTaxRate ?? mcCapGainsRate,
-					capitalGainsTaxMode: params.capitalGainsTaxMode,
-					initialCostBasis: params.initialCostBasis,
-					levelIncomeWithPension: params.levelIncomeWithPension,
-					bolloExemptShare: params.bolloExemptShare ?? mcBolloExemptShare,
-					currentAge: params.currentAge,
-					annualPension: params.annualPension ?? 0,
-					pensionAge: params.pensionAge,
-					otherIncome: params.otherIncome ?? 0,
-					otherIncomeEndAge: params.otherIncomeEndAge,
-					pensionFundIncomeByAge: lastFundPlan?.incomeByAge
-				} satisfies MonteCarloParams,
-				{
-					onProgress: (percent) => {
-						progress = percent;
-					},
-					onResult: (data) => {
-						result = data;
-						running = false;
-						progress = 100;
-						stopTimer();
-						showNotification('Simulazione completata con successo!');
-					},
-					onError: (message) => {
-						running = false;
-						stopTimer();
-						showNotification(`Errore: ${message}`, 'error');
-					},
-					onWorkerError: (e) => {
-						running = false;
-						stopTimer();
-						showNotification(`Errore nel worker: ${e.message}`, 'error');
-					}
+			worker = runMonteCarloWorker(worker, toWorkerParams(params), {
+				onProgress: (percent) => {
+					progress = percent;
+				},
+				onResult: (data) => {
+					result = data;
+					running = false;
+					progress = 100;
+					stopTimer();
+					showNotification('Simulazione completata con successo!');
+				},
+				onError: (message) => {
+					running = false;
+					stopTimer();
+					showNotification(`Errore: ${message}`, 'error');
+				},
+				onWorkerError: (e) => {
+					running = false;
+					stopTimer();
+					showNotification(`Errore nel worker: ${e.message}`, 'error');
 				}
-			);
+			});
 		} catch {
 			running = false;
 			stopTimer();
 			showNotification('Impossibile avviare il Web Worker', 'error');
 		}
+	}
+
+	/**
+	 * Allinea le serie del preset attivo sulle asset class in portafoglio (finestra
+	 * comune, eventualmente dal `fromYear`), applica la ricentratura se attiva e le
+	 * aggancia ai parametri. Restituisce la finestra usata e le medie storiche.
+	 */
+	function attachHistory(
+		params: Partial<MonteCarloParams>,
+		fromYear?: number
+	): {
+		window: { from: number; to: number } | null;
+		means: { stocks?: number; bonds?: number } | null;
+	} {
+		if (params.simulationMode === 'parametric') return { window: null, means: null };
+		// Asset class effettivamente in portafoglio: determinano la finestra comune.
+		const required: HistoricalAsset[] = [];
+		if (params.assetClasses) {
+			for (const ac of params.assetClasses) {
+				if (
+					ac.allocation > 0 &&
+					(ac.name === 'stocks' || ac.name === 'bonds' || ac.name === 'gold')
+				) {
+					required.push(ac.name);
+				}
+			}
+		} else {
+			if ((params.stockAllocation ?? 0) > 0 || params.glidePathEnabled) required.push('stocks');
+			if ((params.bondAllocation ?? 0) > 0 || params.glidePathEnabled) required.push('bonds');
+		}
+		let h = alignHistory(activePreset, required, fromYear);
+		const means = {
+			stocks: h.stocks.length ? meanRealReturn(h.stocks, h.inflation) : undefined,
+			bonds: h.bonds.length ? meanRealReturn(h.bonds, h.inflation) : undefined
+		};
+		if (recenterEnabled) {
+			h = recenterHistory(h, {
+				stocks: (recenterStocksPct || 0) / 100,
+				bonds: (recenterBondsPct || 0) / 100
+			});
+		}
+		params.historicalStockReturns = h.stocks;
+		params.historicalBondReturns = h.bonds;
+		params.historicalInflation = h.inflation;
+		params.jointHistoricalSampling = true;
+
+		// Serie allineate per anno anche per le configurazioni multi-asset (copie:
+		// la verifica per sottoperiodi riusa gli stessi parametri)
+		if (params.assetClasses) {
+			const histMap: Record<string, number[]> = { stocks: h.stocks, bonds: h.bonds, gold: h.gold };
+			params.assetClasses = params.assetClasses.map((ac) =>
+				histMap[ac.name] ? { ...ac, historicalReturns: histMap[ac.name] } : ac
+			);
+		}
+		return {
+			window: h.years.length > 0 ? { from: h.years[0], to: h.years[h.years.length - 1] } : null,
+			means
+		};
+	}
+
+	/** Parametri completi per il worker (default espliciti) */
+	function toWorkerParams(params: Partial<MonteCarloParams>): MonteCarloParams {
+		return {
+			initialPortfolio: params.initialPortfolio ?? 200000,
+			annualContribution: params.annualContribution ?? 20000,
+			annualExpenses: params.annualExpenses ?? 30000,
+			withdrawalRate: params.withdrawalRate ?? 0.04,
+			withdrawalStrategy: params.withdrawalStrategy ?? 'fixed',
+			lifeExpectancy: params.lifeExpectancy,
+			capeRatio: params.capeRatio,
+			targetBequest: params.targetBequest,
+			plannedRealReturn: params.plannedRealReturn,
+			stockAllocation: params.stockAllocation ?? 0.7,
+			bondAllocation: params.bondAllocation ?? 0.3,
+			yearsToFire: params.yearsToFire ?? 10,
+			yearsInRetirement: params.yearsInRetirement ?? 30,
+			inflationRate: params.inflationRate ?? 0.02,
+			simulationMode: params.simulationMode ?? 'historical',
+			iterations: params.iterations ?? 10000,
+			expectedStockReturn: params.expectedStockReturn,
+			stockStdDev: params.stockStdDev,
+			expectedBondReturn: params.expectedBondReturn,
+			bondStdDev: params.bondStdDev,
+			historicalStockReturns: params.historicalStockReturns,
+			historicalBondReturns: params.historicalBondReturns,
+			historicalInflation: params.historicalInflation,
+			jointHistoricalSampling: params.jointHistoricalSampling,
+			useCorrelation: params.useCorrelation,
+			assetClasses: params.assetClasses,
+			correlationMatrix: params.correlationMatrix,
+			glidePathEnabled: params.glidePathEnabled,
+			glidePathStartEquity: params.glidePathStartEquity,
+			glidePathEndEquity: params.glidePathEndEquity,
+			stampDutyRate: params.stampDutyRate ?? DEFAULT_2026.capital.stampDuty,
+			ivafeRate: params.ivafeRate ?? DEFAULT_2026.capital.ivafe,
+			foreignBrokerShare: params.foreignBrokerShare ?? 0,
+			capitalGainsTaxRate: params.capitalGainsTaxRate ?? mcCapGainsRate,
+			capitalGainsTaxMode: params.capitalGainsTaxMode,
+			initialCostBasis: params.initialCostBasis,
+			levelIncomeWithPension: params.levelIncomeWithPension,
+			minAcceptableSpending: params.minAcceptableSpending,
+			bolloExemptShare: params.bolloExemptShare ?? mcBolloExemptShare,
+			currentAge: params.currentAge,
+			annualPension: params.annualPension ?? 0,
+			pensionAge: params.pensionAge,
+			otherIncome: params.otherIncome ?? 0,
+			otherIncomeEndAge: params.otherIncomeEndAge,
+			pensionFundIncomeByAge: lastFundPlan?.incomeByAge
+		} satisfies MonteCarloParams;
+	}
+
+	/**
+	 * Verifica di robustezza: rilancia lo stesso piano su finestre storiche diverse
+	 * (tutto, dal 1991, dal 1999) in sequenza, con al massimo 5.000 iterazioni.
+	 */
+	function runRobustness() {
+		if (!lastParams || robustnessRunning || lastParams.simulationMode === 'parametric') return;
+		const base = $state.snapshot(lastParams) as Partial<MonteCarloParams>;
+		const rows: RobustnessRow[] = ROBUSTNESS_WINDOWS.map((w) => ({ label: w.label }));
+		robustnessRows = rows;
+		robustnessRunning = true;
+		const step = (i: number) => {
+			if (i >= ROBUSTNESS_WINDOWS.length) {
+				robustnessRunning = false;
+				robustnessWorker?.terminate();
+				robustnessWorker = null;
+				return;
+			}
+			const params: Partial<MonteCarloParams> = {
+				...base,
+				iterations: Math.min(base.iterations ?? 10000, 5000)
+			};
+			const { window } = attachHistory(params, ROBUSTNESS_WINDOWS[i].fromYear);
+			if (!window || window.to - window.from + 1 < 10) {
+				robustnessRows[i] = { ...rows[i], note: 'Meno di 10 anni di dati: non significativo' };
+				step(i + 1);
+				return;
+			}
+			try {
+				robustnessWorker = runMonteCarloWorker(robustnessWorker, toWorkerParams(params), {
+					onResult: (data) => {
+						robustnessRows[i] = {
+							label: rows[i].label,
+							from: window.from,
+							to: window.to,
+							successRate: data.successRate,
+							floorSuccessRate: data.spending?.floorSuccessRate,
+							medianFinalValue: data.medianFinalValue
+						};
+						step(i + 1);
+					},
+					onError: (message) => {
+						robustnessRows[i] = { ...rows[i], note: `Errore: ${message}` };
+						step(i + 1);
+					}
+				});
+			} catch {
+				robustnessRunning = false;
+			}
+		};
+		step(0);
 	}
 
 	async function handleSave() {
@@ -516,6 +618,82 @@
 			</label>
 		{/if}
 	</div>
+
+	<!-- Periodo storico e bootstrap ricentrato -->
+	<div
+		class="mt-3 grid grid-cols-1 gap-3 border-t border-blue-200 pt-3 md:grid-cols-2 dark:border-blue-800"
+	>
+		<div>
+			<label
+				for="history-from"
+				class="mb-1 block text-sm font-semibold text-gray-700 dark:text-gray-200"
+			>
+				Periodo storico
+			</label>
+			<select
+				id="history-from"
+				bind:value={historyFromYear}
+				class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700"
+			>
+				<option value={0}>Tutto lo storico disponibile</option>
+				<option value={1991}>Dal 1991</option>
+				<option value={1999}>Dal 1999 (solo era dell'euro)</option>
+			</select>
+			<p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+				Si usano solo anni coperti da tutte le asset class in portafoglio. Finestre corte = pochi
+				anni da campionare: risultato meno affidabile.
+			</p>
+		</div>
+		<div>
+			<label class="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
+				<input type="checkbox" bind:checked={recenterEnabled} class="rounded border-gray-300" />
+				Ricentra sui rendimenti reali attesi
+			</label>
+			<p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+				Tiene la <em>forma</em> della storia (crolli, sequenze di anni negativi, legame con l'inflazione)
+				ma sposta la media sulle tue ipotesi: lo storico diventa uno stress test, non una previsione.
+			</p>
+			{#if recenterEnabled}
+				<div class="mt-2 flex flex-wrap gap-3 text-sm text-gray-700 dark:text-gray-200">
+					<label class="flex items-center gap-1">
+						Azioni
+						<input
+							type="number"
+							step="0.5"
+							min="-5"
+							max="12"
+							bind:value={recenterStocksPct}
+							class="w-20 rounded-md border border-gray-300 bg-white px-2 py-1 text-sm dark:border-gray-600 dark:bg-gray-700"
+						/>
+						% reale
+					</label>
+					<label class="flex items-center gap-1">
+						Obbligazioni
+						<input
+							type="number"
+							step="0.5"
+							min="-5"
+							max="8"
+							bind:value={recenterBondsPct}
+							class="w-20 rounded-md border border-gray-300 bg-white px-2 py-1 text-sm dark:border-gray-600 dark:bg-gray-700"
+						/>
+						% reale
+					</label>
+				</div>
+			{/if}
+			{#if historyMeans && (historyMeans.stocks !== undefined || historyMeans.bonds !== undefined)}
+				<p class="mt-1 text-xs font-medium text-gray-700 dark:text-gray-300">
+					Media reale storica dell'ultima simulazione:
+					{#if historyMeans.stocks !== undefined}azioni {(historyMeans.stocks * 100).toFixed(
+							1
+						)}%{/if}
+					{#if historyMeans.bonds !== undefined}
+						· obbligazioni {(historyMeans.bonds * 100).toFixed(1)}%{/if}
+					(media aritmetica annua).
+				</p>
+			{/if}
+		</div>
+	</div>
 </div>
 
 <!-- Configuration Panel -->
@@ -562,6 +740,71 @@
 						targetExpenses={lastParams?.annualExpenses ?? 0}
 						yearsToFire={lastParams?.yearsToFire ?? 0}
 					/>
+				</div>
+			{/if}
+
+			<!-- Verifica di robustezza per sottoperiodi -->
+			{#if lastParams && lastParams.simulationMode !== 'parametric'}
+				<div
+					class="mb-8 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
+				>
+					<div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+						<h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+							Verifica per sottoperiodi
+						</h3>
+						<Button size="sm" color="light" onclick={runRobustness} disabled={robustnessRunning}>
+							{robustnessRunning ? 'Calcolo in corso…' : 'Esegui la verifica'}
+						</Button>
+					</div>
+					<p class="mb-3 text-sm text-gray-600 dark:text-gray-400">
+						Lo stesso piano simulato su periodi storici diversi (max 5.000 iterazioni ciascuno). Se
+						il successo cambia molto tra le righe, il risultato dipende dal periodo scelto: leggilo
+						con prudenza.
+					</p>
+					{#if robustnessRows.length > 0}
+						<div class="overflow-x-auto">
+							<table class="w-full text-left text-sm">
+								<thead class="text-xs text-gray-500 uppercase dark:text-gray-400">
+									<tr>
+										<th class="py-2 pr-4">Periodo</th>
+										<th class="py-2 pr-4">Anni</th>
+										<th class="py-2 pr-4">Successo</th>
+										{#if lastParams.withdrawalStrategy !== 'fixed'}
+											<th class="py-2 pr-4">Spesa mai sotto la minima</th>
+										{/if}
+										<th class="py-2 pr-4">Patrimonio finale mediano</th>
+									</tr>
+								</thead>
+								<tbody>
+									{#each robustnessRows as row (row.label)}
+										<tr class="border-t border-gray-100 dark:border-gray-700">
+											<td class="py-2 pr-4 font-medium text-gray-900 dark:text-white"
+												>{row.label}</td
+											>
+											{#if row.note}
+												<td class="py-2 pr-4 text-gray-500" colspan="4">{row.note}</td>
+											{:else if row.successRate === undefined}
+												<td class="py-2 pr-4 text-gray-400" colspan="4">…</td>
+											{:else}
+												<td class="py-2 pr-4">{row.from}-{row.to}</td>
+												<td class="py-2 pr-4">{(row.successRate * 100).toFixed(1)}%</td>
+												{#if lastParams.withdrawalStrategy !== 'fixed'}
+													<td class="py-2 pr-4">
+														{row.floorSuccessRate !== undefined
+															? `${(row.floorSuccessRate * 100).toFixed(1)}%`
+															: '—'}
+													</td>
+												{/if}
+												<td class="py-2 pr-4"
+													>{Math.round(row.medianFinalValue ?? 0).toLocaleString('it-IT')} &euro;</td
+												>
+											{/if}
+										</tr>
+									{/each}
+								</tbody>
+							</table>
+						</div>
+					{/if}
 				</div>
 			{/if}
 

@@ -82,7 +82,8 @@ export const usdPerEurDecember: Record<number, number> = {
 	2021: 1.1301,
 	2022: 1.0591,
 	2023: 1.0909,
-	2024: 1.0472
+	2024: 1.0472,
+	2025: 1.171
 };
 
 /**

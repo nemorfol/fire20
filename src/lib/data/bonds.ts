@@ -1,7 +1,9 @@
 /**
- * Rendimenti annuali US 10-Year Treasury Bond (1928-2024).
- * Fonte: NYU Stern (Damodaran), dati storici reali.
- * I valori rappresentano il rendimento totale annuo in percentuale.
+ * Rendimenti annuali totali del US 10-Year Treasury Bond (1928-2025), in USD.
+ * Fonte: A. Damodaran, NYU Stern, "Historical Returns on Stocks, Bonds and Bills"
+ * (histretSP, aggiornamento del 5 gennaio 2026), pages.stern.nyu.edu/~adamodar.
+ * Serie riallineata per intero all'edizione 2026 (alcuni anni recenti delle edizioni
+ * precedenti erano stati rivisti).
  */
 
 export interface AnnualReturn {
@@ -50,7 +52,7 @@ export const bondReturns: AnnualReturn[] = [
 	{ year: 1965, value: 0.72 },
 	{ year: 1966, value: 2.91 },
 	{ year: 1967, value: -1.58 },
-	{ year: 1968, value: 3.22 },
+	{ year: 1968, value: 3.27 },
 	{ year: 1969, value: -5.01 },
 	{ year: 1970, value: 16.75 },
 	{ year: 1971, value: 9.79 },
@@ -73,7 +75,7 @@ export const bondReturns: AnnualReturn[] = [
 	{ year: 1988, value: 8.22 },
 	{ year: 1989, value: 17.69 },
 	{ year: 1990, value: 6.24 },
-	{ year: 1991, value: 15.0 },
+	{ year: 1991, value: 15 },
 	{ year: 1992, value: 9.36 },
 	{ year: 1993, value: 14.21 },
 	{ year: 1994, value: -8.04 },
@@ -105,8 +107,9 @@ export const bondReturns: AnnualReturn[] = [
 	{ year: 2020, value: 11.33 },
 	{ year: 2021, value: -4.42 },
 	{ year: 2022, value: -17.83 },
-	{ year: 2023, value: 3.97 },
-	{ year: 2024, value: 0.72 }
+	{ year: 2023, value: 3.88 },
+	{ year: 2024, value: -1.64 },
+	{ year: 2025, value: 7.8 }
 ];
 
 function computeStats(data: AnnualReturn[]) {

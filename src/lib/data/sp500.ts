@@ -1,7 +1,9 @@
 /**
- * S&P 500 Total Returns annuali (1928-2024).
- * Fonte: NYU Stern (Damodaran), dati storici reali.
- * I valori rappresentano il rendimento totale annuo (dividendi inclusi) in percentuale.
+ * S&P 500 Total Returns annuali (1928-2025), dividendi inclusi, in USD.
+ * Fonte: A. Damodaran, NYU Stern, "Historical Returns on Stocks, Bonds and Bills"
+ * (histretSP, aggiornamento del 5 gennaio 2026), pages.stern.nyu.edu/~adamodar.
+ * Serie riallineata per intero all'edizione 2026 (alcuni anni recenti delle edizioni
+ * precedenti erano stati rivisti).
  */
 
 export interface AnnualReturn {
@@ -57,7 +59,7 @@ export const sp500Returns: AnnualReturn[] = [
 	{ year: 1972, value: 18.76 },
 	{ year: 1973, value: -14.31 },
 	{ year: 1974, value: -25.9 },
-	{ year: 1975, value: 37.0 },
+	{ year: 1975, value: 37 },
 	{ year: 1976, value: 23.83 },
 	{ year: 1977, value: -6.98 },
 	{ year: 1978, value: 6.51 },
@@ -89,7 +91,7 @@ export const sp500Returns: AnnualReturn[] = [
 	{ year: 2004, value: 10.74 },
 	{ year: 2005, value: 4.83 },
 	{ year: 2006, value: 15.61 },
-	{ year: 2007, value: 5.49 },
+	{ year: 2007, value: 5.48 },
 	{ year: 2008, value: -36.55 },
 	{ year: 2009, value: 25.94 },
 	{ year: 2010, value: 14.82 },
@@ -106,7 +108,8 @@ export const sp500Returns: AnnualReturn[] = [
 	{ year: 2021, value: 28.47 },
 	{ year: 2022, value: -18.04 },
 	{ year: 2023, value: 26.06 },
-	{ year: 2024, value: 24.89 }
+	{ year: 2024, value: 24.88 },
+	{ year: 2025, value: 17.78 }
 ];
 
 // Statistiche calcolate

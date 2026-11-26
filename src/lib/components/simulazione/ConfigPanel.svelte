@@ -95,14 +95,16 @@
 	let capitalGainsTaxMode = $state<'realization' | 'accrual'>('realization');
 	/** Plusvalenza latente oggi, in % del valore del portafoglio */
 	let latentGainPct = $state(0);
+	/** Spesa minima accettabile, in % delle spese annue (strategie variabili) */
+	let minSpendingPct = $state(80);
 	const levelApplies = $derived(withdrawalStrategy === 'vpw' || withdrawalStrategy === 'amortized');
 
 	const strategyOptions: { value: Strategy; name: string; description: string }[] = [
 		{
 			value: 'fixed',
-			name: 'Spesa fissa (regola del 4%)',
+			name: 'Spesa reale fissa (senza guardrail)',
 			description:
-				"Prelevi ogni anno le spese annue in pensione, rivalutate con l'inflazione realizzata. Spesa stabile, ma il portafoglio puo' esaurirsi."
+				"Prelevi ogni anno l'importo delle spese annue in pensione (es. 24.000 €), rivalutato con l'inflazione realizzata: potere d'acquisto costante, nessun taglio. Il tasso di prelievo qui non conta. Spesa stabile, ma il portafoglio puo' esaurirsi."
 		},
 		{
 			value: 'guyton-klinger',
@@ -288,6 +290,10 @@
 				targetBequest,
 				plannedRealReturn: plannedRealReturn / 100,
 				levelIncomeWithPension: levelApplies && levelIncomeWithPension,
+				minAcceptableSpending:
+					withdrawalStrategy !== 'fixed'
+						? (annualExpenses * Math.min(100, Math.max(0, minSpendingPct || 0))) / 100
+						: 0,
 				capitalGainsTaxMode,
 				initialCostBasis:
 					initialPortfolio * (1 - Math.min(100, Math.max(0, latentGainPct || 0)) / 100),
@@ -331,6 +337,10 @@
 				targetBequest,
 				plannedRealReturn: plannedRealReturn / 100,
 				levelIncomeWithPension: levelApplies && levelIncomeWithPension,
+				minAcceptableSpending:
+					withdrawalStrategy !== 'fixed'
+						? (annualExpenses * Math.min(100, Math.max(0, minSpendingPct || 0))) / 100
+						: 0,
 				capitalGainsTaxMode,
 				initialCostBasis:
 					initialPortfolio * (1 - Math.min(100, Math.max(0, latentGainPct || 0)) / 100),
@@ -463,6 +473,28 @@
 					<Label for="cape-ratio" class="mb-2">CAPE (fisso nella simulazione)</Label>
 					<Input id="cape-ratio" type="number" bind:value={capeRatio} min={5} max={60} step={0.5} />
 					<Helper class="mt-1 text-xs">Default: CAPE S&amp;P 500 attuale ({currentCAPE}).</Helper>
+				</div>
+			{/if}
+			{#if withdrawalStrategy !== 'fixed'}
+				<div class="max-w-md">
+					<Label for="min-spending" class="mb-2"
+						>Spesa minima accettabile (% delle spese annue)</Label
+					>
+					<Input
+						id="min-spending"
+						type="number"
+						bind:value={minSpendingPct}
+						min={0}
+						max={100}
+						step={5}
+					/>
+					<Helper class="mt-1 text-xs"
+						>Con le strategie variabili il portafoglio quasi non si esaurisce (VPW e CAPE-based
+						prelevano una percentuale del capitale: successo 100% per costruzione). La misura utile
+						e' la quota di simulazioni in cui la spesa reale non scende mai sotto questa soglia ({Math.round(
+							(annualExpenses * (minSpendingPct || 0)) / 100
+						).toLocaleString('it-IT')} &euro;).</Helper
+					>
 				</div>
 			{/if}
 			{#if levelApplies}
@@ -964,7 +996,7 @@
 					</div>
 					{#if advancedMode && goldEnabled}
 						<div>
-							<span class="font-medium">Oro (1971-2024):</span>
+							<span class="font-medium">Oro (1971-2025):</span>
 							media {goldStats.mean}%, dev.std {goldStats.stdDev}%
 						</div>
 					{/if}

@@ -4,15 +4,23 @@ import {
 	SERIES_IT_DEFAULT,
 	SERIES_US_CLASSIC,
 	SERIES_IT_ALLWORLD,
+	SERIES_IT_WORLD,
+	ALL_SERIES_PRESETS,
+	msciWorldReturnsEur,
 	ALLWORLD_US_WEIGHT_DEFAULT,
 	alignHistory,
 	blendAnnualReturns,
 	buildAllWorldEurPreset,
 	getSeriesPreset,
 	internationalReturnsEur,
-	sp500ReturnsEur
+	sp500ReturnsEur,
+	recenterHistory,
+	meanRealReturn,
+	type AlignedHistory
 } from './default-series';
 import { internationalReturns } from './international';
+import { btpReturns, BTP_MEASURED_UNTIL } from './btp';
+import { jstItalyBondReturns } from './jst-italia';
 import { inflationITReturns } from './inflation-it';
 
 /** Media geometrica annua (decimali) di una serie in percentuale, su [from, to] */
@@ -72,24 +80,24 @@ describe('preset IT - coerenza valutaria', () => {
 describe('alignHistory - finestra comune per anno', () => {
 	const span = (ys: number[]) => [ys[0], ys[ys.length - 1]];
 
-	it('IT azioni + BTP -> 1991-2024 (limite: BTP stimati dal 1991)', () => {
+	it('IT azioni + BTP -> 1970-2025 (BTP misurati JST dal 1970)', () => {
 		const h = alignHistory(SERIES_IT_DEFAULT, ['stocks', 'bonds']);
-		expect(span(h.years)).toEqual([1991, 2024]);
+		expect(span(h.years)).toEqual([1970, 2025]);
 		expect(h.stocks).toHaveLength(h.years.length);
 		expect(h.bonds).toHaveLength(h.years.length);
 		expect(h.inflation).toHaveLength(h.years.length);
 	});
 
-	it('IT solo azioni -> 1970-2024 (include la stagflazione anni 70)', () => {
+	it('IT solo azioni -> 1970-2025 (include la stagflazione anni 70)', () => {
 		const h = alignHistory(SERIES_IT_DEFAULT, ['stocks']);
-		expect(span(h.years)).toEqual([1970, 2024]);
-		expect(h.bonds).toEqual([]); // BTP non coprono la finestra: non usati
+		expect(span(h.years)).toEqual([1970, 2025]);
+		expect(h.bonds).toHaveLength(h.years.length); // i BTP coprono anche gli anni '70
 	});
 
-	it('US azioni + bond -> 1928-2024, con oro -> 1971-2024', () => {
-		expect(span(alignHistory(SERIES_US_CLASSIC, ['stocks', 'bonds']).years)).toEqual([1928, 2024]);
+	it('US azioni + bond -> 1928-2025, con oro -> 1971-2025', () => {
+		expect(span(alignHistory(SERIES_US_CLASSIC, ['stocks', 'bonds']).years)).toEqual([1928, 2025]);
 		expect(span(alignHistory(SERIES_US_CLASSIC, ['stocks', 'bonds', 'gold']).years)).toEqual([
-			1971, 2024
+			1971, 2025
 		]);
 	});
 
@@ -100,7 +108,7 @@ describe('alignHistory - finestra comune per anno', () => {
 			inflationITReturns.find((r) => r.year === 2022)!.value / 100,
 			10
 		);
-		expect(h.bonds[i]).toBeCloseTo(-0.168, 10);
+		expect(h.bonds[i]).toBeCloseTo(-0.225, 10);
 	});
 });
 
@@ -117,11 +125,11 @@ describe('preset All-World in EUR (S&P 500 + ex-USA a peso fisso)', () => {
 		expect(out).toEqual([{ year: 2001, value: -14 }]);
 	});
 
-	it('tutto in EUR, finestra azioni 1970-2024 e default 70% USA', () => {
+	it('tutto in EUR, finestra azioni 1970-2025 e default 70% USA', () => {
 		expect(SERIES_IT_ALLWORLD.currency).toBe('EUR');
 		expect(ALLWORLD_US_WEIGHT_DEFAULT).toBe(0.7);
 		const h = alignHistory(SERIES_IT_ALLWORLD, ['stocks']);
-		expect([h.years[0], h.years[h.years.length - 1]]).toEqual([1970, 2024]);
+		expect([h.years[0], h.years[h.years.length - 1]]).toEqual([1970, 2025]);
 	});
 
 	it('peso 0 = ex-USA in EUR, peso 1 = S&P 500 in EUR', () => {
@@ -143,5 +151,83 @@ describe('preset All-World in EUR (S&P 500 + ex-USA a peso fisso)', () => {
 		expect(getSeriesPreset(undefined).id).toBe('it-default');
 		expect(getSeriesPreset('it-allworld')).toBe(SERIES_IT_ALLWORLD);
 		expect(getSeriesPreset('it-allworld', 0.5).description).toContain('50% USA');
+	});
+});
+
+describe('Periodo storico e bootstrap ricentrato', () => {
+	it('alignHistory con fromYear taglia la finestra (1999 = era euro)', () => {
+		const all = alignHistory(SERIES_IT_ALLWORLD, ['stocks', 'bonds']);
+		const euro = alignHistory(SERIES_IT_ALLWORLD, ['stocks', 'bonds'], 1999);
+		expect(all.years[0]).toBe(1970);
+		expect(euro.years[0]).toBe(1999);
+		expect(euro.years.at(-1)).toBe(all.years.at(-1));
+		expect(euro.stocks).toHaveLength(euro.years.length);
+		expect(euro.inflation).toHaveLength(euro.years.length);
+	});
+
+	const h: AlignedHistory = {
+		years: [2001, 2002, 2003, 2004],
+		stocks: [0.3, -0.2, 0.1, 0.05],
+		bonds: [0.04, 0.06, -0.02, 0.03],
+		gold: [0.1, 0.1, 0.1, 0.1],
+		inflation: [0.02, 0.05, 0.0, 0.01]
+	};
+
+	it('la media reale ricentrata coincide con l obiettivo dichiarato', () => {
+		const r = recenterHistory(h, { stocks: 0.05, bonds: 0.015 });
+		expect(meanRealReturn(r.stocks, r.inflation)).toBeCloseTo(0.05, 10);
+		expect(meanRealReturn(r.bonds, r.inflation)).toBeCloseTo(0.015, 10);
+	});
+
+	it('conserva la forma: rapporti tra rendimenti reali lordi e inflazione invariati', () => {
+		const r = recenterHistory(h, { stocks: 0.0 });
+		const g = h.stocks.map((x, i) => (1 + x) / (1 + h.inflation[i]));
+		const g2 = r.stocks.map((x, i) => (1 + x) / (1 + r.inflation[i]));
+		const k = g2[0] / g[0];
+		g.forEach((v, i) => expect(g2[i] / v).toBeCloseTo(k, 12));
+		expect(r.inflation).toEqual(h.inflation);
+	});
+
+	it('serie senza obiettivo restano invariate', () => {
+		const r = recenterHistory(h, { stocks: 0.05 });
+		expect(r.bonds).toBe(h.bonds);
+		expect(r.gold).toBe(h.gold);
+	});
+});
+
+describe('serie BTP: JST misurato + proxy recente', () => {
+	it('1970-2025 senza buchi; 1970-2020 identici a JST', () => {
+		const years = btpReturns.map((r) => r.year);
+		expect(years[0]).toBe(1970);
+		expect(years.at(-1)).toBe(2025);
+		years.forEach((y, i) => expect(y).toBe(1970 + i));
+		expect(btpReturns.slice(0, jstItalyBondReturns.length)).toEqual(jstItalyBondReturns);
+		expect(jstItalyBondReturns.at(-1)!.year).toBe(BTP_MEASURED_UNTIL);
+	});
+
+	it('valori JST di controllo (1993, 2011, 2012)', () => {
+		const v = (y: number) => btpReturns.find((r) => r.year === y)!.value;
+		expect(v(1993)).toBeCloseTo(40.2, 1);
+		expect(v(2011)).toBeCloseTo(-6.49, 2);
+		expect(v(2012)).toBeCloseTo(24.55, 2);
+	});
+});
+
+describe('preset MSCI World in EUR (pesi storici)', () => {
+	it('e il default della lista, in EUR, 1970-2025 con BTP', () => {
+		expect(ALL_SERIES_PRESETS[0].id).toBe('it-world');
+		expect(getSeriesPreset('it-world')).toBe(SERIES_IT_WORLD);
+		expect(SERIES_IT_WORLD.currency).toBe('EUR');
+		const h = alignHistory(SERIES_IT_WORLD, ['stocks', 'bonds']);
+		expect([h.years[0], h.years.at(-1)]).toEqual([1970, 2025]);
+	});
+
+	it('rendimento reale MSCI World in EUR/ISTAT 1970-2025 tra ex-USA e mix 70% USA', () => {
+		const infl = geo(inflationITReturns, 1970, 2025);
+		const real = (s: { year: number; value: number }[]) =>
+			(1 + geo(s, 1970, 2025)) / (1 + infl) - 1;
+		const world = real(msciWorldReturnsEur);
+		expect(world).toBeGreaterThan(real(internationalReturnsEur));
+		expect(world).toBeLessThan(real(buildAllWorldEurPreset(0.7).series.stocks));
 	});
 });

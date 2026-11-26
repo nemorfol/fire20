@@ -1,6 +1,10 @@
 /**
- * Inflazione annua italiana (ISTAT CPI) 1960-2024.
- * Fonte: ISTAT / World Bank, dati storici reali.
+ * Inflazione annua italiana (prezzi al consumo, media annua) 1960-2025.
+ * Fonte: World Bank FP.CPI.TOTL.ZG (Italia, aggiornamento 11/11/2026), coerente con
+ * ISTAT NIC: 2024 +1,0% e 2025 +1,5% (comunicato ISTAT "Prezzi al consumo -
+ * Dicembre 2025", 16/01/2026). Il 2024 era erroneamente 2,4: corretto a 0,98.
+ * Il 2026 non e' incluso: l'anno non e' concluso (una media parziale falserebbe
+ * la simulazione, che campiona anni interi abbinati ai rendimenti).
  */
 
 export interface AnnualReturn {
@@ -73,7 +77,8 @@ export const inflationITReturns: AnnualReturn[] = [
 	{ year: 2021, value: 1.87 },
 	{ year: 2022, value: 8.2 },
 	{ year: 2023, value: 5.62 },
-	{ year: 2024, value: 2.4 }
+	{ year: 2024, value: 0.98 },
+	{ year: 2025, value: 1.53 }
 ];
 
 function computeStats(data: AnnualReturn[]) {
