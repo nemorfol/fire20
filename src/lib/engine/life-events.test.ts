@@ -49,7 +49,7 @@ describe('Eventi di vita - Eredità', () => {
 		expect(impact.goalBucketDeposit).toBe(100000);
 	});
 
-	it('conta solo nell\'anno target', () => {
+	it("conta solo nell'anno target", () => {
 		const e = [ev({ amount: 50000, year: 2030 })];
 		expect(computeYearlyImpact(e, 2029).bonusIncome).toBe(0);
 		expect(computeYearlyImpact(e, 2030).bonusIncome).toBe(50000);
@@ -72,7 +72,7 @@ describe('Eventi di vita - Vendita immobile (plusvalenza)', () => {
 	const sale = (p: Partial<LifeEvent>) =>
 		ev({ type: 'propertySale', amount: 200000, costBasis: 150000, year: 2030, ...p });
 
-	it('venduto oltre 5 anni dall\'acquisto: plusvalenza esente, netto pieno', () => {
+	it("venduto oltre 5 anni dall'acquisto: plusvalenza esente, netto pieno", () => {
 		// acquisto 2024, vendita 2030 -> 6 anni -> esente
 		const impact = computeYearlyImpact([sale({ purchaseYear: 2024 })], 2030);
 		expect(impact.bonusIncome).toBe(200000);
@@ -100,7 +100,7 @@ describe('Eventi di vita - Vendita immobile (plusvalenza)', () => {
 		expect(impact.bonusIncome).toBe(150000);
 	});
 
-	it('conta solo nell\'anno della vendita', () => {
+	it("conta solo nell'anno della vendita", () => {
 		const e = [sale({ purchaseYear: 2027 })];
 		expect(computeYearlyImpact(e, 2029).bonusIncome).toBe(0);
 		expect(computeYearlyImpact(e, 2030).bonusIncome).toBe(187000);

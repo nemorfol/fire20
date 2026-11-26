@@ -1,29 +1,48 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import {
-		Heading, Breadcrumb, BreadcrumbItem, Card, Button,
-		Badge, Checkbox, Alert, Spinner, Toast
+		Heading,
+		Breadcrumb,
+		BreadcrumbItem,
+		Card,
+		Button,
+		Badge,
+		Checkbox,
+		Alert,
+		Spinner,
+		Toast
 	} from 'flowbite-svelte';
 	import {
-		PlusOutline, TrashBinOutline, EditOutline,
-		CheckCircleSolid, CloseCircleSolid,
-		FileCopySolid, PlaySolid, ChartOutline
+		PlusOutline,
+		TrashBinOutline,
+		EditOutline,
+		CheckCircleSolid,
+		CloseCircleSolid,
+		FileCopySolid,
+		PlaySolid,
+		ChartOutline,
+		ShareNodesSolid,
+		ArrowRightOutline
 	} from 'flowbite-svelte-icons';
 	import type { Profile, Scenario, SimulationResult } from '$lib/db/index';
 	import {
-		getAllScenarios, createScenario, updateScenario, deleteScenario
+		getAllScenarios,
+		createScenario,
+		updateScenario,
+		deleteScenario
 	} from '$lib/db/scenarios';
 	import { getAllProfiles } from '$lib/db/profiles';
 	import { getAllResults, createResult } from '$lib/db/results';
 	import { calculateNetWorth } from '$lib/engine/fire-calculator';
-	import type { MonteCarloParams, MonteCarloResult } from '$lib/engine/monte-carlo';
+	import type { MonteCarloParams } from '$lib/engine/monte-carlo';
+	import { runMonteCarloWorker } from '$lib/workers/monte-carlo-client';
 	import { sp500Returns } from '$lib/data/sp500';
 	import { bondReturns } from '$lib/data/bonds';
 	import { inflationUSReturns } from '$lib/data/inflation-us';
 	import { formatCurrency, formatPercent, formatDate } from '$lib/utils/format';
 	import ConfirmDialog from '$lib/components/shared/ConfirmDialog.svelte';
 	import ScenarioForm from '$lib/components/scenari/ScenarioForm.svelte';
-	import ScenarioComparison from '$lib/components/scenari/ScenarioComparison.svelte';
+	import SavedScenarioComparison from '$lib/components/scenari/SavedScenarioComparison.svelte';
 
 	// === State ===
 	let loading = $state(true);
@@ -97,7 +116,9 @@
 		toastMessage = message;
 		toastType = type;
 		showToast = true;
-		setTimeout(() => { showToast = false; }, 4000);
+		setTimeout(() => {
+			showToast = false;
+		}, 4000);
 	}
 
 	function getProfileName(profileId: number): string {
@@ -208,9 +229,7 @@
 		showComparison = true;
 	}
 
-	let selectedScenarios = $derived(
-		scenarios.filter((s) => selectedIds.has(s.id))
-	);
+	let selectedScenarios = $derived(scenarios.filter((s) => selectedIds.has(s.id)));
 
 	// === Run Simulation ===
 
@@ -221,18 +240,24 @@
 			return;
 		}
 		if (runningScenarioId !== null) {
-			notify('Una simulazione e\' gia in corso', 'error');
+			notify("Una simulazione e' gia in corso", 'error');
 			return;
 		}
 
 		const o = scenario.overrides ?? {};
 		const simO = (o as any).simulation ?? {};
 
-		const withdrawalRate = simO.withdrawalRate != null ? simO.withdrawalRate / 100 : profile.simulation.withdrawalRate;
-		const stockAllocation = simO.stockAllocation != null ? simO.stockAllocation / 100 : profile.simulation.stockAllocation;
+		const withdrawalRate =
+			simO.withdrawalRate != null ? simO.withdrawalRate / 100 : profile.simulation.withdrawalRate;
+		const stockAllocation =
+			simO.stockAllocation != null
+				? simO.stockAllocation / 100
+				: profile.simulation.stockAllocation;
 		const bondAllocation = 1 - stockAllocation;
-		const inflationRate = simO.inflationRate != null ? simO.inflationRate / 100 : profile.simulation.inflationRate;
-		const expectedReturn = simO.expectedReturn != null ? simO.expectedReturn / 100 : profile.simulation.expectedReturn;
+		const inflationRate =
+			simO.inflationRate != null ? simO.inflationRate / 100 : profile.simulation.inflationRate;
+		const expectedReturn =
+			simO.expectedReturn != null ? simO.expectedReturn / 100 : profile.simulation.expectedReturn;
 		const annualExpenses = o.fireExpenses ?? profile.fireExpenses;
 		const retirementAge = o.retirementAge ?? profile.retirementAge;
 		const currentYear = new Date().getFullYear();
@@ -240,26 +265,39 @@
 		const yearsToFire = Math.max(0, retirementAge - currentAge);
 		const yearsInRetirement = profile.lifeExpectancy - retirementAge;
 		const netWorth = calculateNetWorth(profile.portfolio as unknown as Record<string, number>);
-		const annualContribution = Object.values(profile.monthlyContributions).reduce((s, v) => s + (v || 0), 0) * 12;
+		const annualContribution =
+			Object.values(profile.monthlyContributions).reduce((s, v) => s + (v || 0), 0) * 12;
 		const iterations = profile.simulation.iterations || 10000;
 
 		runningScenarioId = scenario.id;
 		runProgress = 0;
 
-		worker?.terminate();
-
 		try {
-			worker = new Worker(
-				new URL('$lib/workers/monte-carlo.worker.ts', import.meta.url),
-				{ type: 'module' }
-			);
+			const mcParams = {
+				initialPortfolio: netWorth,
+				annualContribution,
+				annualExpenses,
+				withdrawalRate,
+				withdrawalStrategy: profile.simulation.withdrawalStrategy,
+				stockAllocation,
+				bondAllocation,
+				yearsToFire,
+				yearsInRetirement,
+				inflationRate,
+				simulationMode: 'historical',
+				iterations,
+				historicalStockReturns,
+				historicalBondReturns,
+				historicalInflation,
+				// Serie US tutte 1928-2024 (allineate, USD): campionamento per anno
+				jointHistoricalSampling: true
+			} satisfies MonteCarloParams;
 
-			worker.onmessage = async (e: MessageEvent) => {
-				const data = e.data;
-				if (data.type === 'progress') {
-					runProgress = data.percent;
-				} else if (data.type === 'result') {
-					const mcResult = data.data as MonteCarloResult;
+			worker = runMonteCarloWorker(worker, mcParams, {
+				onProgress: (percent) => {
+					runProgress = percent;
+				},
+				onResult: async (mcResult) => {
 					const totalYears = yearsToFire + yearsInRetirement;
 					const finalYear = mcResult.percentiles.p5.length - 1;
 					try {
@@ -305,36 +343,15 @@
 						notify('Simulazione completata ma errore nel salvataggio', 'error');
 					}
 					runningScenarioId = null;
-				} else if (data.type === 'error') {
-					notify(`Errore simulazione: ${data.message}`, 'error');
+				},
+				onError: (message) => {
+					notify(`Errore simulazione: ${message}`, 'error');
+					runningScenarioId = null;
+				},
+				onWorkerError: () => {
+					notify('Errore nel worker della simulazione', 'error');
 					runningScenarioId = null;
 				}
-			};
-
-			worker.onerror = () => {
-				notify('Errore nel worker della simulazione', 'error');
-				runningScenarioId = null;
-			};
-
-			worker.postMessage({
-				type: 'run',
-				params: {
-					initialPortfolio: netWorth,
-					annualContribution,
-					annualExpenses,
-					withdrawalRate,
-					withdrawalStrategy: profile.simulation.withdrawalStrategy,
-					stockAllocation,
-					bondAllocation,
-					yearsToFire,
-					yearsInRetirement,
-					inflationRate,
-					simulationMode: 'historical',
-					iterations,
-					historicalStockReturns,
-					historicalBondReturns,
-					historicalInflation
-				} satisfies MonteCarloParams
 			});
 		} catch {
 			notify('Impossibile avviare la simulazione', 'error');
@@ -353,9 +370,9 @@
 		<Toast color={toastType === 'success' ? 'green' : 'red'} dismissable toastStatus={showToast}>
 			{#snippet icon()}
 				{#if toastType === 'success'}
-					<CheckCircleSolid class="w-5 h-5" />
+					<CheckCircleSolid class="h-5 w-5" />
 				{:else}
-					<CloseCircleSolid class="w-5 h-5" />
+					<CloseCircleSolid class="h-5 w-5" />
 				{/if}
 			{/snippet}
 			{toastMessage}
@@ -370,30 +387,32 @@
 
 {#if showComparison && selectedScenarios.length >= 2}
 	<!-- Comparison view -->
-	<ScenarioComparison
+	<SavedScenarioComparison
 		scenarios={selectedScenarios}
 		{profiles}
 		{results}
-		onClose={() => { showComparison = false; }}
+		onClose={() => {
+			showComparison = false;
+		}}
 	/>
 {:else}
 	<!-- Main list view -->
-	<div class="flex items-start justify-between mb-6 flex-wrap gap-4">
+	<div class="mb-6 flex flex-wrap items-start justify-between gap-4">
 		<div>
 			<Heading tag="h1" class="mb-2">Scenari Salvati</Heading>
 			<p class="text-gray-600 dark:text-gray-400">
 				Gestisci e confronta i tuoi scenari FIRE. Seleziona fino a 4 scenari per confrontarli.
 			</p>
 		</div>
-		<div class="flex gap-3 flex-wrap">
+		<div class="flex flex-wrap gap-3">
 			{#if selectedIds.size >= 2}
 				<Button color="blue" onclick={openComparison}>
-					<ChartOutline class="w-4 h-4 me-2" />
+					<ChartOutline class="me-2 h-4 w-4" />
 					Confronta Selezionati ({selectedIds.size})
 				</Button>
 			{/if}
 			<Button color="primary" onclick={handleNew}>
-				<PlusOutline class="w-4 h-4 me-2" />
+				<PlusOutline class="me-2 h-4 w-4" />
 				Nuovo Scenario
 			</Button>
 		</div>
@@ -407,45 +426,58 @@
 		<Alert color="yellow" class="mb-6">
 			<span class="font-medium">Nessun profilo trovato.</span>
 			Crea prima un profilo nella sezione
-			<a href="/profilo" class="underline font-semibold">Profilo</a>
+			<a href="/profilo" class="font-semibold underline">Profilo</a>
 			per poter creare scenari.
 		</Alert>
 	{:else if scenarios.length === 0}
 		<Card class="max-w-none">
-			<div class="text-center py-8">
-				<p class="text-gray-500 dark:text-gray-400 mb-4">
+			<div class="py-8 text-center">
+				<p class="mb-4 text-gray-500 dark:text-gray-400">
 					Nessuno scenario salvato. Crea il tuo primo scenario per iniziare a pianificare.
 				</p>
 				<Button color="primary" onclick={handleNew}>
-					<PlusOutline class="w-4 h-4 me-2" />
+					<PlusOutline class="me-2 h-4 w-4" />
 					Crea Primo Scenario
 				</Button>
 			</div>
 		</Card>
 	{:else}
+		<!-- Aggancio contestuale verso la Community (discreto) -->
+		<div
+			class="mb-4 flex flex-col gap-1 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between dark:border-gray-700 dark:bg-gray-800"
+		>
+			<span class="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+				<ShareNodesSolid class="h-4 w-4" />
+				Condividi il tuo scenario in forma anonima e confrontalo con la community.
+			</span>
+			<a
+				href="/community/"
+				class="text-primary-600 dark:text-primary-400 inline-flex items-center gap-1 font-medium hover:underline"
+			>
+				Vai alla Community <ArrowRightOutline class="h-3 w-3" />
+			</a>
+		</div>
+
 		<!-- Scenario Cards Grid -->
-		<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+		<div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
 			{#each scenarios as scenario (scenario.id)}
 				{@const result = getResult(scenario.id)}
 				{@const isSelected = selectedIds.has(scenario.id)}
 				{@const isRunning = runningScenarioId === scenario.id}
-				<Card class="max-w-none relative {isSelected ? 'ring-2 ring-blue-500' : ''}">
+				<Card class="relative max-w-none {isSelected ? 'ring-2 ring-blue-500' : ''}">
 					<!-- Selection checkbox -->
 					<div class="absolute top-4 right-4">
-						<Checkbox
-							checked={isSelected}
-							onchange={() => toggleSelection(scenario.id)}
-						/>
+						<Checkbox checked={isSelected} onchange={() => toggleSelection(scenario.id)} />
 					</div>
 
 					<!-- Header -->
 					<div class="mb-3 pr-8">
-						<div class="flex items-center gap-2 mb-1">
-							<h3 class="text-lg font-semibold text-gray-900 dark:text-white truncate">
+						<div class="mb-1 flex items-center gap-2">
+							<h3 class="truncate text-lg font-semibold text-gray-900 dark:text-white">
 								{scenario.name}
 							</h3>
 						</div>
-						<div class="flex items-center gap-2 flex-wrap">
+						<div class="flex flex-wrap items-center gap-2">
 							<Badge color={TYPE_COLORS[scenario.type]}>
 								{TYPE_LABELS[scenario.type]}
 							</Badge>
@@ -457,18 +489,24 @@
 
 					<!-- Description -->
 					{#if scenario.description}
-						<p class="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
+						<p class="mb-3 line-clamp-2 text-sm text-gray-600 dark:text-gray-400">
 							{scenario.description}
 						</p>
 					{/if}
 
 					<!-- Result summary -->
-					<div class="mb-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+					<div class="mb-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
 						{#if result}
 							<div class="grid grid-cols-2 gap-2 text-sm">
 								<div>
 									<span class="text-gray-500 dark:text-gray-400">Successo:</span>
-									<span class={result.successRate >= 0.9 ? 'text-green-600 font-bold' : result.successRate >= 0.7 ? 'text-yellow-600 font-bold' : 'text-red-600 font-bold'}>
+									<span
+										class={result.successRate >= 0.9
+											? 'font-bold text-green-600'
+											: result.successRate >= 0.7
+												? 'font-bold text-yellow-600'
+												: 'font-bold text-red-600'}
+									>
 										{formatPercent(result.successRate * 100)}
 									</span>
 								</div>
@@ -484,7 +522,9 @@
 						{:else if isRunning}
 							<div class="flex items-center gap-2">
 								<Spinner size="4" />
-								<span class="text-sm text-blue-600">Simulazione in corso... {Math.round(runProgress)}%</span>
+								<span class="text-sm text-blue-600"
+									>Simulazione in corso... {Math.round(runProgress)}%</span
+								>
 							</div>
 						{:else}
 							<p class="text-sm text-gray-400 italic">Nessuna simulazione eseguita</p>
@@ -492,22 +532,50 @@
 					</div>
 
 					<!-- Footer with date and actions -->
-					<div class="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-3">
+					<div
+						class="flex items-center justify-between border-t border-gray-200 pt-3 dark:border-gray-700"
+					>
 						<span class="text-xs text-gray-400">
-							{formatDate(scenario.createdAt instanceof Date ? scenario.createdAt : new Date(scenario.createdAt))}
+							{formatDate(
+								scenario.createdAt instanceof Date
+									? scenario.createdAt
+									: new Date(scenario.createdAt)
+							)}
 						</span>
 						<div class="flex gap-1">
-							<Button size="xs" color="alternative" onclick={() => handleRunSimulation(scenario)} disabled={isRunning} title="Esegui simulazione">
-								<PlaySolid class="w-3.5 h-3.5" />
+							<Button
+								size="xs"
+								color="alternative"
+								onclick={() => handleRunSimulation(scenario)}
+								disabled={isRunning}
+								title="Esegui simulazione"
+							>
+								<PlaySolid class="h-3.5 w-3.5" />
 							</Button>
-							<Button size="xs" color="alternative" onclick={() => handleEdit(scenario)} title="Modifica">
-								<EditOutline class="w-3.5 h-3.5" />
+							<Button
+								size="xs"
+								color="alternative"
+								onclick={() => handleEdit(scenario)}
+								title="Modifica"
+							>
+								<EditOutline class="h-3.5 w-3.5" />
 							</Button>
-							<Button size="xs" color="alternative" onclick={() => handleDuplicate(scenario)} title="Duplica">
-								<FileCopySolid class="w-3.5 h-3.5" />
+							<Button
+								size="xs"
+								color="alternative"
+								onclick={() => handleDuplicate(scenario)}
+								title="Duplica"
+							>
+								<FileCopySolid class="h-3.5 w-3.5" />
 							</Button>
-							<Button size="xs" color="red" outline onclick={() => confirmDelete(scenario.id)} title="Elimina">
-								<TrashBinOutline class="w-3.5 h-3.5" />
+							<Button
+								size="xs"
+								color="red"
+								outline
+								onclick={() => confirmDelete(scenario.id)}
+								title="Elimina"
+							>
+								<TrashBinOutline class="h-3.5 w-3.5" />
 							</Button>
 						</div>
 					</div>
@@ -518,12 +586,7 @@
 {/if}
 
 <!-- Modals -->
-<ScenarioForm
-	bind:open={showForm}
-	{profiles}
-	scenario={editingScenario}
-	onSave={handleSave}
-/>
+<ScenarioForm bind:open={showForm} {profiles} scenario={editingScenario} onSave={handleSave} />
 
 <ConfirmDialog
 	bind:open={showDeleteDialog}

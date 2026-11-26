@@ -1,16 +1,47 @@
 <script lang="ts">
 	import {
-		Heading, Breadcrumb, BreadcrumbItem, Card, Button, Select,
-		Tabs, TabItem, Badge, Alert, Spinner
+		Heading,
+		Breadcrumb,
+		BreadcrumbItem,
+		Card,
+		Button,
+		Select,
+		Tabs,
+		TabItem,
+		Badge,
+		Alert,
+		Spinner
 	} from 'flowbite-svelte';
 	import {
-		PlusOutline, TrashBinOutline, CheckCircleOutline,
-		WalletOutline, ChartOutline,
-		BriefcaseOutline, CreditCardOutline
+		PlusOutline,
+		TrashBinOutline,
+		CheckCircleOutline,
+		WalletOutline,
+		ChartOutline,
+		BriefcaseOutline,
+		CreditCardOutline,
+		UsersOutline,
+		ArrowRightOutline
 	} from 'flowbite-svelte-icons';
 	import { onMount } from 'svelte';
-	import type { Profile, PortfolioAllocation, MonthlyContributions, Debt, PensionInfo, Child, Mortgage, LifeEvent, Spouse } from '$lib/db/index';
-	import { getAllProfiles, createProfile, updateProfile, deleteProfile, getProfileById } from '$lib/db/profiles';
+	import type {
+		Profile,
+		PortfolioAllocation,
+		MonthlyContributions,
+		Debt,
+		PensionInfo,
+		Child,
+		Mortgage,
+		LifeEvent,
+		Spouse
+	} from '$lib/db/index';
+	import {
+		getAllProfiles,
+		createProfile,
+		updateProfile,
+		deleteProfile,
+		getProfileById
+	} from '$lib/db/profiles';
 	import { calculateSavingsRate, calculateNetWorth } from '$lib/engine/fire-calculator';
 	import { formatCurrency, formatPercent } from '$lib/utils/format';
 	import ConfirmDialog from '$lib/components/shared/ConfirmDialog.svelte';
@@ -49,12 +80,30 @@
 	let fireExpenses = $state(18000);
 	let expenseInflation = $state(2.0);
 	let portfolio = $state<PortfolioAllocation>({
-		stocks: 0, bonds: 0, bfp: 0, cd: 0, cash: 10000, realEstate: 0,
-		gold: 0, crypto: 0, pensionFund: 0, tfr: 0, other: 0
+		stocks: 0,
+		bonds: 0,
+		bfp: 0,
+		cd: 0,
+		cash: 10000,
+		realEstate: 0,
+		gold: 0,
+		crypto: 0,
+		pensionFund: 0,
+		tfr: 0,
+		other: 0
 	});
 	let monthlyContributions = $state<MonthlyContributions>({
-		stocks: 300, bonds: 100, bfp: 0, cd: 0, cash: 0, realEstate: 0,
-		gold: 0, crypto: 0, pensionFund: 0, tfr: 0, other: 0
+		stocks: 300,
+		bonds: 100,
+		bfp: 0,
+		cd: 0,
+		cash: 0,
+		realEstate: 0,
+		gold: 0,
+		crypto: 0,
+		pensionFund: 0,
+		tfr: 0,
+		other: 0
 	});
 	let debts = $state<Debt[]>([]);
 	let pension = $state<PensionInfo>({
@@ -75,14 +124,10 @@
 	let totalMonthlyContributions = $derived(
 		Object.values(monthlyContributions).reduce((s, v) => s + (v || 0), 0)
 	);
-	let totalDebt = $derived(
-		debts.reduce((s, d) => s + (d.balance || 0), 0)
-	);
+	let totalDebt = $derived(debts.reduce((s, d) => s + (d.balance || 0), 0));
 
 	// === Profile selector options ===
-	let profileOptions = $derived(
-		profiles.map(p => ({ value: String(p.id), name: p.name }))
-	);
+	let profileOptions = $derived(profiles.map((p) => ({ value: String(p.id), name: p.name })));
 
 	// === Helpers ===
 	function getDefaultProfileData() {
@@ -99,12 +144,30 @@
 			fireExpenses: 18000,
 			expenseInflation: 2.0,
 			portfolio: {
-				stocks: 0, bonds: 0, bfp: 0, cd: 0, cash: 10000, realEstate: 0,
-				gold: 0, crypto: 0, pensionFund: 0, tfr: 0, other: 0
+				stocks: 0,
+				bonds: 0,
+				bfp: 0,
+				cd: 0,
+				cash: 10000,
+				realEstate: 0,
+				gold: 0,
+				crypto: 0,
+				pensionFund: 0,
+				tfr: 0,
+				other: 0
 			} as PortfolioAllocation,
 			monthlyContributions: {
-				stocks: 300, bonds: 100, bfp: 0, cd: 0, cash: 0, realEstate: 0,
-				gold: 0, crypto: 0, pensionFund: 0, tfr: 0, other: 0
+				stocks: 300,
+				bonds: 100,
+				bfp: 0,
+				cd: 0,
+				cash: 0,
+				realEstate: 0,
+				gold: 0,
+				crypto: 0,
+				pensionFund: 0,
+				tfr: 0,
+				other: 0
 			} as MonthlyContributions,
 			debts: [] as Debt[],
 			children: [] as Child[],
@@ -144,13 +207,17 @@
 		// bfp/cd aggiunti in v6: la migrazione Dexie li backfilla a 0, ma un
 		// profilo importato da JSON puo' bypassarla: default 0 difensivo cosi' i
 		// CurrencyInput (fallback 0) non ricevono undefined. Vedi issue #33.
-		portfolio = { bfp: 0, cd: 0, ...(p.portfolio as Partial<PortfolioAllocation>) } as PortfolioAllocation;
+		portfolio = {
+			bfp: 0,
+			cd: 0,
+			...(p.portfolio as Partial<PortfolioAllocation>)
+		} as PortfolioAllocation;
 		monthlyContributions = {
 			bfp: 0,
 			cd: 0,
 			...(p.monthlyContributions as Partial<MonthlyContributions>)
 		} as MonthlyContributions;
-		debts = p.debts.map(d => ({ ...d }));
+		debts = p.debts.map((d) => ({ ...d }));
 		// Normalizza i campi opzionali aggiunti dopo (stopContributionsAtFire #37,
 		// allocation/goal* #38), cosi' i profili salvati PRIMA non rompono i bind
 		// verso prop $bindable con fallback (svelte props_invalid_value). Vedi #33.
@@ -173,7 +240,9 @@
 					...(e as Partial<LifeEvent>)
 				}) as LifeEvent
 		);
-		spouse = p.spouse ? { ...p.spouse, initialPortfolio: p.spouse.initialPortfolio ?? 0 } : undefined;
+		spouse = p.spouse
+			? { ...p.spouse, initialPortfolio: p.spouse.initialPortfolio ?? 0 }
+			: undefined;
 	}
 
 	function getStateAsProfileData() {
@@ -191,7 +260,7 @@
 			expenseInflation,
 			portfolio: { ...portfolio },
 			monthlyContributions: { ...monthlyContributions },
-			debts: debts.map(d => ({ ...d })),
+			debts: debts.map((d) => ({ ...d })),
 			pension: { ...pension },
 			children: children.map((c: Child) => ({ ...c })),
 			mortgage: mortgage ? { ...mortgage } : undefined,
@@ -203,7 +272,9 @@
 	function showStatus(msg: string) {
 		statusMessage = msg;
 		if (statusTimer) clearTimeout(statusTimer);
-		statusTimer = setTimeout(() => { statusMessage = ''; }, 3000);
+		statusTimer = setTimeout(() => {
+			statusMessage = '';
+		}, 3000);
 	}
 
 	// === Auto-save (debounced) ===
@@ -231,9 +302,16 @@
 	$effect(() => {
 		// Read all reactive state to track them
 		// Read all reactive state to track dependencies
-		void name; void birthYear; void retirementAge; void lifeExpectancy;
-		void annualIncome; void incomeGrowthRate; void otherIncome;
-		void annualExpenses; void fireExpenses; void expenseInflation;
+		void name;
+		void birthYear;
+		void retirementAge;
+		void lifeExpectancy;
+		void annualIncome;
+		void incomeGrowthRate;
+		void otherIncome;
+		void annualExpenses;
+		void fireExpenses;
+		void expenseInflation;
 		void JSON.stringify(portfolio);
 		void JSON.stringify(monthlyContributions);
 		void JSON.stringify(debts);
@@ -325,12 +403,12 @@
 	<BreadcrumbItem>Profilo Finanziario</BreadcrumbItem>
 </Breadcrumb>
 
-<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+<div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 	<Heading tag="h1">Profilo Finanziario</Heading>
 	<div class="flex items-center gap-2">
 		{#if statusMessage}
 			<Badge color="green" class="flex items-center gap-1">
-				<CheckCircleOutline class="w-3 h-3" />
+				<CheckCircleOutline class="h-3 w-3" />
 				{statusMessage}
 			</Badge>
 		{/if}
@@ -347,9 +425,9 @@
 	</div>
 {:else}
 	<!-- Profile selector -->
-	<Card class="max-w-none mb-6">
-		<div class="flex flex-col sm:flex-row items-start sm:items-end gap-4">
-			<div class="flex-1 w-full sm:w-auto">
+	<Card class="mb-6 max-w-none">
+		<div class="flex flex-col items-start gap-4 sm:flex-row sm:items-end">
+			<div class="w-full flex-1 sm:w-auto">
 				<Select
 					items={profileOptions}
 					value={String(currentProfileId)}
@@ -359,31 +437,43 @@
 			</div>
 			<div class="flex gap-2">
 				<Button color="primary" size="sm" onclick={createNewProfile}>
-					<PlusOutline class="w-4 h-4 me-1" />
+					<PlusOutline class="me-1 h-4 w-4" />
 					Nuovo Profilo
 				</Button>
 				{#if profiles.length > 1}
-					<Button color="red" outline size="sm" onclick={() => showDeleteDialog = true}>
-						<TrashBinOutline class="w-4 h-4 me-1" />
+					<Button color="red" outline size="sm" onclick={() => (showDeleteDialog = true)}>
+						<TrashBinOutline class="me-1 h-4 w-4" />
 						Elimina
 					</Button>
 				{/if}
 			</div>
 		</div>
+		{#if profiles.length >= 2}
+			<div
+				class="mt-4 flex flex-col gap-1 border-t border-gray-100 pt-3 text-sm sm:flex-row sm:items-center sm:justify-between dark:border-gray-700"
+			>
+				<span class="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+					<UsersOutline class="h-4 w-4" />
+					Hai piu' profili salvati: confrontali fianco a fianco.
+				</span>
+				<a
+					href="/confronto-profili/"
+					class="text-primary-600 dark:text-primary-400 inline-flex items-center gap-1 font-medium hover:underline"
+				>
+					Confronta profili <ArrowRightOutline class="h-3 w-3" />
+				</a>
+			</div>
+		{/if}
 	</Card>
 
-	<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+	<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 		<!-- Main form area -->
 		<div class="lg:col-span-2">
 			<Card class="max-w-none">
 				<Tabs tabStyle="underline" class="mb-2 overflow-x-auto">
 					<TabItem open title="Dati Personali">
 						<div class="pt-4">
-							<TabDatiPersonali
-								bind:birthYear
-								bind:retirementAge
-								bind:lifeExpectancy
-							/>
+							<TabDatiPersonali bind:birthYear bind:retirementAge bind:lifeExpectancy />
 						</div>
 					</TabItem>
 					<TabItem title="Reddito">
@@ -400,11 +490,7 @@
 					</TabItem>
 					<TabItem title="Spese">
 						<div class="pt-4">
-							<TabSpese
-								bind:annualExpenses
-								bind:fireExpenses
-								bind:expenseInflation
-							/>
+							<TabSpese bind:annualExpenses bind:fireExpenses bind:expenseInflation />
 						</div>
 					</TabItem>
 					<TabItem title="Famiglia">
@@ -424,10 +510,7 @@
 					</TabItem>
 					<TabItem title="Patrimonio">
 						<div class="pt-4">
-							<TabPatrimonio
-								bind:portfolio
-								bind:monthlyContributions
-							/>
+							<TabPatrimonio bind:portfolio bind:monthlyContributions />
 						</div>
 					</TabItem>
 					<TabItem title="Debiti">
@@ -442,10 +525,12 @@
 					</TabItem>
 					<TabItem title="Import Banca">
 						<div class="pt-4">
-							<BankImport onApply={(result) => {
-								annualIncome = result.annualIncome;
-								annualExpenses = result.annualExpenses;
-							}} />
+							<BankImport
+								onApply={(result) => {
+									annualIncome = result.annualIncome;
+									annualExpenses = result.annualExpenses;
+								}}
+							/>
 						</div>
 					</TabItem>
 				</Tabs>
@@ -459,8 +544,10 @@
 
 				<div class="space-y-4">
 					<div class="flex items-start gap-3">
-						<div class="p-2 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
-							<ChartOutline class="w-5 h-5" />
+						<div
+							class="rounded-lg bg-green-100 p-2 text-green-600 dark:bg-green-900/30 dark:text-green-400"
+						>
+							<ChartOutline class="h-5 w-5" />
 						</div>
 						<div>
 							<p class="text-sm text-gray-500 dark:text-gray-400">Tasso di risparmio</p>
@@ -480,8 +567,10 @@
 					<hr class="border-gray-200 dark:border-gray-700" />
 
 					<div class="flex items-start gap-3">
-						<div class="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
-							<WalletOutline class="w-5 h-5" />
+						<div
+							class="rounded-lg bg-blue-100 p-2 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+						>
+							<WalletOutline class="h-5 w-5" />
 						</div>
 						<div>
 							<p class="text-sm text-gray-500 dark:text-gray-400">Patrimonio netto</p>
@@ -494,8 +583,10 @@
 					<hr class="border-gray-200 dark:border-gray-700" />
 
 					<div class="flex items-start gap-3">
-						<div class="p-2 rounded-lg bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400">
-							<BriefcaseOutline class="w-5 h-5" />
+						<div
+							class="bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-lg p-2"
+						>
+							<BriefcaseOutline class="h-5 w-5" />
 						</div>
 						<div>
 							<p class="text-sm text-gray-500 dark:text-gray-400">Contributi mensili totali</p>
@@ -512,8 +603,10 @@
 						<hr class="border-gray-200 dark:border-gray-700" />
 
 						<div class="flex items-start gap-3">
-							<div class="p-2 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">
-								<CreditCardOutline class="w-5 h-5" />
+							<div
+								class="rounded-lg bg-red-100 p-2 text-red-600 dark:bg-red-900/30 dark:text-red-400"
+							>
+								<CreditCardOutline class="h-5 w-5" />
 							</div>
 							<div>
 								<p class="text-sm text-gray-500 dark:text-gray-400">Debito totale</p>
@@ -521,7 +614,8 @@
 									{formatCurrency(totalDebt)}
 								</p>
 								<p class="text-xs text-gray-400 dark:text-gray-500">
-									{debts.length} {debts.length === 1 ? 'debito' : 'debiti'} attivi
+									{debts.length}
+									{debts.length === 1 ? 'debito' : 'debiti'} attivi
 								</p>
 							</div>
 						</div>
@@ -534,15 +628,21 @@
 				<div class="space-y-2 text-sm">
 					<div class="flex justify-between">
 						<span class="text-gray-500 dark:text-gray-400">Reddito totale</span>
-						<span class="font-semibold text-gray-900 dark:text-white">{formatCurrency(totalIncome)}</span>
+						<span class="font-semibold text-gray-900 dark:text-white"
+							>{formatCurrency(totalIncome)}</span
+						>
 					</div>
 					<div class="flex justify-between">
 						<span class="text-gray-500 dark:text-gray-400">Spese attuali</span>
-						<span class="font-semibold text-gray-900 dark:text-white">{formatCurrency(annualExpenses)}</span>
+						<span class="font-semibold text-gray-900 dark:text-white"
+							>{formatCurrency(annualExpenses)}</span
+						>
 					</div>
 					<div class="flex justify-between">
 						<span class="text-gray-500 dark:text-gray-400">Spese in FIRE</span>
-						<span class="font-semibold text-gray-900 dark:text-white">{formatCurrency(fireExpenses)}</span>
+						<span class="font-semibold text-gray-900 dark:text-white"
+							>{formatCurrency(fireExpenses)}</span
+						>
 					</div>
 					<div class="flex justify-between">
 						<span class="text-gray-500 dark:text-gray-400">Risparmio annuo</span>
@@ -559,13 +659,16 @@
 					</div>
 					<div class="flex justify-between">
 						<span class="text-gray-500 dark:text-gray-400">Eta pensione INPS</span>
-						<span class="font-semibold text-gray-900 dark:text-white">{pension.pensionAge} anni</span>
+						<span class="font-semibold text-gray-900 dark:text-white"
+							>{pension.pensionAge} anni</span
+						>
 					</div>
 				</div>
 			</Card>
 
 			<Alert color="blue">
-				<span class="font-medium">Salvataggio automatico</span> - Le modifiche vengono salvate automaticamente dopo ogni modifica.
+				<span class="font-medium">Salvataggio automatico</span> - Le modifiche vengono salvate automaticamente
+				dopo ogni modifica.
 			</Alert>
 		</div>
 	</div>

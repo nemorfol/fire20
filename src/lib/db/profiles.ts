@@ -38,7 +38,7 @@ export async function deleteProfile(id: number): Promise<void> {
 	await db.transaction('rw', [db.profiles, db.scenarios, db.simulation_results], async () => {
 		// Elimina risultati delle simulazioni collegate
 		const scenarios = await db.scenarios.where('profileId').equals(id).toArray();
-		const scenarioIds = scenarios.map(s => s.id);
+		const scenarioIds = scenarios.map((s) => s.id);
 		if (scenarioIds.length > 0) {
 			await db.simulation_results.where('scenarioId').anyOf(scenarioIds).delete();
 		}

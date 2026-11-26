@@ -26,6 +26,6 @@ vite.config.ts.timestamp-*
 /utils/
 *.xml
 # Bozze dei post per i forum (lavoro locale, non vanno versionate)
-FORUM*.txt
+FORUM*
 # ...ma la sitemap e' un asset pubblico del sito: va versionata
 !static/sitemap.xml

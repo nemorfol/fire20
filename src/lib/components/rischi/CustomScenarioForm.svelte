@@ -25,7 +25,7 @@
 		{ value: 'inflation', name: 'Inflazione' },
 		{ value: 'geopolitical', name: 'Geopolitica' },
 		{ value: 'personal', name: 'Personale' },
-		{ value: 'longevity', name: 'Longevita\'' }
+		{ value: 'longevity', name: "Longevita'" }
 	];
 
 	function handleSubmit() {
@@ -62,11 +62,11 @@
 </script>
 
 <Card class="max-w-none">
-	<h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+	<h5 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
 		Crea Scenario Personalizzato
 	</h5>
 
-	<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+	<div class="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
 		<div>
 			<Label for="custom-name" class="mb-1">Nome scenario</Label>
 			<Input id="custom-name" bind:value={name} placeholder="Es. Recessione prolungata" />
@@ -82,23 +82,44 @@
 		<Input id="custom-desc" bind:value={description} placeholder="Descrizione dello scenario..." />
 	</div>
 
-	<h6 class="font-medium text-gray-700 dark:text-gray-300 mb-3">Parametri di Impatto</h6>
+	<h6 class="mb-3 font-medium text-gray-700 dark:text-gray-300">Parametri di Impatto</h6>
 
-	<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+	<div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 		<div>
 			<Label for="custom-shock" class="mb-1">Shock portafoglio (%)</Label>
-			<Input id="custom-shock" type="number" bind:value={portfolioShock} step="5" min="-100" max="0" />
-			<p class="text-xs text-gray-400 mt-0.5">Es. -40 per un crollo del 40%</p>
+			<Input
+				id="custom-shock"
+				type="number"
+				bind:value={portfolioShock}
+				step="5"
+				min="-100"
+				max="0"
+			/>
+			<p class="mt-0.5 text-xs text-gray-400">Es. -40 per un crollo del 40%</p>
 		</div>
 		<div>
 			<Label for="custom-expense" class="mb-1">Aumento spese (%)</Label>
-			<Input id="custom-expense" type="number" bind:value={expenseIncrease} step="5" min="0" max="200" />
-			<p class="text-xs text-gray-400 mt-0.5">Es. 30 per +30% spese</p>
+			<Input
+				id="custom-expense"
+				type="number"
+				bind:value={expenseIncrease}
+				step="5"
+				min="0"
+				max="200"
+			/>
+			<p class="mt-0.5 text-xs text-gray-400">Es. 30 per +30% spese</p>
 		</div>
 		<div>
 			<Label for="custom-income" class="mb-1">Riduzione reddito (%)</Label>
-			<Input id="custom-income" type="number" bind:value={incomeReduction} step="10" min="0" max="100" />
-			<p class="text-xs text-gray-400 mt-0.5">Es. 100 per perdita totale</p>
+			<Input
+				id="custom-income"
+				type="number"
+				bind:value={incomeReduction}
+				step="10"
+				min="0"
+				max="100"
+			/>
+			<p class="mt-0.5 text-xs text-gray-400">Es. 100 per perdita totale</p>
 		</div>
 		<div>
 			<Label for="custom-duration" class="mb-1">Durata (anni)</Label>
@@ -106,18 +127,32 @@
 		</div>
 		<div>
 			<Label for="custom-year" class="mb-1">Anno di occorrenza</Label>
-			<Input id="custom-year" type="number" bind:value={yearOfOccurrence} step="1" min="-10" max="30" />
-			<p class="text-xs text-gray-400 mt-0.5">0 = al FIRE, negativo = pre-FIRE</p>
+			<Input
+				id="custom-year"
+				type="number"
+				bind:value={yearOfOccurrence}
+				step="1"
+				min="-10"
+				max="30"
+			/>
+			<p class="mt-0.5 text-xs text-gray-400">0 = al FIRE, negativo = pre-FIRE</p>
 		</div>
 		<div>
 			<Label for="custom-return" class="mb-1">Riduzione rendimenti (%)</Label>
-			<Input id="custom-return" type="number" bind:value={returnReduction} step="1" min="0" max="30" />
-			<p class="text-xs text-gray-400 mt-0.5">Es. 15 per -15 punti percentuali</p>
+			<Input
+				id="custom-return"
+				type="number"
+				bind:value={returnReduction}
+				step="1"
+				min="0"
+				max="30"
+			/>
+			<p class="mt-0.5 text-xs text-gray-400">Es. 15 per -15 punti percentuali</p>
 		</div>
 	</div>
 
 	<Button onclick={handleSubmit} disabled={!name.trim()} class="gap-1">
-		<PlusOutline class="w-4 h-4" />
+		<PlusOutline class="h-4 w-4" />
 		Applica Stress Test
 	</Button>
 </Card>

@@ -7,10 +7,7 @@
 	let {
 		onApply
 	}: {
-		onApply?: (
-			assets: Record<keyof PortfolioAllocation, number>,
-			mode: 'replace' | 'add'
-		) => void;
+		onApply?: (assets: Record<keyof PortfolioAllocation, number>, mode: 'replace' | 'add') => void;
 	} = $props();
 
 	let jsonText = $state('');
@@ -58,7 +55,7 @@
 		try {
 			parseResult = parseGestptfExport(jsonText);
 			if (parseResult.totalAssets === 0) {
-				errorMessage = 'Il file e\' valido ma non contiene asset con valore positivo.';
+				errorMessage = "Il file e' valido ma non contiene asset con valore positivo.";
 				parseResult = null;
 			}
 		} catch (err) {
@@ -81,8 +78,8 @@
 <div class="space-y-4">
 	<h4 class="text-lg font-semibold text-gray-900 dark:text-white">Importa da GestPTF</h4>
 	<p class="text-sm text-gray-500 dark:text-gray-400">
-		Carica il file JSON esportato da GestPTF (<em>Import/Export → Esporta per FIRE Planner</em>):
-		il patrimonio per categoria viene riportato qui. Tutto in locale, nessun dato lascia il
+		Carica il file JSON esportato da GestPTF (<em>Import/Export → Esporta per FIRE Planner</em>): il
+		patrimonio per categoria viene riportato qui. Tutto in locale, nessun dato lascia il
 		dispositivo.
 	</p>
 
@@ -93,11 +90,11 @@
 		<Alert color="green" dismissable>{successMessage}</Alert>
 	{/if}
 
-	<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+	<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 		<div>
 			<label
 				for="gestptf-file"
-				class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300"
+				class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
 			>
 				Carica file (JSON)
 			</label>
@@ -106,20 +103,20 @@
 				id="gestptf-file"
 				accept=".json,application/json"
 				onchange={handleFileUpload}
-				class="block w-full text-sm text-gray-500 dark:text-gray-400
-					file:mr-4 file:py-2 file:px-4
+				class="file:bg-primary-50 file:text-primary-700 dark:file:bg-primary-900/30 dark:file:text-primary-400 hover:file:bg-primary-100
+					dark:hover:file:bg-primary-900/50 block w-full
+					cursor-pointer text-sm
+					text-gray-500 file:mr-4
 					file:rounded-lg file:border-0
+					file:px-4 file:py-2
 					file:text-sm file:font-semibold
-					file:bg-primary-50 file:text-primary-700
-					dark:file:bg-primary-900/30 dark:file:text-primary-400
-					hover:file:bg-primary-100 dark:hover:file:bg-primary-900/50
-					cursor-pointer"
+					dark:text-gray-400"
 			/>
 		</div>
 		<div>
 			<label
 				for="gestptf-paste"
-				class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300"
+				class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
 			>
 				Oppure incolla il JSON
 			</label>
@@ -147,7 +144,9 @@
 			<div class="flex flex-wrap gap-3">
 				{#each orderedKeys as key}
 					{#if parseResult.assets[key] > 0}
-						<Badge color="primary" large>{labels[key]}: {formatCurrency(parseResult.assets[key])}</Badge>
+						<Badge color="primary" large
+							>{labels[key]}: {formatCurrency(parseResult.assets[key])}</Badge
+						>
 					{/if}
 				{/each}
 				<Badge color="green" large>Totale: {formatCurrency(parseResult.totalAssets)}</Badge>
@@ -162,8 +161,10 @@
 					Come applicare l'import
 				</legend>
 				<Radio name="gestptf-mode" bind:group={mode} value="replace">
-					<span><strong>Sostituisci</strong> — rimpiazza i valori del patrimonio con lo snapshot
-						(consigliato: lo snapshot e' completo)</span>
+					<span
+						><strong>Sostituisci</strong> — rimpiazza i valori del patrimonio con lo snapshot (consigliato:
+						lo snapshot e' completo)</span
+					>
 				</Radio>
 				<Radio name="gestptf-mode" bind:group={mode} value="add">
 					<span><strong>Somma</strong> — aggiunge gli importi a quelli gia' presenti</span>

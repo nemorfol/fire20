@@ -35,21 +35,21 @@
 	}
 </script>
 
-<div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 overflow-x-auto">
-	<h4 class="text-base font-semibold text-gray-900 dark:text-white mb-4">
+<div class="overflow-x-auto rounded-xl bg-white p-4 shadow-lg dark:bg-gray-800">
+	<h4 class="mb-4 text-base font-semibold text-gray-900 dark:text-white">
 		Statistiche per Anno Chiave
 	</h4>
 	<Table striped hoverable>
 		<TableHead>
 			<TableHeadCell class="text-xs">Anno</TableHeadCell>
-			<TableHeadCell class="text-xs text-right">P5</TableHeadCell>
-			<TableHeadCell class="text-xs text-right">P10</TableHeadCell>
-			<TableHeadCell class="text-xs text-right">P25</TableHeadCell>
-			<TableHeadCell class="text-xs text-right font-bold">P50</TableHeadCell>
-			<TableHeadCell class="text-xs text-right">P75</TableHeadCell>
-			<TableHeadCell class="text-xs text-right">P90</TableHeadCell>
-			<TableHeadCell class="text-xs text-right">P95</TableHeadCell>
-			<TableHeadCell class="text-xs text-right">Successo</TableHeadCell>
+			<TableHeadCell class="text-right text-xs">P5</TableHeadCell>
+			<TableHeadCell class="text-right text-xs">P10</TableHeadCell>
+			<TableHeadCell class="text-right text-xs">P25</TableHeadCell>
+			<TableHeadCell class="text-right text-xs font-bold">P50</TableHeadCell>
+			<TableHeadCell class="text-right text-xs">P75</TableHeadCell>
+			<TableHeadCell class="text-right text-xs">P90</TableHeadCell>
+			<TableHeadCell class="text-right text-xs">P95</TableHeadCell>
+			<TableHeadCell class="text-right text-xs">Successo</TableHeadCell>
 		</TableHead>
 		<TableBody>
 			{#each keyYears as year}

@@ -1,7 +1,11 @@
-<script lang="ts">
-	import EChart from '$lib/components/simulazione/EChart.svelte';
+﻿<script lang="ts">
+	import EChart from '$lib/components/shared/EChart.svelte';
+	import type { EChartsCoreOption } from 'echarts/core';
 	import type { PortfolioSnapshot, CashFlow } from '$lib/engine/twr-calculator';
-	import { buildPortfolioCumulativeSeries, buildBenchmarkCumulativeSeries } from '$lib/engine/twr-calculator';
+	import {
+		buildPortfolioCumulativeSeries,
+		buildBenchmarkCumulativeSeries
+	} from '$lib/engine/twr-calculator';
 	import { sp500Returns } from '$lib/data/sp500';
 
 	let {
@@ -40,8 +44,12 @@
 		const uniqueDates = [...new Set(allDates.map((d) => d.toISOString().split('T')[0]))];
 
 		// Mappa i valori per data
-		const portfolioMap = new Map(portfolioSeries.map((p) => [p.date.toISOString().split('T')[0], p.value]));
-		const benchmarkMap = new Map(benchmarkSeries.map((b) => [b.date.toISOString().split('T')[0], b.value]));
+		const portfolioMap = new Map(
+			portfolioSeries.map((p) => [p.date.toISOString().split('T')[0], p.value])
+		);
+		const benchmarkMap = new Map(
+			benchmarkSeries.map((b) => [b.date.toISOString().split('T')[0], b.value])
+		);
 
 		return {
 			tooltip: {
@@ -91,7 +99,7 @@
 					itemStyle: { color: '#f59e0b' }
 				}
 			]
-		} as any;
+		} satisfies EChartsCoreOption;
 	});
 </script>
 

@@ -1,7 +1,24 @@
 <script lang="ts">
-	import { Button, Select, Table, TableHead, TableHeadCell, TableBody, TableBodyRow, TableBodyCell, Badge, Textarea, Alert } from 'flowbite-svelte';
+	import {
+		Button,
+		Select,
+		Table,
+		TableHead,
+		TableHeadCell,
+		TableBody,
+		TableBodyRow,
+		TableBodyCell,
+		Badge,
+		Textarea,
+		Alert
+	} from 'flowbite-svelte';
 	import { ArrowDownToBracketOutline, UploadSolid } from 'flowbite-svelte-icons';
-	import { brokerTemplates, parseBrokerCSV, parseFinecoXLS, type PortfolioImport } from '$lib/utils/broker-import';
+	import {
+		brokerTemplates,
+		parseBrokerCSV,
+		parseFinecoXLS,
+		type PortfolioImport
+	} from '$lib/utils/broker-import';
 	import { formatCurrency } from '$lib/utils/format';
 
 	let {
@@ -16,7 +33,7 @@
 	let errorMessage = $state('');
 	let successMessage = $state('');
 
-	let selectedTemplate = $derived(brokerTemplates.find(t => t.id === selectedBroker));
+	let selectedTemplate = $derived(brokerTemplates.find((t) => t.id === selectedBroker));
 
 	function handleFileUpload(event: Event) {
 		const input = event.target as HTMLInputElement;
@@ -30,19 +47,25 @@
 			const reader = new FileReader();
 			reader.onload = (e) => {
 				const data = e.target?.result as ArrayBuffer;
-				if (!data) { errorMessage = 'Errore nella lettura del file.'; return; }
+				if (!data) {
+					errorMessage = 'Errore nella lettura del file.';
+					return;
+				}
 				errorMessage = '';
 				successMessage = '';
 				try {
 					parseResult = parseFinecoXLS(data);
 					console.log('[BrokerImport] XLS parse result:', JSON.stringify(parseResult, null, 2));
 					if (!parseResult || parseResult.positions.length === 0) {
-						errorMessage = 'Nessuna posizione trovata nel file XLS. Verifica che sia un export di portafoglio Fineco.';
+						errorMessage =
+							'Nessuna posizione trovata nel file XLS. Verifica che sia un export di portafoglio Fineco.';
 						parseResult = null;
 					}
 				} catch (err) {
 					console.error('[BrokerImport] XLS parse error:', err);
-					errorMessage = 'Errore nel parsing del file XLS: ' + (err instanceof Error ? err.message : String(err));
+					errorMessage =
+						'Errore nel parsing del file XLS: ' +
+						(err instanceof Error ? err.message : String(err));
 				}
 			};
 			reader.readAsArrayBuffer(file);
@@ -50,7 +73,7 @@
 			// File CSV/TXT
 			const reader = new FileReader();
 			reader.onload = (e) => {
-				csvText = e.target?.result as string || '';
+				csvText = (e.target?.result as string) || '';
 				doParse();
 			};
 			reader.readAsText(file);
@@ -70,7 +93,8 @@
 
 		const result = parseBrokerCSV(csvText, selectedBroker);
 		if (!result || result.positions.length === 0) {
-			errorMessage = 'Nessuna posizione trovata. Verifica il formato del CSV e il template selezionato.';
+			errorMessage =
+				'Nessuna posizione trovata. Verifica il formato del CSV e il template selezionato.';
 			return;
 		}
 
@@ -94,15 +118,17 @@
 		return 'gray';
 	}
 
-	let totalValue = $derived(parseResult ? parseResult.positions.reduce((s, p) => s + p.value, 0) : 0);
+	let totalValue = $derived(
+		parseResult ? parseResult.positions.reduce((s, p) => s + p.value, 0) : 0
+	);
 
-	let brokerOptions = $derived(brokerTemplates.map(t => ({ value: t.id, name: `${t.name} - ${t.description}` })));
+	let brokerOptions = $derived(
+		brokerTemplates.map((t) => ({ value: t.id, name: `${t.name} - ${t.description}` }))
+	);
 </script>
 
 <div class="space-y-4">
-	<h4 class="text-lg font-semibold text-gray-900 dark:text-white">
-		Importa da Broker
-	</h4>
+	<h4 class="text-lg font-semibold text-gray-900 dark:text-white">Importa da Broker</h4>
 	<p class="text-sm text-gray-500 dark:text-gray-400">
 		Importa le posizioni del tuo portafoglio da un file esportato dal tuo broker (CSV o XLS).
 	</p>
@@ -121,7 +147,10 @@
 
 	<!-- Selezione broker -->
 	<div>
-		<label for="broker-select" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+		<label
+			for="broker-select"
+			class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+		>
 			Seleziona il tuo broker
 		</label>
 		<Select id="broker-select" items={brokerOptions} bind:value={selectedBroker} />
@@ -129,14 +158,16 @@
 
 	{#if selectedTemplate}
 		<p class="text-xs text-gray-400">
-			Intestazioni attese: <code class="bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded">{selectedTemplate.sampleHeaders.join(', ')}</code>
+			Intestazioni attese: <code class="rounded bg-gray-100 px-1 py-0.5 dark:bg-gray-700"
+				>{selectedTemplate.sampleHeaders.join(', ')}</code
+			>
 		</p>
 	{/if}
 
 	<!-- Upload o incolla -->
-	<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+	<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 		<div>
-			<label for="csv-file" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+			<label for="csv-file" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
 				Carica file (CSV/XLS)
 			</label>
 			<input
@@ -144,18 +175,21 @@
 				id="csv-file"
 				accept=".csv,.txt,.xls,.xlsx"
 				onchange={handleFileUpload}
-				class="block w-full text-sm text-gray-500 dark:text-gray-400
-					file:mr-4 file:py-2 file:px-4
+				class="file:bg-primary-50 file:text-primary-700 dark:file:bg-primary-900/30 dark:file:text-primary-400 hover:file:bg-primary-100
+					dark:hover:file:bg-primary-900/50 block w-full
+					cursor-pointer text-sm
+					text-gray-500 file:mr-4
 					file:rounded-lg file:border-0
+					file:px-4 file:py-2
 					file:text-sm file:font-semibold
-					file:bg-primary-50 file:text-primary-700
-					dark:file:bg-primary-900/30 dark:file:text-primary-400
-					hover:file:bg-primary-100 dark:hover:file:bg-primary-900/50
-					cursor-pointer"
+					dark:text-gray-400"
 			/>
 		</div>
 		<div>
-			<label for="csv-paste" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+			<label
+				for="csv-paste"
+				class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+			>
 				Oppure incolla il CSV
 			</label>
 			<Textarea
@@ -167,9 +201,7 @@
 		</div>
 	</div>
 
-	<Button size="sm" onclick={doParse}>
-		Analizza CSV
-	</Button>
+	<Button size="sm" onclick={doParse}>Analizza CSV</Button>
 
 	<!-- Preview risultati -->
 	{#if parseResult}
@@ -216,9 +248,7 @@
 				</Table>
 			</div>
 
-			<Button color="green" onclick={handleApply}>
-				Applica al Patrimonio
-			</Button>
+			<Button color="green" onclick={handleApply}>Applica al Patrimonio</Button>
 		</div>
 	{/if}
 </div>

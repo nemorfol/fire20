@@ -53,16 +53,16 @@ export interface WithdrawalParams {
 const VPW_TABLE: [number, number][] = [
 	[40, 0.033],
 	[45, 0.036],
-	[50, 0.040],
+	[50, 0.04],
 	[55, 0.045],
 	[60, 0.052],
 	[65, 0.063],
 	[70, 0.075],
-	[75, 0.090],
-	[80, 0.110],
-	[85, 0.140],
-	[90, 0.180],
-	[95, 0.250]
+	[75, 0.09],
+	[80, 0.11],
+	[85, 0.14],
+	[90, 0.18],
+	[95, 0.25]
 ];
 
 /**
@@ -98,11 +98,7 @@ export function fixedWithdrawal(
  * @param _lifeExpectancy - Aspettativa di vita (usata per aggiustamento)
  * @returns Importo del prelievo annuale
  */
-export function vpwWithdrawal(
-	portfolio: number,
-	age: number,
-	_lifeExpectancy: number
-): number {
+export function vpwWithdrawal(portfolio: number, age: number, _lifeExpectancy: number): number {
 	if (portfolio <= 0) return 0;
 	if (age < VPW_TABLE[0][0]) return portfolio * VPW_TABLE[0][1];
 	if (age >= VPW_TABLE[VPW_TABLE.length - 1][0]) {
@@ -133,14 +129,8 @@ export function vpwWithdrawal(
  * @returns Importo del prelievo annuale aggiustato
  */
 export function guytonKlingerWithdrawal(params: GuytonKlingerParams): number {
-	const {
-		portfolio,
-		initialWithdrawal,
-		initialRate,
-		inflationRate,
-		year,
-		previousWithdrawal
-	} = params;
+	const { portfolio, initialWithdrawal, initialRate, inflationRate, year, previousWithdrawal } =
+		params;
 
 	if (portfolio <= 0) return 0;
 
@@ -235,11 +225,7 @@ export function calculateWithdrawal(
 			);
 
 		case 'vpw':
-			return vpwWithdrawal(
-				params.portfolio,
-				params.age ?? 65,
-				params.lifeExpectancy ?? 90
-			);
+			return vpwWithdrawal(params.portfolio, params.age ?? 65, params.lifeExpectancy ?? 90);
 
 		case 'guyton-klinger':
 			if (params.guytonKlinger) {
@@ -254,10 +240,7 @@ export function calculateWithdrawal(
 			);
 
 		case 'cape-based':
-			return capeBasedWithdrawal(
-				params.portfolio,
-				params.capeRatio ?? 25
-			);
+			return capeBasedWithdrawal(params.portfolio, params.capeRatio ?? 25);
 
 		case 'amortized':
 			return amortizedWithdrawal(

@@ -1,11 +1,15 @@
 <script lang="ts">
 	import { Heading, Breadcrumb, BreadcrumbItem, Card, Alert, Badge } from 'flowbite-svelte';
 	import { DEFAULT_2026 } from '$lib/engine/assumptions';
+	import { SERIES_IT_DEFAULT, SERIES_US_CLASSIC, alignHistory } from '$lib/data/default-series';
+	import { ITL_PER_EUR } from '$lib/data/fx';
 
 	const a = DEFAULT_2026;
-	const pct = (x: number) =>
-		(x * 100).toLocaleString('it-IT', { maximumFractionDigits: 2 }) + '%';
+	const pct = (x: number) => (x * 100).toLocaleString('it-IT', { maximumFractionDigits: 2 }) + '%';
 	const eur = (x: number) => x.toLocaleString('it-IT') + ' €';
+	const win = (ys: number[]) => `${ys[0]}-${ys[ys.length - 1]}`;
+	const winIT = win(alignHistory(SERIES_IT_DEFAULT, ['stocks', 'bonds']).years);
+	const winUS = win(alignHistory(SERIES_US_CLASSIC, ['stocks', 'bonds']).years);
 
 	// Ogni voce: valore usato dal motore + fonte normativa. I valori sono letti
 	// da DEFAULT_2026 cosi' restano allineati al motore.
@@ -18,7 +22,8 @@
 		{
 			voce: 'Detrazioni lavoro dipendente',
 			valore: 'art.13 TUIR (1.955 fino a 15k, decrescente) + cuneo 2026',
-			fonte: 'Art.13 co.1 TUIR; riduzione cuneo fiscale resa strutturale (Legge di Bilancio 2025/2026)'
+			fonte:
+				'Art.13 co.1 TUIR; riduzione cuneo fiscale resa strutturale (Legge di Bilancio 2025/2026)'
 		},
 		{
 			voce: 'Capital gain',
@@ -64,6 +69,27 @@
 			voce: 'Addizionali IRPEF (media)',
 			valore: `regionale ${pct(a.surtaxes.regional)} · comunale ${pct(a.surtaxes.municipal)}`,
 			fonte: 'Medie nazionali indicative (variano per regione/comune)'
+		},
+		{
+			voce: 'Serie storiche Monte Carlo (preset IT)',
+			valore: `tutto in lire/EUR: MSCI World ex-USA e oro convertiti da USD coi cambi storici, BTP 7-10y (stimati), inflazione ISTAT · finestra azioni+BTP ${winIT}`,
+			fonte: 'MSCI (total return USD); ISTAT CPI; World Gold Council; BTP: stima da rendimenti 10y'
+		},
+		{
+			voce: 'Cambi storici (conversione USD → EUR)',
+			valore: `media di dicembre ITL/USD (1969-70: parità 625) e USD/EUR; lire → euro a ${ITL_PER_EUR.toLocaleString('it-IT')}`,
+			fonte: 'Federal Reserve H.10/G.5 via FRED (EXITUS, EXUSEU); Reg. CE 2866/98'
+		},
+		{
+			voce: 'Serie storiche Monte Carlo (preset USA)',
+			valore: `tutto in USD: S&P 500, Treasury 10y, CPI USA · finestra ${winUS}`,
+			fonte: 'NYU Stern (Damodaran); BLS CPI-U'
+		},
+		{
+			voce: 'Campionamento storico',
+			valore:
+				'congiunto per anno: azioni, obbligazioni, oro e inflazione dello stesso anno storico (block bootstrap: blocchi di 5 anni consecutivi, circolare)',
+			fonte: 'Bootstrap / circular block bootstrap (Politis-Romano, 1992)'
 		}
 	];
 </script>
@@ -79,8 +105,8 @@
 
 <Heading tag="h1" class="mb-2">Metodologia e Fonti</Heading>
 <p class="mb-4 text-gray-600 dark:text-gray-400">
-	FIRE Planner non è una "scatola nera": ogni aliquota, soglia e coefficiente usati dal motore è
-	un numero reale e verificabile. Qui trovi i valori applicati e la relativa fonte normativa.
+	FIRE Planner non è una "scatola nera": ogni aliquota, soglia e coefficiente usati dal motore è un
+	numero reale e verificabile. Qui trovi i valori applicati e la relativa fonte normativa.
 </p>
 
 <Alert color="blue" class="mb-6">
@@ -113,6 +139,6 @@
 </Card>
 
 <p class="mt-6 text-sm text-gray-500 dark:text-gray-400">
-	Puoi personalizzare le ipotesi (aliquote, SWR, rendimenti) nei pannelli del calcolatore: il
-	preset di default riflette la normativa 2026, ma ogni numero è modificabile e ricalcola tutto.
+	Puoi personalizzare le ipotesi (aliquote, SWR, rendimenti) nei pannelli del calcolatore: il preset
+	di default riflette la normativa 2026, ma ogni numero è modificabile e ricalcola tutto.
 </p>

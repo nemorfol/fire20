@@ -105,18 +105,18 @@ export function calculateIRPEF(
 	for (const bracket of brackets_def) {
 		if (remainingIncome <= 0) break;
 
-		const bracketWidth = bracket.to === Number.POSITIVE_INFINITY
-			? remainingIncome
-			: Math.min(bracket.to - bracket.from, remainingIncome);
+		const bracketWidth =
+			bracket.to === Number.POSITIVE_INFINITY
+				? remainingIncome
+				: Math.min(bracket.to - bracket.from, remainingIncome);
 
 		const taxableInBracket = Math.max(0, bracketWidth);
 		const bracketTax = taxableInBracket * bracket.rate;
 
 		brackets.push({
 			from: bracket.from,
-			to: bracket.to === Number.POSITIVE_INFINITY
-				? annualIncome
-				: Math.min(bracket.to, annualIncome),
+			to:
+				bracket.to === Number.POSITIVE_INFINITY ? annualIncome : Math.min(bracket.to, annualIncome),
 			rate: bracket.rate,
 			tax: bracketTax
 		});
@@ -156,7 +156,9 @@ export function invertIRPEF(
 		const bracketWidth = bracketTop - b.from;
 		const bracketTax = bracketWidth === Number.POSITIVE_INFINITY ? Infinity : bracketWidth * b.rate;
 		const bracketNetTop =
-			bracketTop === Number.POSITIVE_INFINITY ? Infinity : bracketTop - (cumulativeTax + bracketTax);
+			bracketTop === Number.POSITIVE_INFINITY
+				? Infinity
+				: bracketTop - (cumulativeTax + bracketTax);
 		// Se il netto target rientra in questo scaglione, risolvi: gross =
 		// b.from + (target - bracketNetFloor) / (1 - b.rate)
 		const bracketNetFloor = b.from - cumulativeTax;
@@ -627,7 +629,8 @@ export function calculateExtraDeductibility(
 			extraDeduction: 0,
 			totalMaxDeduction: ORDINARY_LIMIT,
 			unusedAllowance: 0,
-			notes: 'Non idoneo: il primo impiego e\' precedente al 1/1/2007. Si applica solo la deducibilita\' ordinaria di 5.300€/anno.'
+			notes:
+				"Non idoneo: il primo impiego e' precedente al 1/1/2007. Si applica solo la deducibilita' ordinaria di 5.300€/anno."
 		};
 	}
 
@@ -659,7 +662,8 @@ export function calculateExtraDeductibility(
 
 	// L'extra recuperabile e' limitato a 2.650€/anno per max 20 anni
 	const recoveryYearsLeft = Math.max(0, 20 - (yearsInFund - 5));
-	const annualExtra = recoveryYearsLeft > 0 ? Math.min(EXTRA_LIMIT, unusedAllowance / recoveryYearsLeft) : 0;
+	const annualExtra =
+		recoveryYearsLeft > 0 ? Math.min(EXTRA_LIMIT, unusedAllowance / recoveryYearsLeft) : 0;
 
 	const totalMax = ORDINARY_LIMIT + annualExtra;
 
@@ -710,7 +714,7 @@ export function calculatePensionFundTax(
 	const contributionDeduction = Math.min(contributions, maxDeduction);
 
 	// Tassazione sui rendimenti: 20% (aliquota standard)
-	const returnTax = 0.20;
+	const returnTax = 0.2;
 
 	// Tassazione sulla prestazione: 15% base, -0.3% per ogni anno oltre il 15°
 	const extraYears = Math.max(0, years - 15);
@@ -735,11 +739,7 @@ export function calculatePensionFundTax(
  * @param inflation - Tasso di inflazione medio annuale (es. 0.02)
  * @returns TFR totale accantonato (lordo)
  */
-export function calculateTFR(
-	annualSalary: number,
-	years: number,
-	inflation: number
-): number {
+export function calculateTFR(annualSalary: number, years: number, inflation: number): number {
 	if (annualSalary <= 0 || years <= 0) return 0;
 
 	const annualAccrual = annualSalary / 13.5;
@@ -750,7 +750,7 @@ export function calculateTFR(
 	for (let i = 0; i < years; i++) {
 		// Rivaluta il TFR accantonato degli anni precedenti
 		if (i > 0) {
-			totalTFR *= (1 + revaluationRate);
+			totalTFR *= 1 + revaluationRate;
 		}
 		// Aggiungi l'accantonamento dell'anno corrente
 		totalTFR += annualAccrual;
@@ -1033,9 +1033,17 @@ export function calculateNetSalary(
 ): NetSalaryBreakdown {
 	if (grossIncome <= 0) {
 		return {
-			gross: 0, inpsContribution: 0, irpef: 0, regionalTax: 0,
-			municipalTax: 0, totalTax: 0, net: 0, effectiveRate: 0,
-			irpefLorda: 0, detrazioni: 0, bonusCuneo: 0
+			gross: 0,
+			inpsContribution: 0,
+			irpef: 0,
+			regionalTax: 0,
+			municipalTax: 0,
+			totalTax: 0,
+			net: 0,
+			effectiveRate: 0,
+			irpefLorda: 0,
+			detrazioni: 0,
+			bonusCuneo: 0
 		};
 	}
 	const round2 = (x: number) => Math.round(x * 100) / 100;

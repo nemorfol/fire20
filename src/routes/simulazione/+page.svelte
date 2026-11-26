@@ -1,32 +1,20 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import {
-		Heading,
-		Breadcrumb,
-		BreadcrumbItem,
-		Button,
-		Toast
-	} from 'flowbite-svelte';
-	import {
-		FloppyDiskSolid,
-		CheckCircleSolid,
-		CloseCircleSolid
-	} from 'flowbite-svelte-icons';
+	import { Heading, Breadcrumb, BreadcrumbItem, Button, Toast } from 'flowbite-svelte';
+	import { FloppyDiskSolid, CheckCircleSolid, CloseCircleSolid } from 'flowbite-svelte-icons';
 	import type { MonteCarloParams, MonteCarloResult } from '$lib/engine/monte-carlo';
+	import { runMonteCarloWorker } from '$lib/workers/monte-carlo-client';
 	import type { SimulationResult } from '$lib/db/index';
-	import { goldReturns } from '$lib/data/gold';
 	import {
 		ALL_SERIES_PRESETS,
 		getSeriesPreset,
+		alignHistory,
+		type HistoricalAsset,
 		type SeriesPresetId
 	} from '$lib/data/default-series';
 	import { DEFAULT_2026, getPreset } from '$lib/engine/assumptions';
 	import { blendedCapitalGainsRate } from '$lib/engine/tax-italy';
-	import {
-		createResult,
-		getAllResults,
-		deleteResult
-	} from '$lib/db/results';
+	import { createResult, getAllResults, deleteResult } from '$lib/db/results';
 	import { getAllProfiles } from '$lib/db/profiles';
 	import { calculateLiquidNetWorth } from '$lib/engine/fire-calculator';
 
@@ -55,9 +43,16 @@
 	let mcBolloExemptShare = $state(0);
 	// #5: valori iniziali della simulazione ereditati dal profilo (come il calcolatore).
 	let simDefaults = $state<{
-		initialPortfolio?: number; annualContribution?: number; annualExpenses?: number;
-		yearsToFire?: number; yearsInRetirement?: number; currentAge?: number;
-		pensionAnnual?: number; pensionStartAge?: number; otherIncomeAnnual?: number; otherIncomeEndAge?: number;
+		initialPortfolio?: number;
+		annualContribution?: number;
+		annualExpenses?: number;
+		yearsToFire?: number;
+		yearsInRetirement?: number;
+		currentAge?: number;
+		pensionAnnual?: number;
+		pensionStartAge?: number;
+		otherIncomeAnnual?: number;
+		otherIncomeEndAge?: number;
 	}>({});
 	let paramsReady = $state(false);
 
@@ -65,13 +60,12 @@
 	let worker: Worker | null = null;
 	let timerInterval: ReturnType<typeof setInterval> | null = null;
 
-	// Historical returns as decimals - default IT-centric (MSCI World + BTP + ISTAT).
-	// L'utente puo' switchare al preset US classico (S&P 500 + bond US + CPI USA).
+	// Preset di serie storiche: default IT tutto in lire/EUR (ex-USA + oro convertiti
+	// coi cambi storici, BTP, ISTAT); alternativa US tutta in USD. Le serie vengono
+	// allineate per anno al momento del run (finestra comune alle asset class usate).
 	let seriesPresetId = $state<SeriesPresetId>('it-default');
-	let historicalStockReturns = $derived(getSeriesPreset(seriesPresetId).stocks);
-	let historicalBondReturns = $derived(getSeriesPreset(seriesPresetId).bonds);
-	const historicalGoldReturns = goldReturns.map((r) => r.value / 100);
-	let historicalInflation = $derived(getSeriesPreset(seriesPresetId).inflation);
+	/** Finestra storica effettivamente usata dall'ultimo run (per trasparenza) */
+	let historyWindow = $state<{ from: number; to: number } | null>(null);
 
 	onMount(() => {
 		loadPreviousResults();
@@ -164,17 +158,38 @@
 		startTimer();
 
 		// Add historical data for non-parametric modes
+		historyWindow = null;
 		if (params.simulationMode !== 'parametric') {
-			params.historicalStockReturns = historicalStockReturns;
-			params.historicalBondReturns = historicalBondReturns;
-			params.historicalInflation = historicalInflation;
+			// Asset class effettivamente in portafoglio: determinano la finestra comune.
+			const required: HistoricalAsset[] = [];
+			if (params.assetClasses) {
+				for (const ac of params.assetClasses) {
+					if (
+						ac.allocation > 0 &&
+						(ac.name === 'stocks' || ac.name === 'bonds' || ac.name === 'gold')
+					) {
+						required.push(ac.name);
+					}
+				}
+			} else {
+				if ((params.stockAllocation ?? 0) > 0 || params.glidePathEnabled) required.push('stocks');
+				if ((params.bondAllocation ?? 0) > 0 || params.glidePathEnabled) required.push('bonds');
+			}
+			const h = alignHistory(getSeriesPreset(seriesPresetId), required);
+			if (h.years.length > 0) {
+				historyWindow = { from: h.years[0], to: h.years[h.years.length - 1] };
+			}
+			params.historicalStockReturns = h.stocks;
+			params.historicalBondReturns = h.bonds;
+			params.historicalInflation = h.inflation;
+			params.jointHistoricalSampling = true;
 
-			// Attach historical returns to multi-asset configs
+			// Attach historical returns to multi-asset configs (allineate per anno)
 			if (params.assetClasses) {
 				const histMap: Record<string, number[]> = {
-					stocks: historicalStockReturns,
-					bonds: historicalBondReturns,
-					gold: historicalGoldReturns
+					stocks: h.stocks,
+					bonds: h.bonds,
+					gold: h.gold
 				};
 				for (const ac of params.assetClasses) {
 					if (histMap[ac.name]) {
@@ -184,41 +199,10 @@
 			}
 		}
 
-		// Terminate previous worker if still running
-		worker?.terminate();
-
 		try {
-			worker = new Worker(
-				new URL('$lib/workers/monte-carlo.worker.ts', import.meta.url),
-				{ type: 'module' }
-			);
-
-			worker.onmessage = (e: MessageEvent) => {
-				const data = e.data;
-				if (data.type === 'progress') {
-					progress = data.percent;
-				} else if (data.type === 'result') {
-					result = data.data as MonteCarloResult;
-					running = false;
-					progress = 100;
-					stopTimer();
-					showNotification('Simulazione completata con successo!');
-				} else if (data.type === 'error') {
-					running = false;
-					stopTimer();
-					showNotification(`Errore: ${data.message}`, 'error');
-				}
-			};
-
-			worker.onerror = (e) => {
-				running = false;
-				stopTimer();
-				showNotification(`Errore nel worker: ${e.message}`, 'error');
-			};
-
-			worker.postMessage({
-				type: 'run',
-				params: {
+			worker = runMonteCarloWorker(
+				worker,
+				{
 					initialPortfolio: params.initialPortfolio ?? 200000,
 					annualContribution: params.annualContribution ?? 20000,
 					annualExpenses: params.annualExpenses ?? 30000,
@@ -238,6 +222,7 @@
 					historicalStockReturns: params.historicalStockReturns,
 					historicalBondReturns: params.historicalBondReturns,
 					historicalInflation: params.historicalInflation,
+					jointHistoricalSampling: params.jointHistoricalSampling,
 					useCorrelation: params.useCorrelation,
 					assetClasses: params.assetClasses,
 					correlationMatrix: params.correlationMatrix,
@@ -254,9 +239,31 @@
 					pensionAge: params.pensionAge,
 					otherIncome: params.otherIncome ?? 0,
 					otherIncomeEndAge: params.otherIncomeEndAge
-				} satisfies MonteCarloParams
-			});
-		} catch (err) {
+				} satisfies MonteCarloParams,
+				{
+					onProgress: (percent) => {
+						progress = percent;
+					},
+					onResult: (data) => {
+						result = data;
+						running = false;
+						progress = 100;
+						stopTimer();
+						showNotification('Simulazione completata con successo!');
+					},
+					onError: (message) => {
+						running = false;
+						stopTimer();
+						showNotification(`Errore: ${message}`, 'error');
+					},
+					onWorkerError: (e) => {
+						running = false;
+						stopTimer();
+						showNotification(`Errore nel worker: ${e.message}`, 'error');
+					}
+				}
+			);
+		} catch {
 			running = false;
 			stopTimer();
 			showNotification('Impossibile avviare il Web Worker', 'error');
@@ -371,9 +378,9 @@
 		<Toast color={toastType === 'success' ? 'green' : 'red'} dismissable toastStatus={showToast}>
 			{#snippet icon()}
 				{#if toastType === 'success'}
-					<CheckCircleSolid class="w-5 h-5" />
+					<CheckCircleSolid class="h-5 w-5" />
 				{:else}
-					<CloseCircleSolid class="w-5 h-5" />
+					<CloseCircleSolid class="h-5 w-5" />
 				{/if}
 			{/snippet}
 			{toastMessage}
@@ -386,7 +393,7 @@
 	<BreadcrumbItem>Simulazione Monte Carlo</BreadcrumbItem>
 </Breadcrumb>
 
-<div class="flex items-start justify-between mb-6 flex-wrap gap-4">
+<div class="mb-6 flex flex-wrap items-start justify-between gap-4">
 	<div>
 		<Heading tag="h1" class="mb-2">Simulazione Monte Carlo</Heading>
 		<p class="text-gray-600 dark:text-gray-400">
@@ -395,27 +402,39 @@
 	</div>
 	{#if result && !running}
 		<Button color="primary" onclick={handleSave}>
-			<FloppyDiskSolid class="w-4 h-4 me-2" />
+			<FloppyDiskSolid class="me-2 h-4 w-4" />
 			Salva Risultato
 		</Button>
 	{/if}
 </div>
 
 <!-- Series preset switcher -->
-<div class="mb-4 p-4 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
-	<div class="flex flex-col sm:flex-row sm:items-center gap-3">
+<div
+	class="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950/30"
+>
+	<div class="flex flex-col gap-3 sm:flex-row sm:items-center">
 		<div class="flex-1">
-			<label for="series-preset" class="text-sm font-semibold text-gray-700 dark:text-gray-200 block mb-1">
+			<label
+				for="series-preset"
+				class="mb-1 block text-sm font-semibold text-gray-700 dark:text-gray-200"
+			>
 				Serie storica di riferimento
 			</label>
 			<p class="text-xs text-gray-600 dark:text-gray-400">
 				{getSeriesPreset(seriesPresetId).description}
+				{#if historyWindow}
+					<br /><span class="font-medium"
+						>Ultima simulazione: anni {historyWindow.from}-{historyWindow.to} ({historyWindow.to -
+							historyWindow.from +
+							1} anni), valuta {getSeriesPreset(seriesPresetId).currency}.</span
+					>
+				{/if}
 			</p>
 		</div>
 		<select
 			id="series-preset"
 			bind:value={seriesPresetId}
-			class="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm"
+			class="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700"
 		>
 			{#each ALL_SERIES_PRESETS as preset (preset.id)}
 				<option value={preset.id}>{preset.label}</option>
@@ -438,13 +457,15 @@
 			defaults={simDefaults}
 		/>
 	{:else}
-		<div class="py-10 text-center text-gray-400 dark:text-gray-500">Caricamento dati dal profilo…</div>
+		<div class="py-10 text-center text-gray-400 dark:text-gray-500">
+			Caricamento dati dal profilo…
+		</div>
 	{/if}
 </div>
 
 <!-- Results Section -->
 {#if result}
-	<div class="space-y-8 mb-8">
+	<div class="mb-8 space-y-8">
 		<!-- Animated entrance -->
 		<div class="animate-fade-in">
 			<!-- Success Gauge + Key Stats -->
@@ -458,7 +479,7 @@
 			</div>
 
 			<!-- Histogram + Summary Table -->
-			<div class="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
+			<div class="mb-8 grid grid-cols-1 gap-8 xl:grid-cols-2">
 				<HistogramChart {result} />
 				<SummaryTable {result} />
 			</div>

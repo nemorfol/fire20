@@ -10,12 +10,7 @@
  * INTEGRITA' NUMERICA: l'assistente spiega/narra, NON calcola numeri fiscali o
  * finanziari (vedi SYSTEM_PROMPT). I numeri arrivano gia' calcolati dal motore.
  */
-import type {
-	LLMMessage,
-	LLMProviderId,
-	LLMProviderStatus,
-	LLMStreamOptions
-} from './types';
+import type { LLMMessage, LLMProviderId, LLMProviderStatus, LLMStreamOptions } from './types';
 import type { LLMSettings } from './store.svelte';
 
 /**
@@ -35,9 +30,7 @@ Regole tassative:
 
 interface ChromeLanguageModel {
 	availability(): Promise<'available' | 'downloadable' | 'downloading' | 'unavailable'>;
-	create(opts?: {
-		initialPrompts?: { role: string; content: string }[];
-	}): Promise<ChromeSession>;
+	create(opts?: { initialPrompts?: { role: string; content: string }[] }): Promise<ChromeSession>;
 }
 interface ChromeSession {
 	prompt(input: string): Promise<string>;
@@ -131,7 +124,8 @@ async function detectOllama(settings: LLMSettings): Promise<LLMProviderStatus> {
 			id: 'ollama',
 			available: false,
 			label: 'Ollama (locale)',
-			detail: 'Non raggiungibile. Avvia Ollama in locale; su web pubblico (https) il browser puo\' bloccare localhost.'
+			detail:
+				"Non raggiungibile. Avvia Ollama in locale; su web pubblico (https) il browser puo' bloccare localhost."
 		};
 	}
 }
@@ -211,7 +205,9 @@ export async function* streamChat(
 ): AsyncGenerator<string> {
 	const provider = await resolveProvider(settings);
 	if (provider === 'none') {
-		throw new Error('Nessun provider AI disponibile. Attiva Ollama in locale o usa un browser con AI integrata.');
+		throw new Error(
+			'Nessun provider AI disponibile. Attiva Ollama in locale o usa un browser con AI integrata.'
+		);
 	}
 	const withSystem: LLMMessage[] = messages.some((m) => m.role === 'system')
 		? messages

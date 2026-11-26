@@ -1,7 +1,12 @@
 <script lang="ts">
-	import EChart from './EChart.svelte';
+	import EChart from '$lib/components/shared/EChart.svelte';
+	import type { CallbackDataParams } from 'echarts/types/dist/shared';
 	import type { MonteCarloResult } from '$lib/engine/monte-carlo';
 	import { formatCompact, formatCurrency } from '$lib/utils/format';
+
+	// I parametri di un tooltip ad asse portano anche `axisValue`, non dichiarato
+	// in CallbackDataParams: lo aggiungiamo localmente invece di ricorrere ad any.
+	type AxisTooltipParam = CallbackDataParams & { axisValue?: string | number };
 
 	let {
 		result
@@ -23,14 +28,14 @@
 			tooltip: {
 				trigger: 'axis',
 				axisPointer: { type: 'cross' },
-				formatter: (params: any) => {
+				formatter: (params: AxisTooltipParam[]) => {
 					if (!Array.isArray(params) || params.length === 0) return '';
 					const yearLabel = params[0].axisValue;
 					let html = `<strong>${yearLabel}</strong><br/>`;
 					for (const p of params) {
 						if (p.seriesName && p.value != null) {
-							const val = typeof p.value === 'number' ? p.value : p.value[1];
-							html += `${p.marker} ${p.seriesName}: ${formatCurrency(val)}<br/>`;
+							const val = typeof p.value === 'number' ? p.value : (p.value as number[])[1];
+							html += `${p.marker as string} ${p.seriesName}: ${formatCurrency(val)}<br/>`;
 						}
 					}
 					return html;
@@ -172,12 +177,13 @@
 	});
 </script>
 
-<div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
-	<h4 class="text-base font-semibold text-gray-900 dark:text-white mb-2">
+<div class="rounded-xl bg-white p-4 shadow-lg dark:bg-gray-800">
+	<h4 class="mb-2 text-base font-semibold text-gray-900 dark:text-white">
 		Proiezione del Portafoglio - Fan Chart
 	</h4>
-	<p class="text-xs text-gray-500 dark:text-gray-400 mb-4">
-		Bande di probabilit&agrave;: P5-P95 (chiara), P10-P90 (media), P25-P75 (scura), P50 mediana (linea)
+	<p class="mb-4 text-xs text-gray-500 dark:text-gray-400">
+		Bande di probabilit&agrave;: P5-P95 (chiara), P10-P90 (media), P25-P75 (scura), P50 mediana
+		(linea)
 	</p>
 	<EChart {options} height="420px" />
 </div>

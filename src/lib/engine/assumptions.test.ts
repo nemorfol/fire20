@@ -11,7 +11,7 @@ import { calculateIRPEF } from './tax-italy';
 // speranza di vita). Questi golden test impediscono regressioni sui numeri
 // previdenziali sensibili.
 describe('Coefficienti di trasformazione 2025-2026 (DM 20/11/2024)', () => {
-	it('valori ufficiali alle eta\' chiave', () => {
+	it("valori ufficiali alle eta' chiave", () => {
 		expect(getTransformationCoefficient(57)).toBeCloseTo(0.04204, 5);
 		expect(getTransformationCoefficient(65)).toBeCloseTo(0.0525, 5);
 		expect(getTransformationCoefficient(67)).toBeCloseTo(0.05608, 5);
@@ -29,12 +29,12 @@ describe('Coefficienti di trasformazione 2025-2026 (DM 20/11/2024)', () => {
 		expect(getTransformationCoefficient(80)).toBe(getTransformationCoefficient(71));
 	});
 
-	it('interpolazione lineare tra eta\' intere', () => {
+	it("interpolazione lineare tra eta' intere", () => {
 		// 66,5 = (5,423% + 5,608%) / 2 = 5,5155%
 		expect(getTransformationCoefficient(66.5)).toBeCloseTo((0.05423 + 0.05608) / 2, 6);
 	});
 
-	it('monotono crescente con l\'eta\'', () => {
+	it("monotono crescente con l'eta'", () => {
 		for (let i = 1; i < TRANSFORMATION_COEFFICIENTS_2025_2026.length; i++) {
 			expect(TRANSFORMATION_COEFFICIENTS_2025_2026[i][1]).toBeGreaterThan(
 				TRANSFORMATION_COEFFICIENTS_2025_2026[i - 1][1]

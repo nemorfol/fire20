@@ -1,15 +1,29 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import {
-		Heading, Breadcrumb, BreadcrumbItem, Card, Button, Input,
-		Table, TableHead, TableHeadCell, TableBody, TableBodyRow, TableBodyCell,
-		Badge, Alert, Select, Modal
+		Heading,
+		Breadcrumb,
+		BreadcrumbItem,
+		Card,
+		Button,
+		Input,
+		Table,
+		TableHead,
+		TableHeadCell,
+		TableBody,
+		TableBodyRow,
+		TableBodyCell,
+		Badge,
+		Alert,
+		Select,
+		Modal
 	} from 'flowbite-svelte';
 	import {
 		ShareNodesSolid,
 		ClipboardOutline,
 		TrashBinOutline,
-		PlusOutline
+		PlusOutline,
+		ArrowRightOutline
 	} from 'flowbite-svelte-icons';
 	import { page } from '$app/state';
 	import { getAllProfiles } from '$lib/db/profiles';
@@ -74,25 +88,34 @@
 
 	let filteredScenarios = $derived(() => {
 		let result = scenarios;
-		if (filterFireType) result = result.filter(s => s.fireType === filterFireType);
-		if (filterRegion) result = result.filter(s => s.region === filterRegion);
-		if (filterAgeRange) result = result.filter(s => s.ageRange === filterAgeRange);
+		if (filterFireType) result = result.filter((s) => s.fireType === filterFireType);
+		if (filterRegion) result = result.filter((s) => s.region === filterRegion);
+		if (filterAgeRange) result = result.filter((s) => s.ageRange === filterAgeRange);
 		return result;
 	});
 
 	let ageRangeFilterOptions = $derived(() => {
-		const ages = [...new Set(scenarios.map(s => s.ageRange))].sort();
-		return [{ value: '', name: 'Tutte le eta' }, ...ages.map(a => ({ value: a, name: a + ' anni' }))];
+		const ages = [...new Set(scenarios.map((s) => s.ageRange))].sort();
+		return [
+			{ value: '', name: 'Tutte le eta' },
+			...ages.map((a) => ({ value: a, name: a + ' anni' }))
+		];
 	});
 
 	function fireTypeBadgeColor(type: string): 'green' | 'blue' | 'purple' | 'yellow' | 'indigo' {
 		switch (type) {
-			case 'LeanFIRE': return 'green';
-			case 'FIRE': return 'blue';
-			case 'FatFIRE': return 'purple';
-			case 'BaristaFIRE': return 'yellow';
-			case 'CoastFIRE': return 'indigo';
-			default: return 'blue';
+			case 'LeanFIRE':
+				return 'green';
+			case 'FIRE':
+				return 'blue';
+			case 'FatFIRE':
+				return 'purple';
+			case 'BaristaFIRE':
+				return 'yellow';
+			case 'CoastFIRE':
+				return 'indigo';
+			default:
+				return 'blue';
 		}
 	}
 
@@ -113,7 +136,9 @@
 		try {
 			await navigator.clipboard.writeText(shareURL);
 			copied = true;
-			setTimeout(() => { copied = false; }, 2000);
+			setTimeout(() => {
+				copied = false;
+			}, 2000);
 		} catch {
 			// Fallback
 			const ta = document.createElement('textarea');
@@ -123,7 +148,9 @@
 			document.execCommand('copy');
 			document.body.removeChild(ta);
 			copied = true;
-			setTimeout(() => { copied = false; }, 2000);
+			setTimeout(() => {
+				copied = false;
+			}, 2000);
 		}
 	}
 
@@ -206,12 +233,13 @@
 	<BreadcrumbItem>Community</BreadcrumbItem>
 </Breadcrumb>
 
-<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+<div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 	<Heading tag="h1">Community Benchmark</Heading>
 </div>
 
-<p class="text-gray-600 dark:text-gray-400 mb-6">
-	Confronta il tuo percorso FIRE con la community. Condividi il tuo scenario in modo anonimo e importa quelli degli altri per un benchmark collettivo.
+<p class="mb-6 text-gray-600 dark:text-gray-400">
+	Confronta il tuo percorso FIRE con la community. Condividi il tuo scenario in modo anonimo e
+	importa quelli degli altri per un benchmark collettivo.
 </p>
 
 {#if importSuccess}
@@ -220,48 +248,56 @@
 	</Alert>
 {/if}
 
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+<div class="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
 	<!-- Condividi -->
 	<Card class="max-w-none">
 		<Heading tag="h4" class="mb-3">Condividi il tuo scenario</Heading>
-		<p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-			I tuoi dati vengono anonimizzati automaticamente: nessun nome, nessuna info personale. Solo range di eta, reddito e dati aggregati.
+		<p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+			I tuoi dati vengono anonimizzati automaticamente: nessun nome, nessuna info personale. Solo
+			range di eta, reddito e dati aggregati.
 		</p>
 		<div class="mb-3">
-			<label for="region-select" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+			<label
+				for="region-select"
+				class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+			>
 				La tua regione
 			</label>
 			<Select id="region-select" items={regionOptions} bind:value={selectedRegion} />
 		</div>
 		<Button color="blue" onclick={prepareShare} disabled={!profile}>
-			<ShareNodesSolid class="w-4 h-4 me-2" />
+			<ShareNodesSolid class="me-2 h-4 w-4" />
 			Condividi il tuo scenario
 		</Button>
 		{#if !profile}
-			<p class="text-xs text-gray-400 mt-2">Crea prima un profilo finanziario.</p>
+			<p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+				Per condividere uno scenario serve prima un profilo finanziario.
+				<a
+					href="/profilo/"
+					class="text-primary-600 dark:text-primary-400 inline-flex items-center gap-1 font-medium hover:underline"
+				>
+					Crea il tuo profilo <ArrowRightOutline class="h-3 w-3" />
+				</a>
+			</p>
 		{/if}
 	</Card>
 
 	<!-- Importa -->
 	<Card class="max-w-none">
 		<Heading tag="h4" class="mb-3">Importa scenario</Heading>
-		<p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+		<p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
 			Incolla il link ricevuto da un altro utente per aggiungerlo al benchmark.
 		</p>
 		<div class="flex gap-2">
 			<div class="flex-1">
-				<Input
-					type="text"
-					placeholder="Incolla il link qui..."
-					bind:value={importLink}
-				/>
+				<Input type="text" placeholder="Incolla il link qui..." bind:value={importLink} />
 			</div>
 			<Button color="green" onclick={handleImport}>
-				<PlusOutline class="w-4 h-4" />
+				<PlusOutline class="h-4 w-4" />
 			</Button>
 		</div>
 		{#if importError}
-			<p class="text-xs text-red-500 mt-2">{importError}</p>
+			<p class="mt-2 text-xs text-red-500">{importError}</p>
 		{/if}
 	</Card>
 
@@ -296,42 +332,50 @@
 				</div>
 			</div>
 		{:else}
-			<p class="text-sm text-gray-400">Nessuno scenario importato. Condividi il tuo o importa quelli di altri per vedere le statistiche.</p>
+			<p class="text-sm text-gray-400">
+				Nessuno scenario importato. Condividi il tuo o importa quelli di altri per vedere le
+				statistiche.
+			</p>
 		{/if}
 	</Card>
 </div>
 
 <!-- Confronto con la community -->
 {#if profile && stats && stats.count > 0}
-	<Card class="max-w-none mb-6">
+	<Card class="mb-6 max-w-none">
 		<Heading tag="h4" class="mb-4">Il tuo profilo vs la Community</Heading>
 		{@const myIncome = profile.annualIncome + profile.otherIncome}
-		{@const mySavingsRate = myIncome > 0 ? Math.round(((myIncome - profile.annualExpenses) / myIncome) * 100) : 0}
+		{@const mySavingsRate =
+			myIncome > 0 ? Math.round(((myIncome - profile.annualExpenses) / myIncome) * 100) : 0}
 		{@const myPortfolio = Object.values(profile.portfolio).reduce((s, v) => s + (v || 0), 0)}
-		{@const myWr = (profile.simulation?.withdrawalRate || 0.04)}
+		{@const myWr = profile.simulation?.withdrawalRate || 0.04}
 		{@const myFireNumber = profile.fireExpenses > 0 ? Math.round(profile.fireExpenses / myWr) : 0}
-		<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+		<div class="grid grid-cols-2 gap-4 md:grid-cols-4">
 			<div class="text-center">
-				<p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Tasso risparmio</p>
+				<p class="mb-1 text-xs text-gray-500 dark:text-gray-400">Tasso risparmio</p>
 				<p class="text-lg font-bold text-gray-900 dark:text-white">{mySavingsRate}%</p>
-				<p class="text-xs {mySavingsRate > stats.avgSavingsRate ? 'text-green-500' : 'text-red-500'}">
+				<p
+					class="text-xs {mySavingsRate > stats.avgSavingsRate ? 'text-green-500' : 'text-red-500'}"
+				>
 					Community: {stats.avgSavingsRate}%
 				</p>
 			</div>
 			<div class="text-center">
-				<p class="text-xs text-gray-500 dark:text-gray-400 mb-1">FIRE Number</p>
+				<p class="mb-1 text-xs text-gray-500 dark:text-gray-400">FIRE Number</p>
 				<p class="text-lg font-bold text-gray-900 dark:text-white">{formatCompact(myFireNumber)}</p>
 				<p class="text-xs text-gray-500">Community: {formatCompact(stats.avgFireNumber)}</p>
 			</div>
 			<div class="text-center">
-				<p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Portafoglio</p>
+				<p class="mb-1 text-xs text-gray-500 dark:text-gray-400">Portafoglio</p>
 				<p class="text-lg font-bold text-gray-900 dark:text-white">{formatCompact(myPortfolio)}</p>
-				<p class="text-xs {myPortfolio > stats.avgPortfolioSize ? 'text-green-500' : 'text-red-500'}">
+				<p
+					class="text-xs {myPortfolio > stats.avgPortfolioSize ? 'text-green-500' : 'text-red-500'}"
+				>
 					Community: {formatCompact(stats.avgPortfolioSize)}
 				</p>
 			</div>
 			<div class="text-center">
-				<p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Withdrawal Rate</p>
+				<p class="mb-1 text-xs text-gray-500 dark:text-gray-400">Withdrawal Rate</p>
 				<p class="text-lg font-bold text-gray-900 dark:text-white">{(myWr * 100).toFixed(1)}%</p>
 				<p class="text-xs text-gray-500">Community: {stats.avgWithdrawalRate.toFixed(1)}%</p>
 			</div>
@@ -341,7 +385,7 @@
 
 <!-- Distribution bars -->
 {#if stats && stats.count > 0}
-	<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+	<div class="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
 		<!-- FIRE Type Distribution -->
 		<Card class="max-w-none">
 			<Heading tag="h5" class="mb-3">Distribuzione tipo FIRE</Heading>
@@ -349,11 +393,11 @@
 				{#each Object.entries(stats.fireTypeDistribution) as [type, count]}
 					{@const pct = Math.round((count / stats.count) * 100)}
 					<div class="flex items-center gap-2">
-						<span class="text-xs w-24 text-right">{type}</span>
-						<div class="flex-1 h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-							<div class="h-full bg-blue-500 rounded-full" style="width: {pct}%"></div>
+						<span class="w-24 text-right text-xs">{type}</span>
+						<div class="h-4 flex-1 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+							<div class="h-full rounded-full bg-blue-500" style="width: {pct}%"></div>
 						</div>
-						<span class="text-xs w-16 text-gray-500">{count} ({pct}%)</span>
+						<span class="w-16 text-xs text-gray-500">{count} ({pct}%)</span>
 					</div>
 				{/each}
 			</div>
@@ -366,11 +410,11 @@
 				{#each Object.entries(stats.regionDistribution) as [region, count]}
 					{@const pct = Math.round((count / stats.count) * 100)}
 					<div class="flex items-center gap-2">
-						<span class="text-xs w-24 text-right">{region}</span>
-						<div class="flex-1 h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-							<div class="h-full bg-green-500 rounded-full" style="width: {pct}%"></div>
+						<span class="w-24 text-right text-xs">{region}</span>
+						<div class="h-4 flex-1 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+							<div class="h-full rounded-full bg-green-500" style="width: {pct}%"></div>
 						</div>
-						<span class="text-xs w-16 text-gray-500">{count} ({pct}%)</span>
+						<span class="w-16 text-xs text-gray-500">{count} ({pct}%)</span>
 					</div>
 				{/each}
 			</div>
@@ -379,8 +423,8 @@
 {/if}
 
 <!-- Tabella scenari -->
-<Card class="max-w-none mb-6">
-	<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+<Card class="mb-6 max-w-none">
+	<div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 		<Heading tag="h4">Scenari Community ({scenarios.length})</Heading>
 		<div class="flex flex-wrap gap-2">
 			<Select items={fireTypeFilterOptions} bind:value={filterFireType} class="w-36" />
@@ -422,11 +466,11 @@
 							<TableBodyCell>{s.withdrawalRate}%</TableBodyCell>
 							<TableBodyCell>
 								<button
-									class="text-red-500 hover:text-red-700 dark:hover:text-red-400 cursor-pointer"
+									class="cursor-pointer text-red-500 hover:text-red-700 dark:hover:text-red-400"
 									onclick={() => handleRemove(s.id)}
 									title="Rimuovi"
 								>
-									<TrashBinOutline class="w-4 h-4" />
+									<TrashBinOutline class="h-4 w-4" />
 								</button>
 							</TableBodyCell>
 						</TableBodyRow>
@@ -435,7 +479,7 @@
 			</Table>
 		</div>
 	{:else}
-		<p class="text-sm text-gray-400 py-8 text-center">
+		<p class="py-8 text-center text-sm text-gray-400">
 			Nessuno scenario nella community. Condividi il tuo o importa quelli di altri!
 		</p>
 	{/if}
@@ -450,56 +494,58 @@
 			</p>
 
 			<div class="grid grid-cols-2 gap-3 text-sm">
-				<div class="flex justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded">
+				<div class="flex justify-between rounded bg-gray-50 p-2 dark:bg-gray-800">
 					<span class="text-gray-500">Fascia eta</span>
 					<span class="font-semibold">{myScenario.ageRange} anni</span>
 				</div>
-				<div class="flex justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded">
+				<div class="flex justify-between rounded bg-gray-50 p-2 dark:bg-gray-800">
 					<span class="text-gray-500">Regione</span>
 					<span class="font-semibold">{myScenario.region}</span>
 				</div>
-				<div class="flex justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded">
+				<div class="flex justify-between rounded bg-gray-50 p-2 dark:bg-gray-800">
 					<span class="text-gray-500">Reddito</span>
 					<span class="font-semibold">{myScenario.incomeRange}</span>
 				</div>
-				<div class="flex justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded">
+				<div class="flex justify-between rounded bg-gray-50 p-2 dark:bg-gray-800">
 					<span class="text-gray-500">Risparmio</span>
 					<span class="font-semibold">{myScenario.savingsRate}%</span>
 				</div>
-				<div class="flex justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded">
+				<div class="flex justify-between rounded bg-gray-50 p-2 dark:bg-gray-800">
 					<span class="text-gray-500">FIRE Number</span>
 					<span class="font-semibold">{formatCompact(myScenario.fireNumber)}</span>
 				</div>
-				<div class="flex justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded">
+				<div class="flex justify-between rounded bg-gray-50 p-2 dark:bg-gray-800">
 					<span class="text-gray-500">Anni al FIRE</span>
 					<span class="font-semibold">{myScenario.yearsToFire}</span>
 				</div>
-				<div class="flex justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded">
+				<div class="flex justify-between rounded bg-gray-50 p-2 dark:bg-gray-800">
 					<span class="text-gray-500">Portafoglio</span>
 					<span class="font-semibold">{formatCompact(myScenario.portfolioSize)}</span>
 				</div>
-				<div class="flex justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded">
+				<div class="flex justify-between rounded bg-gray-50 p-2 dark:bg-gray-800">
 					<span class="text-gray-500">Tipo FIRE</span>
 					<Badge color={fireTypeBadgeColor(myScenario.fireType)}>{myScenario.fireType}</Badge>
 				</div>
-				<div class="flex justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded">
+				<div class="flex justify-between rounded bg-gray-50 p-2 dark:bg-gray-800">
 					<span class="text-gray-500">Azioni / Bond / Altro</span>
-					<span class="font-semibold">{myScenario.stockAllocation}% / {myScenario.bondAllocation}% / {myScenario.otherAllocation}%</span>
+					<span class="font-semibold"
+						>{myScenario.stockAllocation}% / {myScenario.bondAllocation}% / {myScenario.otherAllocation}%</span
+					>
 				</div>
-				<div class="flex justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded">
+				<div class="flex justify-between rounded bg-gray-50 p-2 dark:bg-gray-800">
 					<span class="text-gray-500">Withdrawal Rate</span>
 					<span class="font-semibold">{myScenario.withdrawalRate}%</span>
 				</div>
 			</div>
 
 			<div>
-				<p class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+				<p class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
 					Link da condividere
 				</p>
 				<div class="flex gap-2">
 					<Input type="text" value={shareURL} readonly class="flex-1 text-xs" />
 					<Button size="sm" color={copied ? 'green' : 'blue'} onclick={copyToClipboard}>
-						<ClipboardOutline class="w-4 h-4 me-1" />
+						<ClipboardOutline class="me-1 h-4 w-4" />
 						{copied ? 'Copiato!' : 'Copia'}
 					</Button>
 				</div>
@@ -508,7 +554,7 @@
 	{/if}
 	{#snippet footer()}
 		<div class="flex justify-end gap-3">
-			<Button color="alternative" onclick={() => showShareModal = false}>Chiudi</Button>
+			<Button color="alternative" onclick={() => (showShareModal = false)}>Chiudi</Button>
 			<Button color="blue" onclick={confirmShare}>Salva nella Community</Button>
 		</div>
 	{/snippet}

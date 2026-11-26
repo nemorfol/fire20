@@ -24,8 +24,14 @@
 			id="annualExpenses"
 			step={500}
 		/>
-		<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-			Circa <strong>{monthlyExpenses.toLocaleString('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}</strong> al mese
+		<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+			Circa <strong
+				>{monthlyExpenses.toLocaleString('it-IT', {
+					style: 'currency',
+					currency: 'EUR',
+					maximumFractionDigits: 0
+				})}</strong
+			> al mese
 		</p>
 	</div>
 
@@ -36,9 +42,14 @@
 			id="fireExpenses"
 			step={500}
 		/>
-		<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-			Circa <strong>{monthlyFireExpenses.toLocaleString('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}</strong> al mese.
-			Le spese in FIRE possono essere diverse: niente pendolarismo, ma piu tempo libero.
+		<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+			Circa <strong
+				>{monthlyFireExpenses.toLocaleString('it-IT', {
+					style: 'currency',
+					currency: 'EUR',
+					maximumFractionDigits: 0
+				})}</strong
+			> al mese. Le spese in FIRE possono essere diverse: niente pendolarismo, ma piu tempo libero.
 		</p>
 	</div>
 
@@ -50,7 +61,7 @@
 			min={0}
 			max={15}
 		/>
-		<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+		<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
 			Media storica italiana: circa 2% annuo
 		</p>
 	</div>

@@ -25,7 +25,7 @@ export const capeRatios: CAPEDataPoint[] = [
 	{ year: 1893, value: 14.59 },
 	{ year: 1894, value: 14.83 },
 	{ year: 1895, value: 14.39 },
-	{ year: 1896, value: 13.80 },
+	{ year: 1896, value: 13.8 },
 	{ year: 1897, value: 14.73 },
 	{ year: 1898, value: 15.87 },
 	{ year: 1899, value: 18.56 },
@@ -33,7 +33,7 @@ export const capeRatios: CAPEDataPoint[] = [
 	{ year: 1901, value: 21.31 },
 	{ year: 1902, value: 22.39 },
 	{ year: 1903, value: 19.51 },
-	{ year: 1904, value: 18.00 },
+	{ year: 1904, value: 18.0 },
 	{ year: 1905, value: 19.63 },
 	{ year: 1906, value: 21.17 },
 	{ year: 1907, value: 15.98 },
@@ -60,8 +60,8 @@ export const capeRatios: CAPEDataPoint[] = [
 	{ year: 1928, value: 20.13 },
 	{ year: 1929, value: 27.08 },
 	{ year: 1930, value: 22.34 },
-	{ year: 1931, value: 16.70 },
-	{ year: 1932, value: 8.30 },
+	{ year: 1931, value: 16.7 },
+	{ year: 1932, value: 8.3 },
 	{ year: 1933, value: 10.07 },
 	{ year: 1934, value: 13.36 },
 	{ year: 1935, value: 12.85 },
@@ -90,7 +90,7 @@ export const capeRatios: CAPEDataPoint[] = [
 	{ year: 1958, value: 14.62 },
 	{ year: 1959, value: 18.71 },
 	{ year: 1960, value: 17.75 },
-	{ year: 1961, value: 19.70 },
+	{ year: 1961, value: 19.7 },
 	{ year: 1962, value: 21.25 },
 	{ year: 1963, value: 19.45 },
 	{ year: 1964, value: 22.28 },
@@ -157,7 +157,7 @@ export const capeRatios: CAPEDataPoint[] = [
 ];
 
 function computeStats(data: CAPEDataPoint[]) {
-	const values = data.map(d => d.value);
+	const values = data.map((d) => d.value);
 	const count = values.length;
 	const mean = values.reduce((a, b) => a + b, 0) / count;
 	const variance = values.reduce((sum, v) => sum + (v - mean) ** 2, 0) / (count - 1);

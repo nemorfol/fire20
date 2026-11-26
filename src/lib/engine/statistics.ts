@@ -20,7 +20,7 @@ let rngState: number | null = null;
 /** Inizializza il PRNG con un seed intero: la generazione diventa deterministica. */
 export function seedRandom(seed: number): void {
 	// Normalizza a intero unsigned 32-bit; evita lo stato 0 (degenere).
-	rngState = (seed >>> 0) || 0x9e3779b9;
+	rngState = seed >>> 0 || 0x9e3779b9;
 }
 
 /** Disattiva il PRNG seedato e torna a Math.random() (non deterministico). */
@@ -148,6 +148,15 @@ export function logNormalReturn(mean: number, stdDev: number): number {
 }
 
 /**
+ * Estrae un indice casuale uniforme in [0, n) (bootstrap semplice).
+ * Usato dal campionamento CONGIUNTO: lo stesso indice (= stesso anno storico)
+ * viene applicato a tutte le serie allineate.
+ */
+export function bootstrapIndex(n: number): number {
+	return Math.floor(nextRandom() * n);
+}
+
+/**
  * Estrae un campione casuale dai rendimenti storici (bootstrap semplice).
  *
  * @param historicalReturns - Array di rendimenti storici
@@ -155,8 +164,24 @@ export function logNormalReturn(mean: number, stdDev: number): number {
  */
 export function bootstrapSample(historicalReturns: number[]): number {
 	if (historicalReturns.length === 0) return 0;
-	const index = Math.floor(nextRandom() * historicalReturns.length);
-	return historicalReturns[index];
+	return historicalReturns[bootstrapIndex(historicalReturns.length)];
+}
+
+/**
+ * Estrae gli indici di un blocco di anni consecutivi (block bootstrap circolare,
+ * Politis-Romano: dopo l'ultimo anno si riparte dal primo).
+ *
+ * @param n - Lunghezza della serie
+ * @param blockSize - Dimensione del blocco
+ * @returns Indici consecutivi (modulo n)
+ */
+export function blockBootstrapIndices(n: number, blockSize: number): number[] {
+	if (n <= 0 || blockSize <= 0) return [];
+	const effectiveBlockSize = Math.min(blockSize, n);
+	const startIndex = Math.floor(nextRandom() * n);
+	const idx: number[] = [];
+	for (let i = 0; i < effectiveBlockSize; i++) idx.push((startIndex + i) % n);
+	return idx;
 }
 
 /**
@@ -167,26 +192,11 @@ export function bootstrapSample(historicalReturns: number[]): number {
  * @param blockSize - Dimensione del blocco da estrarre
  * @returns Array di rendimenti consecutivi
  */
-export function blockBootstrapSample(
-	historicalReturns: number[],
-	blockSize: number
-): number[] {
+export function blockBootstrapSample(historicalReturns: number[], blockSize: number): number[] {
 	if (historicalReturns.length === 0) return [];
-	if (blockSize <= 0) return [];
-
-	const n = historicalReturns.length;
-	const effectiveBlockSize = Math.min(blockSize, n);
-
-	// Punto di inizio casuale (con wrap-around)
-	const startIndex = Math.floor(nextRandom() * n);
-	const block: number[] = [];
-
-	for (let i = 0; i < effectiveBlockSize; i++) {
-		const index = (startIndex + i) % n;
-		block.push(historicalReturns[index]);
-	}
-
-	return block;
+	return blockBootstrapIndices(historicalReturns.length, blockSize).map(
+		(i) => historicalReturns[i]
+	);
 }
 
 /**

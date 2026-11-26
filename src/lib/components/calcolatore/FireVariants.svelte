@@ -42,7 +42,9 @@
 				<div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
 					Spesa: {formatCurrency(v.annualExpenses)}/anno
 				</div>
-				<div class="mt-1 text-xs leading-snug text-gray-400 dark:text-gray-500">{v.description}</div>
+				<div class="mt-1 text-xs leading-snug text-gray-400 dark:text-gray-500">
+					{v.description}
+				</div>
 			</div>
 		{/each}
 	</div>

@@ -8,7 +8,8 @@ import { getTransformationCoefficient } from './pension-italy';
 
 // ─── Tipi di prestazione ───────────────────────────────────────────────────────
 
-export type PayoutStrategy = 'vitalizia' | 'durata-definita' | 'prelievi-liberi' | 'frazionata' | 'capitale-60';
+export type PayoutStrategy =
+	'vitalizia' | 'durata-definita' | 'prelievi-liberi' | 'frazionata' | 'capitale-60';
 
 export interface PayoutSimulationParams {
 	/** Montante accumulato nel fondo pensione */
@@ -122,13 +123,29 @@ export interface RiscattoLaureaResult {
 // ─── Tabelle ISTAT aspettativa di vita ──────────────────────────────────────────
 
 const LIFE_EXPECTANCY_MALE: [number, number][] = [
-	[57, 25.5], [60, 23.0], [62, 21.3], [64, 19.6], [65, 18.8],
-	[67, 17.2], [70, 14.8], [75, 11.0], [80, 7.8], [85, 5.2]
+	[57, 25.5],
+	[60, 23.0],
+	[62, 21.3],
+	[64, 19.6],
+	[65, 18.8],
+	[67, 17.2],
+	[70, 14.8],
+	[75, 11.0],
+	[80, 7.8],
+	[85, 5.2]
 ];
 
 const LIFE_EXPECTANCY_FEMALE: [number, number][] = [
-	[57, 29.0], [60, 26.3], [62, 24.5], [64, 22.7], [65, 21.8],
-	[67, 20.1], [70, 17.5], [75, 13.4], [80, 9.8], [85, 6.8]
+	[57, 29.0],
+	[60, 26.3],
+	[62, 24.5],
+	[64, 22.7],
+	[65, 21.8],
+	[67, 20.1],
+	[70, 17.5],
+	[75, 13.4],
+	[80, 9.8],
+	[85, 6.8]
 ];
 
 /**
@@ -155,13 +172,25 @@ export function getLifeExpectancy(age: number, gender: 'M' | 'F'): number {
 // ─── Fattori conversione rendita vitalizia ──────────────────────────────────────
 
 const CONVERSION_FACTORS_MALE: [number, number][] = [
-	[57, 0.038], [60, 0.042], [62, 0.046], [64, 0.048],
-	[65, 0.050], [67, 0.054], [70, 0.060], [75, 0.070]
+	[57, 0.038],
+	[60, 0.042],
+	[62, 0.046],
+	[64, 0.048],
+	[65, 0.05],
+	[67, 0.054],
+	[70, 0.06],
+	[75, 0.07]
 ];
 
 const CONVERSION_FACTORS_FEMALE: [number, number][] = [
-	[57, 0.034], [60, 0.038], [62, 0.041], [64, 0.044],
-	[65, 0.045], [67, 0.048], [70, 0.053], [75, 0.063]
+	[57, 0.034],
+	[60, 0.038],
+	[62, 0.041],
+	[64, 0.044],
+	[65, 0.045],
+	[67, 0.048],
+	[70, 0.053],
+	[75, 0.063]
 ];
 
 function getConversionFactor(age: number, gender: 'M' | 'F', reversibile: boolean): number {
@@ -213,7 +242,7 @@ export function calculateBenefitTaxRate(yearsInFund: number): number {
 function calculateFrazionataTaxRate(yearsInFund: number): number {
 	const extraYears = Math.max(0, yearsInFund - 15);
 	const reduction = Math.min(extraYears * 0.0025, 0.05);
-	return 0.20 - reduction;
+	return 0.2 - reduction;
 }
 
 // ─── Assegno sociale 2026 ───────────────────────────────────────────────────────
@@ -242,8 +271,14 @@ function getTaxableFraction(montante: number, contributionsBase?: number): numbe
 
 function simulateVitalizia(params: PayoutSimulationParams): PayoutSimulationResult {
 	const {
-		montante, age, gender, yearsInFund, reversibile,
-		expectedReturnRate, contributionsBase, annuityRevaluationRate
+		montante,
+		age,
+		gender,
+		yearsInFund,
+		reversibile,
+		expectedReturnRate,
+		contributionsBase,
+		annuityRevaluationRate
 	} = params;
 	const taxRate = calculateBenefitTaxRate(yearsInFund);
 	const convFactor = getConversionFactor(age, gender, reversibile);
@@ -253,7 +288,8 @@ function simulateVitalizia(params: PayoutSimulationParams): PayoutSimulationResu
 
 	// Rivalutazione annua: rendimento gestione separata - spread compagnia.
 	// Se non passato esplicitamente dall'utente, stimato dal rendimento atteso.
-	const revaluationRate = annuityRevaluationRate ?? Math.max(0, expectedReturnRate - ANNUITY_INSURER_SPREAD);
+	const revaluationRate =
+		annuityRevaluationRate ?? Math.max(0, expectedReturnRate - ANNUITY_INSURER_SPREAD);
 
 	const yearlyPayouts: YearlyPayout[] = [];
 	let totalGross = 0;
@@ -292,14 +328,16 @@ function simulateVitalizia(params: PayoutSimulationParams): PayoutSimulationResu
 		duration,
 		monthlyNetAverage: duration > 0 ? Math.round(totalNet / duration / 12) : 0,
 		pros: [
-			'Rendita garantita a vita, anche se si vive oltre l\'aspettativa',
+			"Rendita garantita a vita, anche se si vive oltre l'aspettativa",
 			`La rendita si rivaluta annualmente (~${(revaluationRate * 100).toFixed(2)}% stimato): compensa in parte l'inflazione`,
-			reversibile ? 'Reversibile al coniuge (60% della rendita)' : 'Tassazione agevolata (dal 15% al 9%)'
+			reversibile
+				? 'Reversibile al coniuge (60% della rendita)'
+				: 'Tassazione agevolata (dal 15% al 9%)'
 		],
 		cons: [
 			'Capitale trasferito alla compagnia assicurativa',
 			'Nessun capitale agli eredi (salvo opzione reversibile)',
-			'Rivalutazione spesso inferiore all\'inflazione reale',
+			"Rivalutazione spesso inferiore all'inflazione reale",
 			'Fattore di conversione spesso poco vantaggioso'
 		]
 	};
@@ -345,9 +383,10 @@ function simulateDurataDefinita(params: PayoutSimulationParams): PayoutSimulatio
 	}
 
 	// Capitale residuo agli eredi se si muore prima
-	const midpointCapital = yearlyPayouts.length > 0
-		? yearlyPayouts[Math.floor(yearlyPayouts.length / 2)]?.remainingCapital ?? 0
-		: 0;
+	const midpointCapital =
+		yearlyPayouts.length > 0
+			? (yearlyPayouts[Math.floor(yearlyPayouts.length / 2)]?.remainingCapital ?? 0)
+			: 0;
 
 	return {
 		strategy: 'durata-definita',
@@ -367,9 +406,9 @@ function simulateDurataDefinita(params: PayoutSimulationParams): PayoutSimulatio
 			'Pagamenti crescenti se i rendimenti sono buoni'
 		],
 		cons: [
-			'Non protegge dalla longevita\': rendita si esaurisce al termine',
-			'Il rendimento del fondo non e\' garantito',
-			'Rata variabile, dipende dall\'andamento del fondo'
+			"Non protegge dalla longevita': rendita si esaurisce al termine",
+			"Il rendimento del fondo non e' garantito",
+			"Rata variabile, dipende dall'andamento del fondo"
 		]
 	};
 }
@@ -418,9 +457,10 @@ function simulatePrelieriLiberi(params: PayoutSimulationParams): PayoutSimulatio
 		totalNet += annualNet;
 	}
 
-	const midpointCapital = yearlyPayouts.length > 0
-		? yearlyPayouts[Math.floor(yearlyPayouts.length / 2)]?.remainingCapital ?? 0
-		: 0;
+	const midpointCapital =
+		yearlyPayouts.length > 0
+			? (yearlyPayouts[Math.floor(yearlyPayouts.length / 2)]?.remainingCapital ?? 0)
+			: 0;
 
 	return {
 		strategy: 'prelievi-liberi',
@@ -434,16 +474,16 @@ function simulatePrelieriLiberi(params: PayoutSimulationParams): PayoutSimulatio
 		duration,
 		monthlyNetAverage: duration > 0 ? Math.round(totalNet / duration / 12) : 0,
 		pros: [
-			'Massima flessibilita\': prelevi quando vuoi e quanto vuoi',
+			"Massima flessibilita': prelevi quando vuoi e quanto vuoi",
 			'Capitale resta investito nel fondo',
 			'Tassazione agevolata (dal 15% al 9%)',
 			'Ideale per chi ha altri redditi e non ha bisogno di un flusso costante',
 			'Perfetto per la strategia FIRE: adatti i prelievi alle tue esigenze'
 		],
 		cons: [
-			'Tetto massimo cumulativo: non puoi prelevare piu\' della rendita a durata definita',
+			"Tetto massimo cumulativo: non puoi prelevare piu' della rendita a durata definita",
 			'Richiede disciplina nella gestione dei prelievi',
-			'Il rendimento del fondo non e\' garantito',
+			"Il rendimento del fondo non e' garantito",
 			'Rischio di esaurire troppo presto il capitale se si preleva troppo'
 		]
 	};
@@ -506,8 +546,8 @@ function simulateFrazionata(params: PayoutSimulationParams): PayoutSimulationRes
 			'Capitale residuo (con rendimenti) va agli eredi'
 		],
 		cons: [
-			'Tassazione piu\' alta: dal 20% al 15% (vs 15%-9% delle altre opzioni)',
-			'Meno flessibilita\' rispetto ai prelievi liberi',
+			"Tassazione piu' alta: dal 20% al 15% (vs 15%-9% delle altre opzioni)",
+			"Meno flessibilita' rispetto ai prelievi liberi",
 			'Non si adatta ai rendimenti del fondo',
 			'Scelta generalmente meno vantaggiosa fiscalmente'
 		]
@@ -516,14 +556,22 @@ function simulateFrazionata(params: PayoutSimulationParams): PayoutSimulationRes
 
 function simulateCapitale(params: PayoutSimulationParams): PayoutSimulationResult {
 	const {
-		montante, age, gender, yearsInFund, capitalPercentage,
-		expectedReturnRate, reversibile, contributionsBase, annuityRevaluationRate
+		montante,
+		age,
+		gender,
+		yearsInFund,
+		capitalPercentage,
+		expectedReturnRate,
+		reversibile,
+		contributionsBase,
+		annuityRevaluationRate
 	} = params;
 	const taxRate = calculateBenefitTaxRate(yearsInFund);
 	const lifeExp = getLifeExpectancy(age, gender);
 	const duration = Math.round(lifeExp);
 	const taxableFraction = getTaxableFraction(montante, contributionsBase);
-	const revaluationRate = annuityRevaluationRate ?? Math.max(0, expectedReturnRate - ANNUITY_INSURER_SPREAD);
+	const revaluationRate =
+		annuityRevaluationRate ?? Math.max(0, expectedReturnRate - ANNUITY_INSURER_SPREAD);
 
 	// Massimo 60% in capitale, il resto in rendita
 	const capPct = Math.min(60, Math.max(0, capitalPercentage)) / 100;
@@ -597,7 +645,9 @@ function simulateCapitale(params: PayoutSimulationParams): PayoutSimulationResul
 
 	return {
 		strategy: 'capitale-60',
-		strategyName: fullCapitalAllowed ? 'Capitale 100%' : `Capitale ${Math.round(effectiveCapPct * 100)}% + Rendita`,
+		strategyName: fullCapitalAllowed
+			? 'Capitale 100%'
+			: `Capitale ${Math.round(effectiveCapPct * 100)}% + Rendita`,
 		taxRate,
 		yearlyPayouts,
 		totalGrossReceived: Math.round(totalGross),
@@ -605,7 +655,8 @@ function simulateCapitale(params: PayoutSimulationParams): PayoutSimulationResul
 		totalTaxPaid: Math.round(totalTax),
 		capitalToHeirs: 0,
 		duration: annuityMontante > 0 ? duration : 1,
-		monthlyNetAverage: duration > 0 ? Math.round(totalNet / duration / 12) : Math.round(totalNet / 12),
+		monthlyNetAverage:
+			duration > 0 ? Math.round(totalNet / duration / 12) : Math.round(totalNet / 12),
 		pros,
 		cons: [
 			'Perdi la rendita sulla parte in capitale',
@@ -621,13 +672,21 @@ function simulateCapitale(params: PayoutSimulationParams): PayoutSimulationResul
 /**
  * Simula una singola strategia di erogazione del fondo pensione.
  */
-export function simulatePayout(params: PayoutSimulationParams, strategy: PayoutStrategy): PayoutSimulationResult {
+export function simulatePayout(
+	params: PayoutSimulationParams,
+	strategy: PayoutStrategy
+): PayoutSimulationResult {
 	switch (strategy) {
-		case 'vitalizia': return simulateVitalizia(params);
-		case 'durata-definita': return simulateDurataDefinita(params);
-		case 'prelievi-liberi': return simulatePrelieriLiberi(params);
-		case 'frazionata': return simulateFrazionata(params);
-		case 'capitale-60': return simulateCapitale(params);
+		case 'vitalizia':
+			return simulateVitalizia(params);
+		case 'durata-definita':
+			return simulateDurataDefinita(params);
+		case 'prelievi-liberi':
+			return simulatePrelieriLiberi(params);
+		case 'frazionata':
+			return simulateFrazionata(params);
+		case 'capitale-60':
+			return simulateCapitale(params);
 	}
 }
 
@@ -635,8 +694,14 @@ export function simulatePayout(params: PayoutSimulationParams, strategy: PayoutS
  * Confronta tutte e 5 le strategie di erogazione.
  */
 export function compareAllStrategies(params: PayoutSimulationParams): PayoutSimulationResult[] {
-	const strategies: PayoutStrategy[] = ['vitalizia', 'durata-definita', 'prelievi-liberi', 'frazionata', 'capitale-60'];
-	return strategies.map(s => simulatePayout(params, s));
+	const strategies: PayoutStrategy[] = [
+		'vitalizia',
+		'durata-definita',
+		'prelievi-liberi',
+		'frazionata',
+		'capitale-60'
+	];
+	return strategies.map((s) => simulatePayout(params, s));
 }
 
 /**
@@ -644,9 +709,14 @@ export function compareAllStrategies(params: PayoutSimulationParams): PayoutSimu
  */
 export function calculateRITA(params: RITAParams): RITAResult {
 	const {
-		currentAge, pensionAge, unemploymentMonths,
-		contributionYears, fondoPensioneBalance,
-		yearsInFund, expectedReturnRate, ritaPercentage
+		currentAge,
+		pensionAge,
+		unemploymentMonths,
+		contributionYears,
+		fondoPensioneBalance,
+		yearsInFund,
+		expectedReturnRate,
+		ritaPercentage
 	} = params;
 
 	const yearsToOldAge = 67 - currentAge;
@@ -700,9 +770,13 @@ export function calculateRITA(params: RITAParams): RITAResult {
  */
 export function calculateRiscattoLaurea(params: RiscattoLaureaParams): RiscattoLaureaResult {
 	const {
-		yearsToRedeem, annualSalary, type,
-		currentAge, currentContributionYears,
-		retirementAge, expectedMonthlyPension
+		yearsToRedeem,
+		annualSalary,
+		type,
+		currentAge,
+		currentContributionYears,
+		retirementAge,
+		expectedMonthlyPension
 	} = params;
 
 	// Costo standard: reddito annuo * aliquota contributiva * anni
@@ -710,13 +784,11 @@ export function calculateRiscattoLaurea(params: RiscattoLaureaParams): RiscattoL
 	const AGEVOLATO_ANNUAL = 5776;
 	const CONTRIBUTION_RATE = 0.33;
 
-	const annualCost = type === 'agevolato'
-		? AGEVOLATO_ANNUAL
-		: annualSalary * CONTRIBUTION_RATE;
+	const annualCost = type === 'agevolato' ? AGEVOLATO_ANNUAL : annualSalary * CONTRIBUTION_RATE;
 	const totalCost = annualCost * yearsToRedeem;
 
 	// Deduzione fiscale 50% (Legge di Bilancio 2024/2026)
-	const taxDeduction = totalCost * 0.50;
+	const taxDeduction = totalCost * 0.5;
 	const netCost = totalCost - taxDeduction;
 
 	// Beneficio: piu' anni di contributi = montante piu' alto
@@ -732,9 +804,7 @@ export function calculateRiscattoLaurea(params: RiscattoLaureaParams): RiscattoL
 
 	// Break-even: costo netto / incremento annuale netto
 	const netAnnualBenefit = additionalAnnualPension * (1 - 0.12); // Tassazione media pensione ~12%
-	const breakEvenYears = netAnnualBenefit > 0
-		? Math.ceil(netCost / netAnnualBenefit)
-		: Infinity;
+	const breakEvenYears = netAnnualBenefit > 0 ? Math.ceil(netCost / netAnnualBenefit) : Infinity;
 
 	const recommended = breakEvenYears <= 15 && breakEvenYears < Infinity;
 
@@ -802,11 +872,21 @@ export interface ContributionLevel {
 /**
  * Calcola i risparmi IRPEF per diversi livelli di contribuzione al fondo pensione.
  */
-export function optimizeContributions(params: ContributionOptimizationParams): ContributionOptimizationResult {
+export function optimizeContributions(
+	params: ContributionOptimizationParams
+): ContributionOptimizationResult {
 	const {
-		annualSalary, currentContribution, employerContribution,
-		tfrToFund, firstEmploymentYear, fundJoinYear, currentYear,
-		avgFirst5Contributions, currentAge, retirementAge, expectedReturnRate
+		annualSalary,
+		currentContribution,
+		employerContribution,
+		tfrToFund,
+		firstEmploymentYear,
+		fundJoinYear,
+		currentYear,
+		avgFirst5Contributions,
+		currentAge,
+		retirementAge,
+		expectedReturnRate
 	} = params;
 
 	// Limiti deducibilita'
@@ -826,7 +906,8 @@ export function optimizeContributions(params: ContributionOptimizationParams): C
 		const totalUsed = avgFirst5Contributions * 5;
 		const unusedAllowance = Math.max(0, totalAllowance - totalUsed);
 		const recoveryYearsLeft = Math.max(0, 20 - (yearsInFund - 5));
-		extraDeduction = recoveryYearsLeft > 0 ? Math.min(EXTRA_LIMIT, unusedAllowance / recoveryYearsLeft) : 0;
+		extraDeduction =
+			recoveryYearsLeft > 0 ? Math.min(EXTRA_LIMIT, unusedAllowance / recoveryYearsLeft) : 0;
 	}
 
 	const totalMaxDeduction = ORDINARY_LIMIT + extraDeduction;
@@ -860,7 +941,10 @@ export function optimizeContributions(params: ContributionOptimizationParams): C
 
 	// Risparmio IRPEF marginale
 	const taxBefore = irpefOnAmount(annualSalary);
-	const deductibleTotal = Math.min(currentContribution + employerContribution + annualTFR, totalMaxDeduction);
+	const deductibleTotal = Math.min(
+		currentContribution + employerContribution + annualTFR,
+		totalMaxDeduction
+	);
 	const taxAfter = irpefOnAmount(annualSalary - deductibleTotal);
 	const irpefSaved = taxBefore - taxAfter;
 
@@ -881,8 +965,11 @@ export function optimizeContributions(params: ContributionOptimizationParams): C
 		{ label: '1.000 EUR/anno', annualContribution: 1000 },
 		{ label: '2.500 EUR/anno', annualContribution: 2500 },
 		{ label: '5.300 EUR/anno (max ordinario)', annualContribution: 5300 },
-		{ label: `${Math.round(totalMaxDeduction).toLocaleString('it-IT')} EUR/anno (max totale)`, annualContribution: totalMaxDeduction }
-	].map(l => {
+		{
+			label: `${Math.round(totalMaxDeduction).toLocaleString('it-IT')} EUR/anno (max totale)`,
+			annualContribution: totalMaxDeduction
+		}
+	].map((l) => {
 		const totalWithEmployer = l.annualContribution + employerContribution + annualTFR;
 		const deductible = Math.min(totalWithEmployer, totalMaxDeduction);
 		const saving = irpefOnAmount(annualSalary) - irpefOnAmount(annualSalary - deductible);

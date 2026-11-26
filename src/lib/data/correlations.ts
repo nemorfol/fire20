@@ -4,13 +4,7 @@
  * Correlazioni di Pearson sui rendimenti annuali reali.
  */
 
-export type AssetClass =
-	| 'usStocks'
-	| 'intlStocks'
-	| 'bonds'
-	| 'gold'
-	| 'realEstate'
-	| 'cash';
+export type AssetClass = 'usStocks' | 'intlStocks' | 'bonds' | 'gold' | 'realEstate' | 'cash';
 
 /** Matrice di correlazione simmetrica */
 export const correlationMatrix: Record<AssetClass, Record<AssetClass, number>> = {

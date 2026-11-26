@@ -10,7 +10,7 @@ describe('pickBestOllamaModel', () => {
 		expect(pickBestOllamaModel(['nomic-embed-text', 'qwen2.5:7b'])).toBe('qwen2.5:7b');
 	});
 
-	it('preferisce il modello piu' + " grande nella stessa famiglia", () => {
+	it('preferisce il modello piu' + ' grande nella stessa famiglia', () => {
 		expect(pickBestOllamaModel(['llama3.2:3b', 'llama3.1:8b'])).toBe('llama3.1:8b');
 	});
 

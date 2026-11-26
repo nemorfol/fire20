@@ -1,4 +1,4 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import { onMount } from 'svelte';
 	import {
 		Heading,
@@ -39,7 +39,7 @@
 	import { childTotalRemainingCost } from '$lib/engine/family';
 	import { blendedCapitalGainsRate } from '$lib/engine/tax-italy';
 	import { getPreset } from '$lib/engine/assumptions';
-	import EChart from '$lib/components/simulazione/EChart.svelte';
+	import EChart from '$lib/components/shared/EChart.svelte';
 	import { formatCurrency, formatCompact, formatPercent } from '$lib/utils/format';
 
 	// === Stato ===
@@ -68,9 +68,7 @@
 			0
 		);
 		return {
-			initialPortfolio: calculateLiquidNetWorth(
-				p.portfolio as unknown as Record<string, number>
-			),
+			initialPortfolio: calculateLiquidNetWorth(p.portfolio as unknown as Record<string, number>),
 			annualContribution: totalContributions * 12,
 			annualExpenses: p.fireExpenses,
 			expectedReturn: p.simulation.expectedReturn,
@@ -330,7 +328,7 @@
 			case 'currency':
 				return formatCurrency(v);
 			case 'years':
-				if (!isFinite(v)) return '—';
+				if (!isFinite(v)) return 'â€”';
 				return `${Math.round(v)} anni`;
 			case 'percent':
 				// calculateSavingsRate restituisce una frazione 0..1
@@ -361,7 +359,7 @@
 
 		const a = row.valueA;
 		const b = row.valueB;
-		if (!isFinite(a) || !isFinite(b)) return { text: '—', color: 'gray' };
+		if (!isFinite(a) || !isFinite(b)) return { text: 'â€”', color: 'gray' };
 
 		const diff = a - b;
 		if (diff === 0) return { text: 'Uguale', color: 'gray' };
@@ -377,7 +375,7 @@
 			}
 			case 'percent': {
 				const sign = diff > 0 ? '+' : '-';
-				// diff e' una differenza tra frazioni 0..1 → punti percentuali
+				// diff e' una differenza tra frazioni 0..1 â†’ punti percentuali
 				text = `${sign}${(Math.abs(diff) * 100).toFixed(1)}pp`;
 				break;
 			}
@@ -398,12 +396,11 @@
 		}
 
 		// Colore: dal punto di vista del Profilo A
-		// higher-better: A > B → verde; A < B → rosso
-		// lower-better:  A < B → verde; A > B → rosso
+		// higher-better: A > B â†’ verde; A < B â†’ rosso
+		// lower-better:  A < B â†’ verde; A > B â†’ rosso
 		// neutral:       grigio
 		if (row.direction === 'neutral') return { text, color: 'gray' };
-		const aBetter =
-			row.direction === 'higher-better' ? diff > 0 : diff < 0;
+		const aBetter = row.direction === 'higher-better' ? diff > 0 : diff < 0;
 		return { text, color: aBetter ? 'green' : 'red' };
 	}
 
@@ -439,15 +436,14 @@
 						const a = row.valueA as number;
 						const b = row.valueB as number;
 						const diff = a - b;
-						const aBetter =
-							row.direction === 'higher-better' ? diff > 0 : diff < 0;
+						const aBetter = row.direction === 'higher-better' ? diff > 0 : diff < 0;
 						const who = aBetter ? 'Profilo A' : 'Profilo B';
 						const loser = aBetter ? 'Profilo B' : 'Profilo A';
 						const absDiff = Math.abs(diff);
 
 						let description: string;
 						if (row.format === 'currency' || row.format === 'monthly') {
-							description = `${who} e' avanti di ${formatCompact(absDiff)} € rispetto a ${loser}`;
+							description = `${who} e' avanti di ${formatCompact(absDiff)} â‚¬ rispetto a ${loser}`;
 						} else if (row.format === 'percent') {
 							description = `${who} e' avanti di ${(absDiff * 100).toFixed(1)} punti percentuali`;
 						} else if (row.format === 'years' || row.format === 'age') {
@@ -499,11 +495,18 @@
 				formatter: (params: unknown) => {
 					const arr = Array.isArray(params) ? params : [params];
 					let html = '';
-					arr.forEach((p: { axisValue?: number | string; seriesName?: string; value?: number; color?: string }) => {
-						if (p.value == null) return;
-						if (!html) html = `<div class="font-semibold">${p.axisValue}</div>`;
-						html += `<div><span style="display:inline-block;width:8px;height:8px;background:${p.color};border-radius:50%;margin-right:4px;"></span>${p.seriesName}: <strong>${formatCurrency(p.value as number)}</strong></div>`;
-					});
+					arr.forEach(
+						(p: {
+							axisValue?: number | string;
+							seriesName?: string;
+							value?: number;
+							color?: string;
+						}) => {
+							if (p.value == null) return;
+							if (!html) html = `<div class="font-semibold">${p.axisValue}</div>`;
+							html += `<div><span style="display:inline-block;width:8px;height:8px;background:${p.color};border-radius:50%;margin-right:4px;"></span>${p.seriesName}: <strong>${formatCurrency(p.value as number)}</strong></div>`;
+						}
+					);
 					return html;
 				}
 			},
@@ -611,10 +614,10 @@
 </Breadcrumb>
 
 <Heading tag="h1" class="mb-2">Confronto profili</Heading>
-<p class="text-gray-600 dark:text-gray-400 mb-6">
+<p class="mb-6 text-gray-600 dark:text-gray-400">
 	Seleziona due profili finanziari per confrontarli fianco a fianco: FIRE Number, patrimonio,
-	proiezione, spese familiari, pensione INPS. Utile per scenari tipo 'single vs coppia con figli'
-	o per confrontare te oggi con la tua situazione a 40 anni.
+	proiezione, spese familiari, pensione INPS. Utile per scenari tipo 'single vs coppia con figli' o
+	per confrontare te oggi con la tua situazione a 40 anni.
 </p>
 
 {#if loading}
@@ -625,25 +628,25 @@
 {:else if profiles.length < 2}
 	<Alert color="yellow">
 		{#snippet icon()}
-			<ExclamationCircleOutline class="w-5 h-5" />
+			<ExclamationCircleOutline class="h-5 w-5" />
 		{/snippet}
 		<span class="font-medium">Servono almeno 2 profili per il confronto.</span>
 		Crea un secondo profilo dalla pagina Profilo.
 		<a
 			href="/profilo/"
-			class="ml-2 inline-flex items-center gap-1 text-yellow-800 dark:text-yellow-300 underline font-medium"
+			class="ml-2 inline-flex items-center gap-1 font-medium text-yellow-800 underline dark:text-yellow-300"
 		>
-			Vai al Profilo <ArrowRightOutline class="w-3 h-3" />
+			Vai al Profilo <ArrowRightOutline class="h-3 w-3" />
 		</a>
 	</Alert>
 {:else}
 	<!-- Selettore profili -->
-	<Card class="max-w-none mb-6">
-		<Heading tag="h4" class="text-lg mb-4 flex items-center gap-2">
-			<UsersGroupOutline class="w-5 h-5" />
+	<Card class="mb-6 max-w-none">
+		<Heading tag="h4" class="mb-4 flex items-center gap-2 text-lg">
+			<UsersGroupOutline class="h-5 w-5" />
 			Seleziona profili
 		</Heading>
-		<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+		<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 			<div>
 				<Label for="sel-a" class="mb-2">Profilo A (blu)</Label>
 				<Select id="sel-a" items={profileOptions} bind:value={selectedIdA} />
@@ -656,7 +659,7 @@
 		{#if selectedIdA === selectedIdB}
 			<Alert color="yellow" class="mt-4">
 				{#snippet icon()}
-					<ExclamationCircleOutline class="w-4 h-4" />
+					<ExclamationCircleOutline class="h-4 w-4" />
 				{/snippet}
 				Stai confrontando lo stesso profilo con se stesso. Scegli due profili diversi.
 			</Alert>
@@ -665,14 +668,14 @@
 
 	{#if profileA && profileB}
 		<!-- Tabella confronto metriche -->
-		<Card class="max-w-none mb-6">
-			<Heading tag="h4" class="text-lg mb-4">Confronto metrica per metrica</Heading>
+		<Card class="mb-6 max-w-none">
+			<Heading tag="h4" class="mb-4 text-lg">Confronto metrica per metrica</Heading>
 			<Table striped={true} class="text-sm">
 				<TableHead>
 					<TableHeadCell>Metrica</TableHeadCell>
 					<TableHeadCell class="text-right">{profileA.name || 'Profilo A'}</TableHeadCell>
 					<TableHeadCell class="text-right">{profileB.name || 'Profilo B'}</TableHeadCell>
-					<TableHeadCell class="text-right">Δ</TableHeadCell>
+					<TableHeadCell class="text-right">Î”</TableHeadCell>
 				</TableHead>
 				<TableBody>
 					{#each rows as row (row.label)}
@@ -689,38 +692,38 @@
 								{#if delta}
 									<Badge color={delta.color}>{delta.text}</Badge>
 								{:else}
-									<span class="text-gray-400">—</span>
+									<span class="text-gray-400">â€”</span>
 								{/if}
 							</TableBodyCell>
 						</TableBodyRow>
 					{/each}
 				</TableBody>
 			</Table>
-			<p class="text-xs text-gray-500 dark:text-gray-400 mt-3">
-				Δ colorato dal punto di vista del Profilo A: verde = A e' meglio posizionato,
-				rosso = B e' meglio posizionato, grigio = metrica neutra.
+			<p class="mt-3 text-xs text-gray-500 dark:text-gray-400">
+				Î” colorato dal punto di vista del Profilo A: verde = A e' meglio posizionato, rosso = B e'
+				meglio posizionato, grigio = metrica neutra.
 			</p>
 		</Card>
 
 		<!-- Grafico overlay proiezione portafoglio -->
-		<Card class="max-w-none mb-6">
-			<Heading tag="h4" class="text-lg mb-4">Proiezione del portafoglio (overlay)</Heading>
+		<Card class="mb-6 max-w-none">
+			<Heading tag="h4" class="mb-4 text-lg">Proiezione del portafoglio (overlay)</Heading>
 			<EChart options={chartOptions} height="420px" />
-			<p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
-				Evoluzione del portafoglio liquido anno per anno per entrambi i profili, con i
-				rispettivi parametri (contributi, spese in FIRE, rendimento atteso, inflazione,
-				pensione INPS, figli e mutuo).
+			<p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+				Evoluzione del portafoglio liquido anno per anno per entrambi i profili, con i rispettivi
+				parametri (contributi, spese in FIRE, rendimento atteso, inflazione, pensione INPS, figli e
+				mutuo).
 			</p>
 		</Card>
 
 		<!-- Differenze chiave -->
 		{#if keyDifferences.length > 0}
-			<Card class="max-w-none mb-6">
-				<Heading tag="h4" class="text-lg mb-4">Differenze chiave</Heading>
-				<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+			<Card class="mb-6 max-w-none">
+				<Heading tag="h4" class="mb-4 text-lg">Differenze chiave</Heading>
+				<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
 					{#each keyDifferences as diff (diff.label)}
 						<div
-							class="p-4 rounded-lg border"
+							class="rounded-lg border p-4"
 							class:border-green-300={diff.color === 'green'}
 							class:bg-green-50={diff.color === 'green'}
 							class:dark:bg-green-900={diff.color === 'green'}
@@ -732,7 +735,7 @@
 							class:bg-gray-50={diff.color === 'gray'}
 							class:dark:bg-gray-800={diff.color === 'gray'}
 						>
-							<div class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">
+							<div class="mb-1 text-xs tracking-wide text-gray-500 uppercase dark:text-gray-400">
 								{diff.label}
 							</div>
 							<div class="text-base font-semibold text-gray-900 dark:text-white">

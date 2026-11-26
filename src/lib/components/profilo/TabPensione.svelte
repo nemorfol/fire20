@@ -38,7 +38,11 @@
 		pension.estimatedMonthly = data.estimatedMonthly;
 	}
 
-	function handleSimulatorApply(data: { contributionYears: number; estimatedMonthly: number; pensionAge: number }) {
+	function handleSimulatorApply(data: {
+		contributionYears: number;
+		estimatedMonthly: number;
+		pensionAge: number;
+	}) {
 		pension.contributionYears = data.contributionYears;
 		pension.estimatedMonthly = data.estimatedMonthly;
 		pension.pensionAge = data.pensionAge;
@@ -47,7 +51,7 @@
 
 <div class="space-y-4">
 	<!-- Dati base pensione (sempre visibili, compatti) -->
-	<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+	<div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
 		<div>
 			<Label for="contributionYears" class="mb-1.5">Anni di contribuzione</Label>
 			<Input
@@ -67,16 +71,17 @@
 			/>
 		</div>
 		<div>
-			<YearSlider
-				bind:value={pension.pensionAge}
-				min={57}
-				max={71}
-				label="Eta' pensione INPS"
-			/>
+			<YearSlider bind:value={pension.pensionAge} min={57} max={71} label="Eta' pensione INPS" />
 		</div>
 	</div>
 	<p class="text-xs text-gray-500 dark:text-gray-400">
-		Pensione annua lorda: <strong>{annualPension.toLocaleString('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}</strong> (13 mensilita'). Usa gli strumenti sotto per una stima precisa.
+		Pensione annua lorda: <strong
+			>{annualPension.toLocaleString('it-IT', {
+				style: 'currency',
+				currency: 'EUR',
+				maximumFractionDigits: 0
+			})}</strong
+		> (13 mensilita'). Usa gli strumenti sotto per una stima precisa.
 	</p>
 
 	<!-- Sotto-tab per gli strumenti avanzati -->
@@ -95,8 +100,9 @@
 		</TabItem>
 
 		<TabItem title="Import Estratto Conto">
-			<p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
-				Carica il file XML esportato dal sito INPS, oppure incolla il testo dell'estratto conto (CSV/TXT).
+			<p class="mb-3 text-sm text-gray-500 dark:text-gray-400">
+				Carica il file XML esportato dal sito INPS, oppure incolla il testo dell'estratto conto
+				(CSV/TXT).
 			</p>
 			<INPSImport onApply={handleINPSImport} />
 		</TabItem>

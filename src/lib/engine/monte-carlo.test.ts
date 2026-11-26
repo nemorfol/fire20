@@ -22,7 +22,7 @@ const baseParams: MonteCarloParams = {
 	seed: 12345
 };
 
-describe('Monte Carlo - riproducibilita\' (seed)', () => {
+describe("Monte Carlo - riproducibilita' (seed)", () => {
 	it('stesso seed -> risultati identici', () => {
 		const a = runMonteCarloSimulation(baseParams);
 		const b = runMonteCarloSimulation(baseParams);
@@ -48,7 +48,7 @@ describe('Monte Carlo - errore standard e IC del successRate', () => {
 		expect(r.successRateStdError).toBeCloseTo(expectedSE, 4);
 	});
 
-	it('IC ~95% contiene il successRate ed e\' dentro [0,1]', () => {
+	it("IC ~95% contiene il successRate ed e' dentro [0,1]", () => {
 		const r = runMonteCarloSimulation(baseParams);
 		expect(r.successRateCI95.lower).toBeGreaterThanOrEqual(0);
 		expect(r.successRateCI95.upper).toBeLessThanOrEqual(1);
@@ -92,7 +92,86 @@ describe('Monte Carlo - coerenza fiscale col deterministico (#1)', () => {
 
 	it('default retrocompatibile: senza i nuovi parametri il MC non tassa i rendimenti', () => {
 		const a = runMonteCarloSimulation(baseParams);
-		const b = runMonteCarloSimulation({ ...baseParams, capitalGainsTaxRate: 0, bolloExemptShare: 0 });
+		const b = runMonteCarloSimulation({
+			...baseParams,
+			capitalGainsTaxRate: 0,
+			bolloExemptShare: 0
+		});
 		expect(a.medianFinalValue).toBe(b.medianFinalValue);
+	});
+});
+
+describe('Monte Carlo - campionamento storico congiunto (serie allineate per anno)', () => {
+	// Azioni e bond perfettamente "anti-correlati" anno per anno: con un 50/50
+	// abbinato per anno il rendimento di portafoglio e' SEMPRE +25%; campionando
+	// le serie in modo indipendente escono anche +100% e -50%.
+	const hist: MonteCarloParams = {
+		...baseParams,
+		initialPortfolio: 100000,
+		annualContribution: 0,
+		annualExpenses: 0,
+		withdrawalRate: 0,
+		stockAllocation: 0.5,
+		bondAllocation: 0.5,
+		yearsToFire: 5,
+		yearsInRetirement: 0,
+		simulationMode: 'historical',
+		iterations: 300,
+		historicalStockReturns: [1.0, -0.5],
+		historicalBondReturns: [-0.5, 1.0],
+		historicalInflation: [0.02, 0.02]
+	};
+	const expected = 100000 * Math.pow(1.25, 5);
+
+	for (const mode of ['historical', 'block-bootstrap'] as const) {
+		it(`${mode}: lo stesso anno storico per azioni e bond (esito deterministico)`, () => {
+			const r = runMonteCarloSimulation({
+				...hist,
+				simulationMode: mode,
+				jointHistoricalSampling: true
+			});
+			expect(r.percentiles.p5[4]).toBeCloseTo(expected, -1);
+			expect(r.percentiles.p95[4]).toBeCloseTo(expected, -1);
+		});
+	}
+
+	it('senza il flag (retrocompatibile) le serie restano indipendenti', () => {
+		const r = runMonteCarloSimulation({ ...hist, jointHistoricalSampling: false });
+		expect(r.percentiles.p95[4] - r.percentiles.p5[4]).toBeGreaterThan(1000);
+	});
+
+	it('multi-asset: lo stesso anno per tutte le asset class', () => {
+		const r = runMonteCarloSimulation({
+			...hist,
+			jointHistoricalSampling: true,
+			assetClasses: [
+				{
+					name: 'stocks',
+					allocation: 0.5,
+					expectedReturn: 0.07,
+					stdDev: 0.16,
+					historicalReturns: [1.0, -0.5]
+				},
+				{
+					name: 'bonds',
+					allocation: 0.5,
+					expectedReturn: 0.03,
+					stdDev: 0.06,
+					historicalReturns: [-0.5, 1.0]
+				}
+			]
+		});
+		expect(r.percentiles.p5[4]).toBeCloseTo(expected, -1);
+		expect(r.percentiles.p95[4]).toBeCloseTo(expected, -1);
+	});
+
+	it('serie di lunghezza diversa -> errore esplicito (non abbinamenti silenziosi)', () => {
+		expect(() =>
+			runMonteCarloSimulation({
+				...hist,
+				jointHistoricalSampling: true,
+				historicalInflation: [0.02, 0.02, 0.02]
+			})
+		).toThrow(/allineate/);
 	});
 });

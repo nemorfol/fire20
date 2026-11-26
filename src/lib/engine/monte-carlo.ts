@@ -11,7 +11,9 @@ import {
 	gaussianRandom,
 	logNormalReturn,
 	bootstrapSample,
+	bootstrapIndex,
 	blockBootstrapSample,
+	blockBootstrapIndices,
 	calculatePercentiles,
 	calculateMean,
 	correlatedReturns,
@@ -76,6 +78,18 @@ export interface MonteCarloParams {
 	historicalBondReturns?: number[];
 	/** Inflazione storica (historical/bootstrap) */
 	historicalInflation?: number[];
+	/**
+	 * Campionamento storico CONGIUNTO (consigliato). Se true, le serie storiche
+	 * (azioni, obbligazioni, inflazione e `historicalReturns` delle asset class)
+	 * devono essere ALLINEATE per anno: stessa lunghezza, indice i = stesso anno
+	 * di calendario (vedi `alignHistory` in `$lib/data/default-series`). Ogni anno
+	 * (o blocco di anni) simulato estrae UN solo anno storico e lo applica a tutte
+	 * le serie: preserva le correlazioni reali (es. anni '70 con inflazione alta e
+	 * rendimenti reali negativi, 2022 con azioni e bond giu' insieme).
+	 * Se false/omesso (retrocompatibile) ogni serie e' campionata in modo
+	 * indipendente, perdendo le correlazioni.
+	 */
+	jointHistoricalSampling?: boolean;
 	/** Eventi di rischio da applicare */
 	riskEvents?: RiskEvent[];
 	/** Età attuale (per VPW) */
@@ -200,9 +214,7 @@ function generateMultiAssetReturn(
 		}
 
 		// Rendimenti indipendenti (fallback)
-		const assetReturns = assetClasses.map((a) =>
-			logNormalReturn(a.expectedReturn, a.stdDev)
-		);
+		const assetReturns = assetClasses.map((a) => logNormalReturn(a.expectedReturn, a.stdDev));
 		return { assetReturns, inflation: Math.max(0, inflation) };
 	}
 
@@ -240,14 +252,8 @@ function generateReturn(
 				[1.0, correlation],
 				[correlation, 1.0]
 			];
-			const means = [
-				params.expectedStockReturn ?? 0.07,
-				params.expectedBondReturn ?? 0.03
-			];
-			const stdDevs = [
-				params.stockStdDev ?? 0.16,
-				params.bondStdDev ?? 0.06
-			];
+			const means = [params.expectedStockReturn ?? 0.07, params.expectedBondReturn ?? 0.03];
+			const stdDevs = [params.stockStdDev ?? 0.16, params.bondStdDev ?? 0.06];
 			const [stockReturn, bondReturn] = correlatedReturns(means, stdDevs, corrMatrix);
 			return { stockReturn, bondReturn, inflation: Math.max(0, inflation) };
 		}
@@ -321,7 +327,42 @@ function runSingleSimulation(params: MonteCarloParams): number[] {
 	let pregenBondReturns: number[] | null = null;
 	let pregenInflation: number[] | null = null;
 
-	if (params.simulationMode === 'block-bootstrap') {
+	if (params.jointHistoricalSampling && params.simulationMode !== 'parametric') {
+		// === Campionamento congiunto: un'unica sequenza di anni storici per tutte le serie ===
+		const series: number[][] = [
+			params.historicalInflation ?? [],
+			...(useMultiAsset
+				? assetClasses.map((ac) => ac.historicalReturns ?? [])
+				: [params.historicalStockReturns ?? [], params.historicalBondReturns ?? []])
+		].filter((xs) => xs.length > 0);
+		const n = series.length > 0 ? series[0].length : 0;
+		if (series.some((xs) => xs.length !== n)) {
+			throw new Error(
+				'jointHistoricalSampling: le serie storiche devono essere allineate per anno (stessa lunghezza)'
+			);
+		}
+
+		const yearIdx: number[] = [];
+		if (n > 0) {
+			if (params.simulationMode === 'block-bootstrap') {
+				const blockSize = 5;
+				while (yearIdx.length < totalYears) yearIdx.push(...blockBootstrapIndices(n, blockSize));
+			} else {
+				for (let i = 0; i < totalYears; i++) yearIdx.push(bootstrapIndex(n));
+			}
+		}
+		// Serie vuota -> valore costante di fallback (come nel ramo indipendente)
+		const pick = (xs: number[] | undefined, fallback: number) =>
+			yearIdx.map((i) => (xs && xs.length > 0 ? xs[i] : fallback));
+
+		pregenInflation = pick(params.historicalInflation, params.inflationRate);
+		if (useMultiAsset) {
+			pregenAssetReturns = assetClasses.map((ac) => pick(ac.historicalReturns, ac.expectedReturn));
+		} else {
+			pregenStockReturns = pick(params.historicalStockReturns, 0.07);
+			pregenBondReturns = pick(params.historicalBondReturns, 0.03);
+		}
+	} else if (params.simulationMode === 'block-bootstrap') {
 		const blockSize = 5;
 		const inflData = params.historicalInflation ?? [params.inflationRate];
 
@@ -374,19 +415,21 @@ function runSingleSimulation(params: MonteCarloParams): number[] {
 			// === Multi-asset path ===
 			if (pregenAssetReturns && pregenInflation) {
 				// block-bootstrap con blocchi pre-generati
-				const assetReturns = assetClasses.map((_, idx) =>
-					pregenAssetReturns![idx][year] ?? assetClasses[idx].expectedReturn
+				const assetReturns = assetClasses.map(
+					(_, idx) => pregenAssetReturns![idx][year] ?? assetClasses[idx].expectedReturn
 				);
 				inflation = Math.max(0, pregenInflation[year] ?? params.inflationRate);
 				portfolioReturn = assetClasses.reduce(
-					(sum, ac, idx) => sum + assetReturns[idx] * ac.allocation, 0
+					(sum, ac, idx) => sum + assetReturns[idx] * ac.allocation,
+					0
 				);
 			} else {
 				// parametric o historical
 				const ret = generateMultiAssetReturn(params, assetClasses, corrMatrix);
 				inflation = ret.inflation;
 				portfolioReturn = assetClasses.reduce(
-					(sum, ac, idx) => sum + ret.assetReturns[idx] * ac.allocation, 0
+					(sum, ac, idx) => sum + ret.assetReturns[idx] * ac.allocation,
+					0
 				);
 			}
 		} else {

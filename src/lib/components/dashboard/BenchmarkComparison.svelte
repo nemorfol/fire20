@@ -1,5 +1,14 @@
 <script lang="ts">
-	import { Card, Badge, Table, TableHead, TableHeadCell, TableBody, TableBodyRow, TableBodyCell } from 'flowbite-svelte';
+	import {
+		Card,
+		Badge,
+		Table,
+		TableHead,
+		TableHeadCell,
+		TableBody,
+		TableBodyRow,
+		TableBodyCell
+	} from 'flowbite-svelte';
 	import { fireBenchmarks, type FIREBenchmark } from '$lib/data/benchmarks';
 	import { formatCurrency } from '$lib/utils/format';
 	import { t } from '$lib/i18n/store.svelte';
@@ -16,10 +25,14 @@
 
 	// Massimo FIRE number tra i benchmark per la scala delle barre
 	let maxFireNumber = $derived(
-		Math.max(...fireBenchmarks.map(b => b.typicalFireNumber), userFireNumber)
+		Math.max(...fireBenchmarks.map((b) => b.typicalFireNumber), userFireNumber)
 	);
 
-	function compareValue(userVal: number, benchVal: number, lowerIsBetter: boolean = false): 'better' | 'worse' | 'similar' {
+	function compareValue(
+		userVal: number,
+		benchVal: number,
+		lowerIsBetter: boolean = false
+	): 'better' | 'worse' | 'similar' {
 		const diff = Math.abs(userVal - benchVal) / Math.max(benchVal, 1);
 		if (diff < 0.1) return 'similar';
 		if (lowerIsBetter) {
@@ -47,39 +60,47 @@
 </script>
 
 <Card class="max-w-none">
-	<h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+	<h5 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
 		Confronto FIRE Internazionale
 	</h5>
-	<p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+	<p class="mb-6 text-sm text-gray-500 dark:text-gray-400">
 		Come si posiziona il tuo piano FIRE rispetto ai benchmark internazionali.
 	</p>
 
 	<!-- Barre FIRE Number -->
 	<div class="mb-6">
-		<h6 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">FIRE Number a confronto</h6>
+		<h6 class="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+			FIRE Number a confronto
+		</h6>
 		<div class="space-y-2">
 			<!-- User bar -->
 			<div class="flex items-center gap-2">
-				<span class="text-sm w-44 truncate font-semibold text-primary-600 dark:text-primary-400">Il tuo piano</span>
-				<div class="flex-1 bg-gray-100 dark:bg-gray-700 rounded-full h-5 overflow-hidden">
+				<span class="text-primary-600 dark:text-primary-400 w-44 truncate text-sm font-semibold"
+					>Il tuo piano</span
+				>
+				<div class="h-5 flex-1 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
 					<div
 						class="bg-primary-500 h-5 rounded-full transition-all"
 						style="width: {barWidth(userFireNumber)}"
 					></div>
 				</div>
-				<span class="text-xs text-gray-600 dark:text-gray-400 w-24 text-right">{formatCurrency(userFireNumber)}</span>
+				<span class="w-24 text-right text-xs text-gray-600 dark:text-gray-400"
+					>{formatCurrency(userFireNumber)}</span
+				>
 			</div>
 			<!-- Benchmark bars -->
 			{#each fireBenchmarks as benchmark}
 				<div class="flex items-center gap-2">
-					<span class="text-sm w-44 truncate">{benchmark.flag} {benchmark.name}</span>
-					<div class="flex-1 bg-gray-100 dark:bg-gray-700 rounded-full h-5 overflow-hidden">
+					<span class="w-44 truncate text-sm">{benchmark.flag} {benchmark.name}</span>
+					<div class="h-5 flex-1 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
 						<div
-							class="bg-gray-400 dark:bg-gray-500 h-5 rounded-full transition-all"
+							class="h-5 rounded-full bg-gray-400 transition-all dark:bg-gray-500"
 							style="width: {barWidth(benchmark.typicalFireNumber)}"
 						></div>
 					</div>
-					<span class="text-xs text-gray-600 dark:text-gray-400 w-24 text-right">{formatCurrency(benchmark.typicalFireNumber)}</span>
+					<span class="w-24 text-right text-xs text-gray-600 dark:text-gray-400"
+						>{formatCurrency(benchmark.typicalFireNumber)}</span
+					>
 				</div>
 			{/each}
 		</div>
@@ -101,7 +122,7 @@
 				<!-- Riga utente -->
 				<TableBodyRow class="bg-primary-50 dark:bg-primary-900/20">
 					<TableBodyCell>
-						<span class="font-semibold text-primary-600 dark:text-primary-400">Il tuo piano</span>
+						<span class="text-primary-600 dark:text-primary-400 font-semibold">Il tuo piano</span>
 					</TableBodyCell>
 					<TableBodyCell>
 						<span class="font-semibold">{(userSavingsRate * 100).toFixed(0)}%</span>
@@ -122,17 +143,21 @@
 						<TableBodyCell>
 							<div>
 								<span class="font-medium">{b.flag} {b.name}</span>
-								<p class="text-xs text-gray-400 mt-0.5 max-w-xs">{b.description}</p>
+								<p class="mt-0.5 max-w-xs text-xs text-gray-400">{b.description}</p>
 							</div>
 						</TableBodyCell>
 						<TableBodyCell>
 							{b.avgSavingsRate}%
-							<Badge color={badgeColor(savingsComp)} class="ml-1">{comparisonLabel(savingsComp)}</Badge>
+							<Badge color={badgeColor(savingsComp)} class="ml-1"
+								>{comparisonLabel(savingsComp)}</Badge
+							>
 						</TableBodyCell>
 						<TableBodyCell>
 							{b.avgYearsToFire}
 							{#if userYearsToFire > 0}
-								<Badge color={badgeColor(yearsComp)} class="ml-1">{comparisonLabel(yearsComp)}</Badge>
+								<Badge color={badgeColor(yearsComp)} class="ml-1"
+									>{comparisonLabel(yearsComp)}</Badge
+								>
 							{/if}
 						</TableBodyCell>
 						<TableBodyCell>{b.typicalSWR}%</TableBodyCell>
@@ -153,7 +178,8 @@
 			</TableBody>
 		</Table>
 	</div>
-	<p class="text-xs text-gray-400 mt-3">
-		* Indice costo della vita relativo all'Italia (= 100). Dati indicativi basati su medie della comunita' FIRE.
+	<p class="mt-3 text-xs text-gray-400">
+		* Indice costo della vita relativo all'Italia (= 100). Dati indicativi basati su medie della
+		comunita' FIRE.
 	</p>
 </Card>

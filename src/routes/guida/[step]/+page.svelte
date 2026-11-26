@@ -1,19 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import {
-		Heading,
-		Breadcrumb,
-		BreadcrumbItem,
-		Button,
-		Badge,
-		Toggle
-	} from 'flowbite-svelte';
-	import {
-		ArrowLeftOutline,
-		ArrowRightOutline,
-		BookOpenSolid
-	} from 'flowbite-svelte-icons';
+	import { Heading, Breadcrumb, BreadcrumbItem, Button, Badge, Toggle } from 'flowbite-svelte';
+	import { ArrowLeftOutline, ArrowRightOutline, BookOpenSolid } from 'flowbite-svelte-icons';
 	import { getStepById, getAdjacentSteps, guideSteps } from '$lib/guida/steps';
 
 	const STORAGE_KEY = 'fire-guida-completed';
@@ -88,8 +77,8 @@
 		<BreadcrumbItem href="/guida/">Guida</BreadcrumbItem>
 		<BreadcrumbItem>Non trovato</BreadcrumbItem>
 	</Breadcrumb>
-	<div class="text-center py-12">
-		<p class="text-xl text-gray-500 dark:text-gray-400 mb-4">Passo non trovato</p>
+	<div class="py-12 text-center">
+		<p class="mb-4 text-xl text-gray-500 dark:text-gray-400">Passo non trovato</p>
 		<Button href="/guida/">Torna alla Guida</Button>
 	</div>
 {:else}
@@ -100,13 +89,13 @@
 	</Breadcrumb>
 
 	<!-- Step progress indicator -->
-	<div class="flex items-center gap-2 mb-4">
+	<div class="mb-4 flex items-center gap-2">
 		<div class="flex gap-1">
 			{#each guideSteps as s}
 				<a
 					href="/guida/{s.id}/"
-					class="w-3 h-3 rounded-full transition-colors {s.id === stepId
-						? 'bg-primary-600 dark:bg-primary-400 ring-2 ring-primary-300 dark:ring-primary-600'
+					class="h-3 w-3 rounded-full transition-colors {s.id === stepId
+						? 'bg-primary-600 dark:bg-primary-400 ring-primary-300 dark:ring-primary-600 ring-2'
 						: completedSteps.has(s.id)
 							? 'bg-green-400 dark:bg-green-600'
 							: 'bg-gray-200 dark:bg-gray-700'}"
@@ -120,7 +109,7 @@
 	</div>
 
 	<!-- Header -->
-	<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+	<div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 		<div class="flex items-center gap-3">
 			<span class="text-3xl">{step.icon}</span>
 			<div>
@@ -138,13 +127,13 @@
 	<!-- Main layout: content + sidebar TOC -->
 	<div class="flex gap-8">
 		<!-- Content -->
-		<div class="flex-1 min-w-0">
+		<div class="min-w-0 flex-1">
 			<div
-				class="guide-content prose prose-gray dark:prose-invert max-w-none
-					prose-h3:text-lg prose-h3:font-bold prose-h3:mt-8 prose-h3:mb-3
-					prose-p:mb-4 prose-p:leading-relaxed
-					prose-ul:mb-4 prose-li:mb-1
-					prose-strong:text-gray-900 dark:prose-strong:text-white"
+				class="guide-content prose prose-gray dark:prose-invert prose-h3:text-lg
+					prose-h3:font-bold prose-h3:mt-8 prose-h3:mb-3 prose-p:mb-4
+					prose-p:leading-relaxed prose-ul:mb-4
+					prose-li:mb-1 prose-strong:text-gray-900
+					dark:prose-strong:text-white max-w-none"
 			>
 				{@html step.content}
 			</div>
@@ -152,14 +141,14 @@
 			<!-- App link -->
 			{#if step.appLink}
 				<div
-					class="mt-8 p-4 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg flex flex-col sm:flex-row items-start sm:items-center gap-3"
+					class="bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800 mt-8 flex flex-col items-start gap-3 rounded-lg border p-4 sm:flex-row sm:items-center"
 				>
-					<BookOpenSolid class="w-5 h-5 text-primary-600 dark:text-primary-400 flex-shrink-0" />
+					<BookOpenSolid class="text-primary-600 dark:text-primary-400 h-5 w-5 flex-shrink-0" />
 					<div class="flex-1">
-						<p class="text-sm font-medium text-primary-800 dark:text-primary-200">
+						<p class="text-primary-800 dark:text-primary-200 text-sm font-medium">
 							Metti in pratica quanto appreso
 						</p>
-						<p class="text-sm text-primary-600 dark:text-primary-400">
+						<p class="text-primary-600 dark:text-primary-400 text-sm">
 							Usa la sezione dedicata dell'app per applicare questi concetti al tuo piano.
 						</p>
 					</div>
@@ -170,13 +159,15 @@
 			{/if}
 
 			<!-- Navigation -->
-			<div class="flex justify-between items-center mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+			<div
+				class="mt-8 flex items-center justify-between border-t border-gray-200 pt-6 dark:border-gray-700"
+			>
 				{#if adjacent.prev}
 					<a
 						href="/guida/{adjacent.prev.id}/"
-						class="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+						class="text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
 					>
-						<ArrowLeftOutline class="w-4 h-4" />
+						<ArrowLeftOutline class="h-4 w-4" />
 						<div class="text-left">
 							<div class="text-xs text-gray-500 dark:text-gray-400">Precedente</div>
 							<div class="text-sm font-medium">{adjacent.prev.title}</div>
@@ -188,21 +179,21 @@
 				{#if adjacent.next}
 					<a
 						href="/guida/{adjacent.next.id}/"
-						class="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-right"
+						class="text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-right transition-colors hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
 					>
 						<div>
 							<div class="text-xs text-gray-500 dark:text-gray-400">Successivo</div>
 							<div class="text-sm font-medium">{adjacent.next.title}</div>
 						</div>
-						<ArrowRightOutline class="w-4 h-4" />
+						<ArrowRightOutline class="h-4 w-4" />
 					</a>
 				{:else}
 					<a
 						href="/guida/"
-						class="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+						class="text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
 					>
 						<div class="text-sm font-medium">Torna all'indice</div>
-						<ArrowRightOutline class="w-4 h-4" />
+						<ArrowRightOutline class="h-4 w-4" />
 					</a>
 				{/if}
 			</div>
@@ -210,15 +201,17 @@
 
 		<!-- Sidebar TOC (desktop only) -->
 		{#if headings.length > 0}
-			<aside class="hidden lg:block w-64 flex-shrink-0">
+			<aside class="hidden w-64 flex-shrink-0 lg:block">
 				<div class="sticky top-4">
-					<h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 uppercase tracking-wide">
+					<h4
+						class="mb-3 text-sm font-semibold tracking-wide text-gray-900 uppercase dark:text-white"
+					>
 						In questa pagina
 					</h4>
 					<nav class="space-y-1">
 						{#each headings as heading}
 							<button
-								class="block w-full text-left text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 py-1 px-2 rounded transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 truncate"
+								class="hover:text-primary-600 dark:hover:text-primary-400 block w-full truncate rounded px-2 py-1 text-left text-sm text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
 								onclick={() => scrollToHeading(heading)}
 								title={heading}
 							>
@@ -228,18 +221,20 @@
 					</nav>
 
 					<!-- Quick step list -->
-					<div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-						<h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 uppercase tracking-wide">
+					<div class="mt-6 border-t border-gray-200 pt-6 dark:border-gray-700">
+						<h4
+							class="mb-3 text-sm font-semibold tracking-wide text-gray-900 uppercase dark:text-white"
+						>
 							Tutti i passi
 						</h4>
-						<nav class="space-y-0.5 max-h-64 overflow-y-auto">
+						<nav class="max-h-64 space-y-0.5 overflow-y-auto">
 							{#each guideSteps as s}
 								<a
 									href="/guida/{s.id}/"
-									class="block text-xs py-1 px-2 rounded truncate transition-colors
+									class="block truncate rounded px-2 py-1 text-xs transition-colors
 										{s.id === stepId
 										? 'bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300 font-medium'
-										: 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'}"
+										: 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200'}"
 									title="{s.number}. {s.title}"
 								>
 									{s.number}. {s.title}

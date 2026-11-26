@@ -40,11 +40,12 @@ export const PREDEFINED_RISK_EVENTS: RiskEvent[] = [
 	{
 		id: 'health-crisis',
 		name: 'Crisi Sanitaria Grave',
-		description: 'Una grave crisi sanitaria personale o familiare che comporta spese mediche elevate per un periodo prolungato. Include costi per cure, assistenza e possibile riduzione della capacità lavorativa.',
+		description:
+			'Una grave crisi sanitaria personale o familiare che comporta spese mediche elevate per un periodo prolungato. Include costi per cure, assistenza e possibile riduzione della capacità lavorativa.',
 		type: 'health',
 		impact: {
 			portfolioShock: -0.05,
-			expenseIncrease: 0.40,
+			expenseIncrease: 0.4,
 			incomeReduction: 0,
 			duration: 3,
 			yearOfOccurrence: 0,
@@ -54,10 +55,11 @@ export const PREDEFINED_RISK_EVENTS: RiskEvent[] = [
 	{
 		id: 'market-crash',
 		name: 'Crash di Mercato',
-		description: 'Un crollo severo dei mercati finanziari simile alla crisi del 2008 o al crollo del 2020. Il portafoglio subisce una perdita immediata del 40% con rendimenti negativi nel primo anno e recupero graduale.',
+		description:
+			'Un crollo severo dei mercati finanziari simile alla crisi del 2008 o al crollo del 2020. Il portafoglio subisce una perdita immediata del 40% con rendimenti negativi nel primo anno e recupero graduale.',
 		type: 'market',
 		impact: {
-			portfolioShock: -0.40,
+			portfolioShock: -0.4,
 			expenseIncrease: 0,
 			incomeReduction: 0,
 			duration: 3,
@@ -68,7 +70,8 @@ export const PREDEFINED_RISK_EVENTS: RiskEvent[] = [
 	{
 		id: 'high-inflation',
 		name: 'Inflazione Elevata Persistente',
-		description: 'Un periodo prolungato di inflazione elevata (stile anni \'70 o post-2022) che erode il potere d\'acquisto. Le spese aumentano significativamente e i rendimenti reali dei bond crollano.',
+		description:
+			"Un periodo prolungato di inflazione elevata (stile anni '70 o post-2022) che erode il potere d'acquisto. Le spese aumentano significativamente e i rendimenti reali dei bond crollano.",
 		type: 'inflation',
 		impact: {
 			portfolioShock: 0,
@@ -76,13 +79,14 @@ export const PREDEFINED_RISK_EVENTS: RiskEvent[] = [
 			incomeReduction: 0,
 			duration: 5,
 			yearOfOccurrence: 0,
-			returnReduction: 0.10
+			returnReduction: 0.1
 		}
 	},
 	{
 		id: 'geopolitical-shock',
 		name: 'Shock Geopolitico',
-		description: 'Un evento geopolitico grave (conflitto internazionale, crisi energetica, sanzioni) che impatta i mercati globali con shock al portafoglio, aumento dei prezzi energetici e alimentari.',
+		description:
+			'Un evento geopolitico grave (conflitto internazionale, crisi energetica, sanzioni) che impatta i mercati globali con shock al portafoglio, aumento dei prezzi energetici e alimentari.',
 		type: 'geopolitical',
 		impact: {
 			portfolioShock: -0.25,
@@ -96,7 +100,8 @@ export const PREDEFINED_RISK_EVENTS: RiskEvent[] = [
 	{
 		id: 'negative-sequence',
 		name: 'Sequenza Rendimenti Negativi',
-		description: 'I primi 5 anni di pensionamento coincidono con i peggiori rendimenti storici, amplificando il rischio di sequenza. Questo è lo scenario più pericoloso per chi è appena andato in pensione.',
+		description:
+			'I primi 5 anni di pensionamento coincidono con i peggiori rendimenti storici, amplificando il rischio di sequenza. Questo è lo scenario più pericoloso per chi è appena andato in pensione.',
 		type: 'market',
 		impact: {
 			portfolioShock: -0.15,
@@ -110,7 +115,8 @@ export const PREDEFINED_RISK_EVENTS: RiskEvent[] = [
 	{
 		id: 'job-loss-pre-fire',
 		name: 'Perdita Lavoro Pre-FIRE',
-		description: 'Perdita del lavoro 3 anni prima della data FIRE prevista. Reddito azzerato per 12 mesi con conseguente interruzione dei contributi e possibile utilizzo dei risparmi.',
+		description:
+			'Perdita del lavoro 3 anni prima della data FIRE prevista. Reddito azzerato per 12 mesi con conseguente interruzione dei contributi e possibile utilizzo dei risparmi.',
 		type: 'personal',
 		impact: {
 			portfolioShock: 0,
@@ -124,11 +130,12 @@ export const PREDEFINED_RISK_EVENTS: RiskEvent[] = [
 	{
 		id: 'divorce',
 		name: 'Divorzio',
-		description: 'Separazione/divorzio con divisione del patrimonio al 50%. Le spese aumentano significativamente per il mantenimento di due nuclei familiari. Impatto immediato e permanente sulle spese.',
+		description:
+			'Separazione/divorzio con divisione del patrimonio al 50%. Le spese aumentano significativamente per il mantenimento di due nuclei familiari. Impatto immediato e permanente sulle spese.',
 		type: 'personal',
 		impact: {
-			portfolioShock: -0.50,
-			expenseIncrease: 0.20,
+			portfolioShock: -0.5,
+			expenseIncrease: 0.2,
 			incomeReduction: 0,
 			duration: 1,
 			yearOfOccurrence: 0,
@@ -138,11 +145,12 @@ export const PREDEFINED_RISK_EVENTS: RiskEvent[] = [
 	{
 		id: 'extreme-longevity',
 		name: "Longevita' Estrema",
-		description: 'Vivere fino a 100 anni o oltre. Richiede che il portafoglio duri molto più a lungo del previsto, con costi crescenti per assistenza e cure nella fase finale della vita.',
+		description:
+			'Vivere fino a 100 anni o oltre. Richiede che il portafoglio duri molto più a lungo del previsto, con costi crescenti per assistenza e cure nella fase finale della vita.',
 		type: 'longevity',
 		impact: {
 			portfolioShock: 0,
-			expenseIncrease: 0.10,
+			expenseIncrease: 0.1,
 			incomeReduction: 0,
 			duration: 15,
 			yearOfOccurrence: 15,
@@ -152,7 +160,8 @@ export const PREDEFINED_RISK_EVENTS: RiskEvent[] = [
 	{
 		id: 'flat-market',
 		name: 'Mercato Piatto (Decennio Perduto)',
-		description: 'Uno scenario stile "decennio perduto" giapponese o quello azionario USA 2000-2010: per 10 anni i mercati restano fermi, i rendimenti reali sono circa zero e il capitale non cresce. Lo shock iniziale e\' lieve ma l\'effetto composto del mancato rendimento e\' devastante.',
+		description:
+			"Uno scenario stile \"decennio perduto\" giapponese o quello azionario USA 2000-2010: per 10 anni i mercati restano fermi, i rendimenti reali sono circa zero e il capitale non cresce. Lo shock iniziale e' lieve ma l'effetto composto del mancato rendimento e' devastante.",
 		type: 'market',
 		impact: {
 			portfolioShock: 0,
@@ -166,7 +175,8 @@ export const PREDEFINED_RISK_EVENTS: RiskEvent[] = [
 	{
 		id: 'chronic-healthcare',
 		name: 'Spese Sanitarie Ricorrenti Prolungate',
-		description: 'Spese mediche elevate e ricorrenti per 10 anni (malattia cronica, assistenza per familiare, cure lunga durata). Costo annuo incrementale del 25% sulle spese ordinarie, senza shock di capitale ma con drenaggio costante.',
+		description:
+			'Spese mediche elevate e ricorrenti per 10 anni (malattia cronica, assistenza per familiare, cure lunga durata). Costo annuo incrementale del 25% sulle spese ordinarie, senza shock di capitale ma con drenaggio costante.',
 		type: 'health',
 		impact: {
 			portfolioShock: 0,

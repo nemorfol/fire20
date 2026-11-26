@@ -37,7 +37,7 @@ describe('amortizedWithdrawal (die-with-X)', () => {
 		expect(amortizedWithdrawal(100_000, 0.03, 30, 1_000_000)).toBe(0);
 	});
 
-	it('monotono: piu\' alto il lascito, piu\' basso il prelievo', () => {
+	it("monotono: piu' alto il lascito, piu' basso il prelievo", () => {
 		const a = amortizedWithdrawal(1_000_000, 0.03, 30, 0);
 		const b = amortizedWithdrawal(1_000_000, 0.03, 30, 200_000);
 		const c = amortizedWithdrawal(1_000_000, 0.03, 30, 400_000);

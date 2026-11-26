@@ -14,13 +14,13 @@ export const goldReturns: AnnualReturn[] = [
 	{ year: 1972, value: 44.79 },
 	{ year: 1973, value: 72.97 },
 	{ year: 1974, value: 66.79 },
-	{ year: 1975, value: -24.80 },
-	{ year: 1976, value: -4.10 },
+	{ year: 1975, value: -24.8 },
+	{ year: 1976, value: -4.1 },
 	{ year: 1977, value: 22.64 },
 	{ year: 1978, value: 36.73 },
 	{ year: 1979, value: 120.57 },
 	{ year: 1980, value: -11.35 },
-	{ year: 1981, value: -32.60 },
+	{ year: 1981, value: -32.6 },
 	{ year: 1982, value: 14.94 },
 	{ year: 1983, value: -16.31 },
 	{ year: 1984, value: -19.19 },
@@ -62,12 +62,12 @@ export const goldReturns: AnnualReturn[] = [
 	{ year: 2020, value: 24.43 },
 	{ year: 2021, value: -3.64 },
 	{ year: 2022, value: -0.28 },
-	{ year: 2023, value: 13.10 },
-	{ year: 2024, value: 26.50 }
+	{ year: 2023, value: 13.1 },
+	{ year: 2024, value: 26.5 }
 ];
 
 function computeStats(data: AnnualReturn[]) {
-	const values = data.map(d => d.value);
+	const values = data.map((d) => d.value);
 	const count = values.length;
 	const mean = values.reduce((a, b) => a + b, 0) / count;
 	const variance = values.reduce((sum, v) => sum + (v - mean) ** 2, 0) / (count - 1);

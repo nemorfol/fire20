@@ -100,7 +100,7 @@
 
 	function buildSystem(question: string): LLMMessage {
 		const parts = [SYSTEM_PROMPT];
-		if (profileSummary) parts.push('\nDati gia\' calcolati dal motore:\n' + profileSummary);
+		if (profileSummary) parts.push("\nDati gia' calcolati dal motore:\n" + profileSummary);
 		const ex = guideExcerpts(question);
 		if (ex) parts.push('\n' + ex);
 		return { role: 'system', content: parts.join('\n') };
@@ -144,9 +144,7 @@
 		try {
 			const convo: LLMMessage[] = [
 				buildSystem(q),
-				...messages
-					.slice(0, idx)
-					.map((m) => ({ role: m.role, content: m.content }) as LLMMessage)
+				...messages.slice(0, idx).map((m) => ({ role: m.role, content: m.content }) as LLMMessage)
 			];
 			let full = '';
 			for await (const chunk of streamChat(convo, getLLMSettings())) {
@@ -179,14 +177,18 @@
 	<BreadcrumbItem>Assistente AI</BreadcrumbItem>
 </Breadcrumb>
 
-<Heading tag="h1" class="mb-2">Assistente AI <Badge color="purple" class="align-middle">opzionale</Badge></Heading>
+<Heading tag="h1" class="mb-2"
+	>Assistente AI <Badge color="purple" class="align-middle">opzionale</Badge></Heading
+>
 <p class="mb-6 text-gray-600 dark:text-gray-400">
 	Spiega i tuoi numeri (FIRE number, fisco, pensione) usando un'AI che gira sul tuo dispositivo.
 	Nessun dato lascia il browser. L'AI <strong>spiega</strong> i risultati del motore, non li calcola.
 </p>
 
 {#if checking}
-	<div class="flex items-center gap-2 text-gray-500"><Spinner size="5" /> Verifica disponibilità…</div>
+	<div class="flex items-center gap-2 text-gray-500">
+		<Spinner size="5" /> Verifica disponibilità…
+	</div>
 {:else if !enabled}
 	<Alert color="yellow">
 		L'assistente AI è <strong>disattivato</strong>. Attivalo da
@@ -203,19 +205,19 @@
 		</p>
 	</Alert>
 {:else}
-	<Card class="max-w-none mb-4">
+	<Card class="mb-4 max-w-none">
 		<div class="flex flex-col gap-3">
 			{#if messages.length === 0}
 				<p class="text-sm text-gray-500 dark:text-gray-400">
-					Esempi: «Perché il mio FIRE number è quello?», «Come funziona la regola del 4%?»,
-					«Cosa cambia tra ETF ad accumulazione e distribuzione?»
+					Esempi: «Perché il mio FIRE number è quello?», «Come funziona la regola del 4%?», «Cosa
+					cambia tra ETF ad accumulazione e distribuzione?»
 				</p>
 			{/if}
 			{#each messages as m (m)}
 				<div class="flex {m.role === 'user' ? 'justify-end' : 'justify-start'}">
 					<div
 						class="max-w-[85%] rounded-lg px-3 py-2 text-sm {m.role === 'user'
-							? 'whitespace-pre-wrap bg-primary-600 text-white'
+							? 'bg-primary-600 whitespace-pre-wrap text-white'
 							: 'bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-gray-100'}"
 					>
 						{#if m.role === 'assistant'}
@@ -255,7 +257,12 @@
 	<div class="flex flex-wrap items-center justify-between gap-2">
 		<div class="flex items-center gap-3">
 			{#if sttSupported}
-				<Button color="light" onclick={startListening} disabled={listening} title="Detta la domanda">
+				<Button
+					color="light"
+					onclick={startListening}
+					disabled={listening}
+					title="Detta la domanda"
+				>
 					{listening ? '🎙️ ascolto…' : '🎙️ Detta'}
 				</Button>
 			{/if}

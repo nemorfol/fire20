@@ -1,0 +1,56 @@
+name: 'Proposta di funzionalità'
+description: 'Proponi una nuova funzionalità o un miglioramento per FIRE Planner'
+title: '[Feature]: '
+labels: ['enhancement']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Grazie per il contributo! Descrivi la funzionalità che vorresti.
+
+        > ⚠️ **Non allegare dati finanziari personali.** Illustra il caso d'uso con valori di esempio.
+  - type: textarea
+    id: problema
+    attributes:
+      label: 'Problema o esigenza'
+      description: "Quale problema risolve questa funzionalità? Qual è il caso d'uso reale?"
+      placeholder: 'Vorrei poter ... perché al momento ...'
+    validations:
+      required: true
+  - type: textarea
+    id: soluzione
+    attributes:
+      label: 'Soluzione proposta'
+      description: 'Come immagini che funzioni. Se riguarda la fiscalità italiana, indica la fonte normativa (aliquota, soglia, riferimento).'
+    validations:
+      required: true
+  - type: textarea
+    id: alternative
+    attributes:
+      label: 'Alternative considerate'
+      description: 'Altri approcci che hai valutato, se ce ne sono.'
+    validations:
+      required: false
+  - type: dropdown
+    id: area
+    attributes:
+      label: 'Area interessata'
+      options:
+        - 'Calcolatore FIRE'
+        - 'Simulazione Monte Carlo'
+        - 'Fiscalità italiana / assunzioni'
+        - 'Pensione INPS / fondo pensione / TFR'
+        - 'Profilo / coppia / famiglia'
+        - 'Import / export / backup'
+        - 'Guida / metodologia'
+        - 'Assistente AI'
+        - 'Altro'
+    validations:
+      required: true
+  - type: checkboxes
+    id: guida
+    attributes:
+      label: 'Consapevolezza convenzioni'
+      options:
+        - label: 'Ho letto CONTRIBUTING.md e capisco che ogni feature utente richiede un capitolo nella guida (src/lib/guida/steps.ts).'
+          required: false

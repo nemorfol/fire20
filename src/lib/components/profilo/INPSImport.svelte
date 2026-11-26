@@ -1,20 +1,35 @@
 <script lang="ts">
 	import {
-		Card, Button, Textarea, Fileupload,
-		Table, TableHead, TableHeadCell, TableBody, TableBodyRow, TableBodyCell,
-		Badge, Alert, Heading
+		Card,
+		Button,
+		Textarea,
+		Fileupload,
+		Table,
+		TableHead,
+		TableHeadCell,
+		TableBody,
+		TableBodyRow,
+		TableBodyCell,
+		Badge,
+		Alert,
+		Heading
 	} from 'flowbite-svelte';
-	import { InfoCircleSolid, CheckCircleOutline, ExclamationCircleSolid } from 'flowbite-svelte-icons';
 	import {
-		parseINPSAuto,
-		type INPSExtract
-	} from '$lib/utils/inps-parser';
+		InfoCircleSolid,
+		CheckCircleOutline,
+		ExclamationCircleSolid
+	} from 'flowbite-svelte-icons';
+	import { parseINPSAuto, type INPSExtract } from '$lib/utils/inps-parser';
 	import { formatCurrency } from '$lib/utils/format';
 
 	let {
 		onApply
 	}: {
-		onApply?: (data: { contributionYears: number; estimatedMonthly: number; montante: number }) => void;
+		onApply?: (data: {
+			contributionYears: number;
+			estimatedMonthly: number;
+			montante: number;
+		}) => void;
 	} = $props();
 
 	let pastedText = $state('');
@@ -26,7 +41,7 @@
 		parseError = '';
 		applied = false;
 		if (!pastedText.trim()) {
-			parseError = 'Incolla il testo dell\'estratto conto contributivo INPS.';
+			parseError = "Incolla il testo dell'estratto conto contributivo INPS.";
 			return;
 		}
 
@@ -34,7 +49,8 @@
 		const result = parseINPSAuto(pastedText);
 
 		if (!result || result.contributions.length === 0) {
-			parseError = 'Impossibile analizzare i dati. Verifica il formato: ogni riga deve contenere almeno anno, retribuzione e contributi, separati da tabulazione, punto e virgola o virgola.';
+			parseError =
+				'Impossibile analizzare i dati. Verifica il formato: ogni riga deve contenere almeno anno, retribuzione e contributi, separati da tabulazione, punto e virgola o virgola.';
 			return;
 		}
 
@@ -70,7 +86,7 @@
 		onApply({
 			contributionYears: extract.totalYears,
 			estimatedMonthly: monthlyPension,
-			montante: extract.estimatedMontante,
+			montante: extract.estimatedMontante
 		});
 
 		applied = true;
@@ -84,11 +100,12 @@
 	}
 </script>
 
-<Card class="max-w-none mt-6">
+<Card class="mt-6 max-w-none">
 	<Heading tag="h4" class="mb-4 text-lg">Importa Estratto Conto Contributivo INPS</Heading>
 
-	<p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-		Incolla i dati copiati dal sito INPS oppure carica un file CSV/TXT per calcolare automaticamente il montante contributivo e la pensione stimata.
+	<p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+		Incolla i dati copiati dal sito INPS oppure carica un file CSV/TXT per calcolare automaticamente
+		il montante contributivo e la pensione stimata.
 	</p>
 
 	<!-- Input area -->
@@ -103,20 +120,20 @@
 				/>
 			</div>
 
-			<div class="flex flex-col sm:flex-row gap-3 items-start">
+			<div class="flex flex-col items-start gap-3 sm:flex-row">
 				<Button color="blue" onclick={handleParse} disabled={!pastedText.trim()}>
 					Analizza Dati
 				</Button>
 
 				<div class="flex-1">
 					<Fileupload accept=".csv,.txt,.tsv,.xml" onchange={handleFileUpload} />
-					<p class="text-xs text-gray-400 mt-1">Oppure carica un file CSV o TXT</p>
+					<p class="mt-1 text-xs text-gray-400">Oppure carica un file CSV o TXT</p>
 				</div>
 			</div>
 
 			{#if parseError}
 				<Alert color="red">
-					<ExclamationCircleSolid class="w-4 h-4 me-2 inline" />
+					<ExclamationCircleSolid class="me-2 inline h-4 w-4" />
 					{parseError}
 				</Alert>
 			{/if}
@@ -133,32 +150,46 @@
 			</div>
 
 			<!-- Montante result -->
-			<Card class="max-w-none bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border-green-200 dark:border-green-800">
-				<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+			<Card
+				class="max-w-none border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 dark:border-green-800 dark:from-green-950/30 dark:to-emerald-950/30"
+			>
+				<div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
 					<div>
-						<p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Montante Contributivo Stimato</p>
-						<p class="text-2xl font-bold text-green-700 dark:text-green-300">{formatCurrency(extract.estimatedMontante)}</p>
+						<p class="mb-1 text-xs text-gray-500 dark:text-gray-400">
+							Montante Contributivo Stimato
+						</p>
+						<p class="text-2xl font-bold text-green-700 dark:text-green-300">
+							{formatCurrency(extract.estimatedMontante)}
+						</p>
 					</div>
 					<div>
-						<p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Pensione Annua Stimata (a 67 anni)</p>
-						<p class="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(Math.round(extract.estimatedMontante * 0.05723))}</p>
+						<p class="mb-1 text-xs text-gray-500 dark:text-gray-400">
+							Pensione Annua Stimata (a 67 anni)
+						</p>
+						<p class="text-xl font-bold text-gray-900 dark:text-white">
+							{formatCurrency(Math.round(extract.estimatedMontante * 0.05723))}
+						</p>
 					</div>
 					<div>
-						<p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Pensione Mensile Stimata (13 mensilita)</p>
-						<p class="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(Math.round(extract.estimatedMontante * 0.05723 / 13))}</p>
+						<p class="mb-1 text-xs text-gray-500 dark:text-gray-400">
+							Pensione Mensile Stimata (13 mensilita)
+						</p>
+						<p class="text-xl font-bold text-gray-900 dark:text-white">
+							{formatCurrency(Math.round((extract.estimatedMontante * 0.05723) / 13))}
+						</p>
 					</div>
 				</div>
 			</Card>
 
 			<!-- Data table -->
-			<div class="max-h-64 overflow-y-auto border rounded-lg dark:border-gray-700">
+			<div class="max-h-64 overflow-y-auto rounded-lg border dark:border-gray-700">
 				<Table striped>
 					<TableHead>
 						<TableHeadCell>Anno</TableHeadCell>
 						<TableHeadCell>Settimane</TableHeadCell>
 						<TableHeadCell>Retribuzione</TableHeadCell>
 						<TableHeadCell>Contributi</TableHeadCell>
-						{#if extract.contributions.some(c => c.employer)}
+						{#if extract.contributions.some((c) => c.employer)}
 							<TableHeadCell>Datore</TableHeadCell>
 						{/if}
 					</TableHead>
@@ -169,7 +200,7 @@
 								<TableBodyCell>{c.weeks}</TableBodyCell>
 								<TableBodyCell>{formatCurrency(c.grossSalary)}</TableBodyCell>
 								<TableBodyCell>{formatCurrency(c.contributions)}</TableBodyCell>
-								{#if extract.contributions.some(cc => cc.employer)}
+								{#if extract.contributions.some((cc) => cc.employer)}
 									<TableBodyCell>{c.employer || '-'}</TableBodyCell>
 								{/if}
 							</TableBodyRow>
@@ -183,28 +214,28 @@
 				{#if onApply}
 					<Button color="green" onclick={handleApply} disabled={applied}>
 						{#if applied}
-							<CheckCircleOutline class="w-4 h-4 me-2" />
+							<CheckCircleOutline class="me-2 h-4 w-4" />
 							Applicato al Profilo
 						{:else}
 							Applica al Profilo
 						{/if}
 					</Button>
 				{/if}
-				<Button color="alternative" onclick={handleReset}>
-					Nuova Importazione
-				</Button>
+				<Button color="alternative" onclick={handleReset}>Nuova Importazione</Button>
 			</div>
 
 			{#if applied}
 				<Alert color="green">
-					<CheckCircleOutline class="w-4 h-4 me-2 inline" />
-					Dati applicati al profilo. Gli anni di contribuzione e la pensione mensile stimata sono stati aggiornati.
+					<CheckCircleOutline class="me-2 inline h-4 w-4" />
+					Dati applicati al profilo. Gli anni di contribuzione e la pensione mensile stimata sono stati
+					aggiornati.
 				</Alert>
 			{/if}
 
 			<Alert color="blue">
-				<InfoCircleSolid class="w-4 h-4 me-2 inline" />
-				Il montante e rivalutato con un tasso medio dell'1,5% (crescita PIL). La pensione e calcolata con il coefficiente di trasformazione a 67 anni (5,723%). Si tratta di una stima indicativa.
+				<InfoCircleSolid class="me-2 inline h-4 w-4" />
+				Il montante e rivalutato con un tasso medio dell'1,5% (crescita PIL). La pensione e calcolata
+				con il coefficiente di trasformazione a 67 anni (5,723%). Si tratta di una stima indicativa.
 			</Alert>
 		</div>
 	{/if}

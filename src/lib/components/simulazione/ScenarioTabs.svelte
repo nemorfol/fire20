@@ -48,23 +48,24 @@
 	let activeScenario = $derived(scenarios[activeTab]);
 </script>
 
-<div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
-	<h4 class="text-base font-semibold text-gray-900 dark:text-white mb-1">
+<div class="rounded-xl bg-white p-4 shadow-lg dark:bg-gray-800">
+	<h4 class="mb-1 text-base font-semibold text-gray-900 dark:text-white">
 		Dettaglio bande di percentile
 	</h4>
-	<p class="text-xs text-gray-500 dark:text-gray-400 mb-4">
-		Ogni riga è il valore di quel percentile in quell'anno, calcolato su tutte le simulazioni:
-		è un <strong>inviluppo statistico</strong>, non l'andamento di un singolo portafoglio. Anni
-		consecutivi appartengono a simulazioni diverse, perciò la loro differenza non rappresenta un
-		rendimento (per questo non mostriamo una variazione percentuale anno&#8209;su&#8209;anno).
+	<p class="mb-4 text-xs text-gray-500 dark:text-gray-400">
+		Ogni riga è il valore di quel percentile in quell'anno, calcolato su tutte le simulazioni: è un <strong
+			>inviluppo statistico</strong
+		>, non l'andamento di un singolo portafoglio. Anni consecutivi appartengono a simulazioni
+		diverse, perciò la loro differenza non rappresenta un rendimento (per questo non mostriamo una
+		variazione percentuale anno&#8209;su&#8209;anno).
 	</p>
 
-	<div class="flex gap-2 mb-4 flex-wrap">
+	<div class="mb-4 flex flex-wrap gap-2">
 		{#each scenarios as scenario, idx}
 			<button
-				class="px-4 py-2 text-sm font-medium rounded-lg transition-colors {activeTab === idx
+				class="rounded-lg px-4 py-2 text-sm font-medium transition-colors {activeTab === idx
 					? 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300'
-					: 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'}"
+					: 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600'}"
 				onclick={() => (activeTab = idx)}
 			>
 				<span class={scenario.color}>{@html scenario.icon}</span>
@@ -78,7 +79,7 @@
 			<Table striped hoverable>
 				<TableHead class="sticky top-0">
 					<TableHeadCell class="text-xs">Anno</TableHeadCell>
-					<TableHeadCell class="text-xs text-right">Valore portafoglio (percentile)</TableHeadCell>
+					<TableHeadCell class="text-right text-xs">Valore portafoglio (percentile)</TableHeadCell>
 				</TableHead>
 				<TableBody>
 					{#each activeScenario.data as value, idx}

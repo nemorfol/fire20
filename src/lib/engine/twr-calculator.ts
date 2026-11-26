@@ -42,10 +42,7 @@ export interface TWRResult {
  * Il rendimento annualizzato:
  *   (1 + TWR)^(365/giorni) - 1
  */
-export function calculateTWR(
-	snapshots: PortfolioSnapshot[],
-	cashFlows: CashFlow[]
-): TWRResult {
+export function calculateTWR(snapshots: PortfolioSnapshot[], cashFlows: CashFlow[]): TWRResult {
 	if (snapshots.length < 2) {
 		return { totalReturn: 0, annualizedReturn: 0, periodReturns: [] };
 	}
@@ -62,7 +59,8 @@ export function calculateTWR(
 
 		// Filtra i cash flow nel sotto-periodo (esclusi gli estremi)
 		const periodCFs = cashFlows.filter(
-			(cf) => cf.date.getTime() > startSnap.date.getTime() && cf.date.getTime() <= endSnap.date.getTime()
+			(cf) =>
+				cf.date.getTime() > startSnap.date.getTime() && cf.date.getTime() <= endSnap.date.getTime()
 		);
 
 		const totalDays = daysBetween(startSnap.date, endSnap.date);
@@ -93,8 +91,7 @@ export function calculateTWR(
 
 	// Annualizzazione
 	const totalDays = daysBetween(sorted[0].date, sorted[sorted.length - 1].date);
-	const annualizedReturn =
-		totalDays > 0 ? Math.pow(1 + totalReturn, 365 / totalDays) - 1 : 0;
+	const annualizedReturn = totalDays > 0 ? Math.pow(1 + totalReturn, 365 / totalDays) - 1 : 0;
 
 	return { totalReturn, annualizedReturn, periodReturns };
 }
@@ -117,9 +114,7 @@ export function calculateBenchmarkReturn(
 	const endYear = endDate.getFullYear();
 
 	// Filtra gli anni nel range
-	const relevantYears = benchmarkData.filter(
-		(d) => d.year >= startYear && d.year <= endYear
-	);
+	const relevantYears = benchmarkData.filter((d) => d.year >= startYear && d.year <= endYear);
 
 	if (relevantYears.length === 0) return 0;
 
@@ -246,7 +241,8 @@ export function buildPortfolioCumulativeSeries(
 		const V1 = endSnap.totalValue;
 
 		const periodCFs = cashFlows.filter(
-			(cf) => cf.date.getTime() > startSnap.date.getTime() && cf.date.getTime() <= endSnap.date.getTime()
+			(cf) =>
+				cf.date.getTime() > startSnap.date.getTime() && cf.date.getTime() <= endSnap.date.getTime()
 		);
 
 		const totalDays = daysBetween(startSnap.date, endSnap.date);

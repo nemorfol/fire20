@@ -41,7 +41,9 @@
 
 	let estimatedPensionAge = $derived(estimatePensionAge(birthYear, contributionStartAge, gender));
 	// #37: i contributi si fermano all'età FIRE solo se questa precede la pensione.
-	let willStopContributions = $derived(stopContributionsAtFire && retirementAge < estimatedPensionAge);
+	let willStopContributions = $derived(
+		stopContributionsAtFire && retirementAge < estimatedPensionAge
+	);
 
 	function computePension(contribEnd: number | undefined): ContributivePensionResult {
 		return calculateContributivePension({
@@ -99,7 +101,9 @@
 
 	// FIRE gap calculation
 	let fireGapYears = $derived(Math.max(0, earlyRetirementAge - retirementAge));
-	let fireGapCost = $derived(calculatePensionGap(retirementAge, earlyRetirementAge, annualExpenses));
+	let fireGapCost = $derived(
+		calculatePensionGap(retirementAge, earlyRetirementAge, annualExpenses)
+	);
 
 	// RITA eligibility: within 5 years of old-age pension (10 if unemployed)
 	let ritaEligible = $derived(retirementAge >= oldAgeRetirementAge - 10);
@@ -119,9 +123,11 @@
 	<Heading tag="h4" class="text-lg">{t('pension.title')}</Heading>
 
 	<!-- Input fields -->
-	<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+	<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 		<div>
-			<Label for="contributionStartYear" class="mb-2 font-semibold">{t('pension.contributionStartYear')}</Label>
+			<Label for="contributionStartYear" class="mb-2 font-semibold"
+				>{t('pension.contributionStartYear')}</Label
+			>
 			<Input
 				id="contributionStartYear"
 				type="number"
@@ -154,15 +160,13 @@
 
 		<div>
 			<Label for="pensionGender" class="mb-2 font-semibold">{t('pension.gender')}</Label>
-			<Select
-				id="pensionGender"
-				items={genderOptions}
-				bind:value={gender}
-			/>
+			<Select id="pensionGender" items={genderOptions} bind:value={gender} />
 		</div>
 
 		<div>
-			<Label for="pensionContribYears" class="mb-2 font-semibold">{t('pension.contributionYears')}</Label>
+			<Label for="pensionContribYears" class="mb-2 font-semibold"
+				>{t('pension.contributionYears')}</Label
+			>
 			<Input
 				id="pensionContribYears"
 				type="number"
@@ -175,39 +179,41 @@
 
 		<div>
 			<Label for="pensionWorkerType" class="mb-2 font-semibold">{t('pension.workerType')}</Label>
-			<Select
-				id="pensionWorkerType"
-				items={workerTypeOptions}
-				bind:value={workerType}
-			/>
+			<Select id="pensionWorkerType" items={workerTypeOptions} bind:value={workerType} />
 			{#if workerType === 'autonomo'}
-				<p class="text-xs text-amber-600 dark:text-amber-400 mt-1">{t('pension.selfEmployedRate')}</p>
+				<p class="mt-1 text-xs text-amber-600 dark:text-amber-400">
+					{t('pension.selfEmployedRate')}
+				</p>
 			{/if}
 		</div>
 	</div>
 
 	<!-- #37: Stop contributi INPS all'età FIRE -->
 	{#if retirementAge < estimatedPensionAge}
-		<div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+		<div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
 			<Toggle bind:checked={stopContributionsAtFire}>
 				<span class="font-medium text-gray-900 dark:text-white">
 					Interrompi i contributi INPS all'età FIRE ({retirementAge} anni)
 				</span>
 			</Toggle>
-			<p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
-				In un percorso FIRE smetti di lavorare (e di versare) prima della pensione. Con lo
-				stop attivo, dopo i {retirementAge} anni il montante si <strong>rivaluta</strong> ma
-				<strong>non</strong> ricevi nuovi contributi fino ai {estimatedPensionAge} anni.
-				Disattivalo per assumere lavoro continuato fino alla pensione (stima più ottimistica).
+			<p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+				In un percorso FIRE smetti di lavorare (e di versare) prima della pensione. Con lo stop
+				attivo, dopo i {retirementAge} anni il montante si <strong>rivaluta</strong> ma
+				<strong>non</strong> ricevi nuovi contributi fino ai {estimatedPensionAge} anni. Disattivalo per
+				assumere lavoro continuato fino alla pensione (stima più ottimistica).
 			</p>
 			{#if willStopContributions && pensionResultNoStop.monthlyPension > 0}
 				<div class="mt-3 flex flex-wrap gap-4 text-sm">
 					<span class="text-gray-700 dark:text-gray-300">
 						Con stop a {retirementAge}:
-						<strong class="text-green-600 dark:text-green-400">{formatCurrency(pensionResult.monthlyPension)}/mese</strong>
+						<strong class="text-green-600 dark:text-green-400"
+							>{formatCurrency(pensionResult.monthlyPension)}/mese</strong
+						>
 					</span>
 					<span class="text-gray-500 dark:text-gray-400">
-						Lavoro fino a {estimatedPensionAge}: {formatCurrency(pensionResultNoStop.monthlyPension)}/mese
+						Lavoro fino a {estimatedPensionAge}: {formatCurrency(
+							pensionResultNoStop.monthlyPension
+						)}/mese
 						<span class="text-red-500 dark:text-red-400">
 							(−{formatCurrency(pensionResultNoStop.monthlyPension - pensionResult.monthlyPension)})
 						</span>
@@ -219,52 +225,75 @@
 
 	<!-- Results Card -->
 	{#if adjustedResult.monthlyPension > 0}
-		<Card class="max-w-none bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-200 dark:border-blue-800">
-			<Heading tag="h4" class="mb-4 text-blue-800 dark:text-blue-300">{t('pension.results')}</Heading>
+		<Card
+			class="max-w-none border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 dark:border-blue-800 dark:from-blue-950/30 dark:to-indigo-950/30"
+		>
+			<Heading tag="h4" class="mb-4 text-blue-800 dark:text-blue-300"
+				>{t('pension.results')}</Heading
+			>
 
-			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+			<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 				<!-- Montante -->
-				<div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-					<p class="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('pension.montante')}</p>
-					<p class="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(adjustedResult.totalMontante)}</p>
+				<div class="rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800">
+					<p class="mb-1 text-xs text-gray-500 dark:text-gray-400">{t('pension.montante')}</p>
+					<p class="text-xl font-bold text-gray-900 dark:text-white">
+						{formatCurrency(adjustedResult.totalMontante)}
+					</p>
 				</div>
 
 				<!-- Coefficient -->
-				<div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-					<p class="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('pension.coefficient')}</p>
-					<p class="text-xl font-bold text-gray-900 dark:text-white">{(adjustedResult.transformationCoefficient * 100).toFixed(3)}%</p>
+				<div class="rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800">
+					<p class="mb-1 text-xs text-gray-500 dark:text-gray-400">{t('pension.coefficient')}</p>
+					<p class="text-xl font-bold text-gray-900 dark:text-white">
+						{(adjustedResult.transformationCoefficient * 100).toFixed(3)}%
+					</p>
 				</div>
 
 				<!-- Replacement Rate -->
-				<div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-					<p class="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('pension.replacementRate')}</p>
-					<p class="text-xl font-bold text-gray-900 dark:text-white">{formatPercent(adjustedResult.replacementRate * 100)}</p>
+				<div class="rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800">
+					<p class="mb-1 text-xs text-gray-500 dark:text-gray-400">
+						{t('pension.replacementRate')}
+					</p>
+					<p class="text-xl font-bold text-gray-900 dark:text-white">
+						{formatPercent(adjustedResult.replacementRate * 100)}
+					</p>
 				</div>
 
 				<!-- Gross Monthly -->
-				<div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-					<p class="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('pension.grossMonthly')}</p>
-					<p class="text-2xl font-bold text-green-600 dark:text-green-400">{formatCurrency(adjustedResult.monthlyPension)}</p>
+				<div class="rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800">
+					<p class="mb-1 text-xs text-gray-500 dark:text-gray-400">{t('pension.grossMonthly')}</p>
+					<p class="text-2xl font-bold text-green-600 dark:text-green-400">
+						{formatCurrency(adjustedResult.monthlyPension)}
+					</p>
 				</div>
 
 				<!-- Net Monthly -->
-				<div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-					<p class="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('pension.netMonthly')}</p>
-					<p class="text-2xl font-bold text-green-700 dark:text-green-300">{formatCurrency(netMonthlyPension)}</p>
+				<div class="rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800">
+					<p class="mb-1 text-xs text-gray-500 dark:text-gray-400">{t('pension.netMonthly')}</p>
+					<p class="text-2xl font-bold text-green-700 dark:text-green-300">
+						{formatCurrency(netMonthlyPension)}
+					</p>
 				</div>
 
 				<!-- Gross Annual -->
-				<div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-					<p class="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('pension.grossAnnual')}</p>
-					<p class="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(adjustedResult.annualPension)}</p>
+				<div class="rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800">
+					<p class="mb-1 text-xs text-gray-500 dark:text-gray-400">{t('pension.grossAnnual')}</p>
+					<p class="text-xl font-bold text-gray-900 dark:text-white">
+						{formatCurrency(adjustedResult.annualPension)}
+					</p>
 				</div>
 			</div>
 
 			<!-- Pension Ages -->
-			<div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-				<div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-					<p class="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('pension.earlyRetirementAge')}</p>
-					<p class="text-xl font-bold text-gray-900 dark:text-white">{earlyRetirementAge} {t('common.years')}</p>
+			<div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+				<div class="rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800">
+					<p class="mb-1 text-xs text-gray-500 dark:text-gray-400">
+						{t('pension.earlyRetirementAge')}
+					</p>
+					<p class="text-xl font-bold text-gray-900 dark:text-white">
+						{earlyRetirementAge}
+						{t('common.years')}
+					</p>
 					<p class="text-xs text-gray-400">
 						{#if gender === 'M'}
 							42 {t('common.years')} 10 {t('common.months')} di contributi
@@ -274,24 +303,35 @@
 					</p>
 				</div>
 
-				<div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-					<p class="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('pension.oldAgeRetirementAge')}</p>
-					<p class="text-xl font-bold text-gray-900 dark:text-white">{oldAgeRetirementAge} {t('common.years')}</p>
+				<div class="rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800">
+					<p class="mb-1 text-xs text-gray-500 dark:text-gray-400">
+						{t('pension.oldAgeRetirementAge')}
+					</p>
+					<p class="text-xl font-bold text-gray-900 dark:text-white">
+						{oldAgeRetirementAge}
+						{t('common.years')}
+					</p>
 					<p class="text-xs text-gray-400">20 {t('common.years')} di contributi minimi</p>
 				</div>
 			</div>
 
 			<!-- FIRE Gap -->
 			{#if fireGapYears > 0}
-				<div class="mt-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
-					<p class="font-semibold text-amber-800 dark:text-amber-300 mb-2">{t('pension.fireGap')}</p>
+				<div
+					class="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/30"
+				>
+					<p class="mb-2 font-semibold text-amber-800 dark:text-amber-300">
+						{t('pension.fireGap')}
+					</p>
 					<div class="flex flex-wrap gap-6">
 						<div>
 							<p class="text-2xl font-bold text-amber-700 dark:text-amber-400">{fireGapYears}</p>
 							<p class="text-xs text-amber-600 dark:text-amber-500">{t('pension.fireGapYears')}</p>
 						</div>
 						<div>
-							<p class="text-2xl font-bold text-amber-700 dark:text-amber-400">{formatCurrency(fireGapCost)}</p>
+							<p class="text-2xl font-bold text-amber-700 dark:text-amber-400">
+								{formatCurrency(fireGapCost)}
+							</p>
 							<p class="text-xs text-amber-600 dark:text-amber-500">{t('pension.fireGapCost')}</p>
 						</div>
 					</div>
@@ -302,9 +342,9 @@
 			<div class="mt-4">
 				<Alert color="blue">
 					<div class="flex items-start gap-2">
-						<InfoCircleSolid class="w-5 h-5 mt-0.5 flex-shrink-0" />
+						<InfoCircleSolid class="mt-0.5 h-5 w-5 flex-shrink-0" />
 						<div>
-							<p class="font-semibold mb-1">{t('pension.rita')}</p>
+							<p class="mb-1 font-semibold">{t('pension.rita')}</p>
 							<p class="text-sm">{t('pension.ritaInfo')}</p>
 							{#if ritaEligible}
 								<Badge color="green" class="mt-2">{t('pension.ritaEligible')}</Badge>

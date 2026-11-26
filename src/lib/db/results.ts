@@ -34,7 +34,10 @@ export async function getResultsByProfileId(profileId: number): Promise<Simulati
 }
 
 /** Aggiorna un risultato */
-export async function updateResult(id: number, data: Partial<SimulationResultInput>): Promise<number> {
+export async function updateResult(
+	id: number,
+	data: Partial<SimulationResultInput>
+): Promise<number> {
 	return await db.simulation_results.update(id, data);
 }
 

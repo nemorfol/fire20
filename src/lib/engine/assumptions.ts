@@ -262,7 +262,7 @@ export function customizeAssumptions(
 		id: 'custom',
 		label: 'Personalizzato',
 		year: base.year,
-		description: 'Set personalizzato dall\'utente partendo da: ' + base.label,
+		description: "Set personalizzato dall'utente partendo da: " + base.label,
 		irpefBrackets: overrides.irpefBrackets ?? base.irpefBrackets,
 		capital: { ...base.capital, ...(overrides.capital ?? {}) },
 		inps: { ...base.inps, ...(overrides.inps ?? {}) },
@@ -295,13 +295,13 @@ export const TRANSFORMATION_COEFFICIENTS_2025_2026: ReadonlyArray<[number, numbe
 	[62, 0.04795],
 	[63, 0.04936],
 	[64, 0.05088],
-	[65, 0.05250],
+	[65, 0.0525],
 	[66, 0.05423],
 	[67, 0.05608],
 	[68, 0.05808],
 	[69, 0.06024],
 	[70, 0.06258],
-	[71, 0.06510]
+	[71, 0.0651]
 ];
 
 /**

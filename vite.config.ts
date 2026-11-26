@@ -13,7 +13,8 @@ export default defineConfig({
 			manifest: {
 				name: 'FIRE Planner',
 				short_name: 'FIRE Planner',
-				description: 'Pianificatore FIRE per l\'indipendenza finanziaria - Contesto fiscale italiano',
+				description:
+					"Pianificatore FIRE per l'indipendenza finanziaria - Contesto fiscale italiano",
 				theme_color: '#1e3a8a',
 				background_color: '#111827',
 				display: 'standalone',

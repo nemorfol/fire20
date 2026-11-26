@@ -29,9 +29,7 @@
 	let annualGap = $derived(Math.max(0, annualFireExpenses - annualPensionNet));
 	let monthlyGap = $derived(annualGap / 12);
 	let coveragePercent = $derived(
-		annualFireExpenses > 0
-			? Math.min(100, (annualPensionNet / annualFireExpenses) * 100)
-			: 0
+		annualFireExpenses > 0 ? Math.min(100, (annualPensionNet / annualFireExpenses) * 100) : 0
 	);
 
 	// Capitale aggiuntivo necessario al momento della pensione per colmare il gap
@@ -58,23 +56,23 @@
 </script>
 
 <Card class="max-w-none">
-	<h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+	<h5 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
 		Analisi gap FIRE vs pensione INPS
 	</h5>
-	<p class="text-sm text-gray-500 dark:text-gray-400 mb-5">
-		Quanta parte delle tue spese FIRE e' coperta dall'INPS, e quanto capitale aggiuntivo
-		serve accumulare nel fondo pensione o nel portafoglio privato per colmare la differenza.
+	<p class="mb-5 text-sm text-gray-500 dark:text-gray-400">
+		Quanta parte delle tue spese FIRE e' coperta dall'INPS, e quanto capitale aggiuntivo serve
+		accumulare nel fondo pensione o nel portafoglio privato per colmare la differenza.
 	</p>
 
 	<!-- Copertura -->
 	<div class="mb-5">
-		<div class="flex items-center justify-between mb-2">
+		<div class="mb-2 flex items-center justify-between">
 			<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Copertura INPS</span>
 			<span class="text-sm font-bold text-gray-900 dark:text-white">
 				{coveragePercent.toFixed(1)}%
 			</span>
 		</div>
-		<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+		<div class="h-3 w-full rounded-full bg-gray-200 dark:bg-gray-700">
 			<div
 				class="h-3 rounded-full transition-all"
 				class:bg-green-500={coveragePercent >= 80}
@@ -83,17 +81,17 @@
 				style="width: {coveragePercent}%"
 			></div>
 		</div>
-		<div class="flex items-center justify-between mt-1 text-xs text-gray-500 dark:text-gray-400">
+		<div class="mt-1 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
 			<span>Pensione INPS: {formatCurrency(annualPensionNet)}/anno</span>
 			<span>Spese FIRE: {formatCurrency(annualFireExpenses)}/anno</span>
 		</div>
 	</div>
 
 	<!-- Metriche -->
-	<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
-		<div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-			<div class="text-xs text-gray-500 dark:text-gray-400 mb-1">Gap annuo</div>
-			<div class="text-xl font-bold text-gray-900 dark:text-white tabular-nums">
+	<div class="mb-5 grid grid-cols-1 gap-4 md:grid-cols-3">
+		<div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+			<div class="mb-1 text-xs text-gray-500 dark:text-gray-400">Gap annuo</div>
+			<div class="text-xl font-bold text-gray-900 tabular-nums dark:text-white">
 				{formatCurrency(annualGap)}
 			</div>
 			<div class="text-xs text-gray-400 dark:text-gray-500">
@@ -101,9 +99,9 @@
 			</div>
 		</div>
 
-		<div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-			<div class="text-xs text-gray-500 dark:text-gray-400 mb-1">Capitale extra necessario</div>
-			<div class="text-xl font-bold text-gray-900 dark:text-white tabular-nums">
+		<div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+			<div class="mb-1 text-xs text-gray-500 dark:text-gray-400">Capitale extra necessario</div>
+			<div class="text-xl font-bold text-gray-900 tabular-nums dark:text-white">
 				{formatCurrency(capitalToCoverGap)}
 			</div>
 			<div class="text-xs text-gray-400 dark:text-gray-500">
@@ -111,9 +109,11 @@
 			</div>
 		</div>
 
-		<div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-			<div class="text-xs text-gray-500 dark:text-gray-400 mb-1">Contributo mensile consigliato</div>
-			<div class="text-xl font-bold text-gray-900 dark:text-white tabular-nums">
+		<div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+			<div class="mb-1 text-xs text-gray-500 dark:text-gray-400">
+				Contributo mensile consigliato
+			</div>
+			<div class="text-xl font-bold text-gray-900 tabular-nums dark:text-white">
 				{formatCurrency(monthlyContributionSuggested)}
 			</div>
 			<div class="text-xs text-gray-400 dark:text-gray-500">
@@ -126,31 +126,29 @@
 	{#if isFullyCovered}
 		<Alert color="green">
 			{#snippet icon()}
-				<CheckCircleSolid class="w-5 h-5" />
+				<CheckCircleSolid class="h-5 w-5" />
 			{/snippet}
 			<span class="font-medium">Pensione INPS sufficiente.</span>
-			La pensione stimata copre tutte le spese FIRE annue. Non e' necessario accumulare
-			capitale aggiuntivo per la fase post-pensione.
+			La pensione stimata copre tutte le spese FIRE annue. Non e' necessario accumulare capitale aggiuntivo
+			per la fase post-pensione.
 		</Alert>
 	{:else if coveragePercent >= 50}
 		<Alert color="yellow">
 			{#snippet icon()}
-				<InfoCircleSolid class="w-5 h-5" />
+				<InfoCircleSolid class="h-5 w-5" />
 			{/snippet}
 			<span class="font-medium">Gap moderato.</span>
-			La pensione copre circa la meta' del fabbisogno. Il capitale aggiuntivo puo' venire
-			da fondo pensione complementare (deducibilita' fiscale fino a 5.300€/anno), portafoglio
-			ETF o rendite passive (affitti).
+			La pensione copre circa la meta' del fabbisogno. Il capitale aggiuntivo puo' venire da fondo pensione
+			complementare (deducibilita' fiscale fino a 5.300€/anno), portafoglio ETF o rendite passive (affitti).
 		</Alert>
 	{:else}
 		<Alert color="red">
 			{#snippet icon()}
-				<ExclamationCircleSolid class="w-5 h-5" />
+				<ExclamationCircleSolid class="h-5 w-5" />
 			{/snippet}
 			<span class="font-medium">Gap significativo.</span>
-			La pensione INPS copre meno della meta' delle spese FIRE. Oltre al fondo pensione,
-			valuta di ridurre le spese target, posticipare l'uscita dal lavoro o incrementare
-			l'aliquota di risparmio.
+			La pensione INPS copre meno della meta' delle spese FIRE. Oltre al fondo pensione, valuta di ridurre
+			le spese target, posticipare l'uscita dal lavoro o incrementare l'aliquota di risparmio.
 		</Alert>
 	{/if}
 </Card>

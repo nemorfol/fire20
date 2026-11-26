@@ -24,12 +24,26 @@ describe('Migrazione Dexie v5 -> v6 (bfp/cd)', () => {
 		await old.table('profiles').add({
 			name: 'Legacy',
 			portfolio: {
-				stocks: 1000, bonds: 0, cash: 500, realEstate: 0,
-				gold: 0, crypto: 0, pensionFund: 0, tfr: 0, other: 0
+				stocks: 1000,
+				bonds: 0,
+				cash: 500,
+				realEstate: 0,
+				gold: 0,
+				crypto: 0,
+				pensionFund: 0,
+				tfr: 0,
+				other: 0
 			},
 			monthlyContributions: {
-				stocks: 100, bonds: 0, cash: 0, realEstate: 0,
-				gold: 0, crypto: 0, pensionFund: 0, tfr: 0, other: 0
+				stocks: 100,
+				bonds: 0,
+				cash: 0,
+				realEstate: 0,
+				gold: 0,
+				crypto: 0,
+				pensionFund: 0,
+				tfr: 0,
+				other: 0
 			}
 		});
 		old.close();

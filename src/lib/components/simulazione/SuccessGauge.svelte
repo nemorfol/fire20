@@ -49,43 +49,49 @@
 	let dashOffset = $derived(circumference - (circumference * Math.min(successPercent, 100)) / 100);
 </script>
 
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="grid grid-cols-1 gap-6 md:grid-cols-3">
 	<!-- Success Rate Gauge -->
-	<div class="flex flex-col items-center justify-center p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg {bgGlowClass}">
-		<div class="relative w-40 h-40">
-			<svg class="w-full h-full transform -rotate-90" viewBox="0 0 120 120">
+	<div
+		class="flex flex-col items-center justify-center rounded-xl bg-white p-6 shadow-lg dark:bg-gray-800 {bgGlowClass}"
+	>
+		<div class="relative h-40 w-40">
+			<svg class="h-full w-full -rotate-90 transform" viewBox="0 0 120 120">
 				<!-- Background circle -->
 				<circle
-					cx="60" cy="60" r="54"
+					cx="60"
+					cy="60"
+					r="54"
 					fill="none"
 					stroke-width="8"
 					class="stroke-gray-200 dark:stroke-gray-700"
 				/>
 				<!-- Progress arc -->
 				<circle
-					cx="60" cy="60" r="54"
+					cx="60"
+					cy="60"
+					r="54"
 					fill="none"
 					stroke-width="8"
 					stroke-linecap="round"
 					class="{bgRingClass} transition-all duration-1000 ease-out"
-					stroke-dasharray="{circumference}"
-					stroke-dashoffset="{dashOffset}"
+					stroke-dasharray={circumference}
+					stroke-dashoffset={dashOffset}
 				/>
 			</svg>
 			<div class="absolute inset-0 flex flex-col items-center justify-center">
 				<span class="text-3xl font-bold {colorClass}">{successPercent}%</span>
-				<span class="text-xs text-gray-500 dark:text-gray-400 mt-1">Successo</span>
+				<span class="mt-1 text-xs text-gray-500 dark:text-gray-400">Successo</span>
 			</div>
 		</div>
 		<p class="mt-3 text-sm font-semibold {colorClass}">{statusLabel}</p>
-		<p class="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">
+		<p class="mt-1 text-center text-xs text-gray-500 dark:text-gray-400">
 			Tasso di Successo della Simulazione
 		</p>
 	</div>
 
 	<!-- Key Stats -->
-	<div class="flex flex-col gap-4 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
-		<h4 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+	<div class="flex flex-col gap-4 rounded-xl bg-white p-6 shadow-lg dark:bg-gray-800">
+		<h4 class="text-sm font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
 			Portafoglio Finale
 		</h4>
 		<div>
@@ -101,7 +107,7 @@
 			</p>
 		</div>
 		{#if result.failureYear}
-			<div class="mt-auto pt-3 border-t border-gray-200 dark:border-gray-700">
+			<div class="mt-auto border-t border-gray-200 pt-3 dark:border-gray-700">
 				<p class="text-xs text-red-500">Anno mediano di esaurimento</p>
 				<p class="text-lg font-bold text-red-600 dark:text-red-400">
 					Anno {result.failureYear}
@@ -111,17 +117,11 @@
 	</div>
 
 	<!-- Percentile Summary -->
-	<div class="flex flex-col gap-3 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
-		<h4 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+	<div class="flex flex-col gap-3 rounded-xl bg-white p-6 shadow-lg dark:bg-gray-800">
+		<h4 class="text-sm font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
 			Distribuzione Valore Finale
 		</h4>
-		{#each [
-			{ label: 'P95 (ottimista)', key: 'p95', color: 'text-green-600 dark:text-green-400' },
-			{ label: 'P75', key: 'p75', color: 'text-green-500 dark:text-green-500' },
-			{ label: 'P50 (mediana)', key: 'p50', color: 'text-blue-600 dark:text-blue-400' },
-			{ label: 'P25', key: 'p25', color: 'text-yellow-600 dark:text-yellow-400' },
-			{ label: 'P5 (pessimista)', key: 'p5', color: 'text-red-600 dark:text-red-400' }
-		] as item}
+		{#each [{ label: 'P95 (ottimista)', key: 'p95', color: 'text-green-600 dark:text-green-400' }, { label: 'P75', key: 'p75', color: 'text-green-500 dark:text-green-500' }, { label: 'P50 (mediana)', key: 'p50', color: 'text-blue-600 dark:text-blue-400' }, { label: 'P25', key: 'p25', color: 'text-yellow-600 dark:text-yellow-400' }, { label: 'P5 (pessimista)', key: 'p5', color: 'text-red-600 dark:text-red-400' }] as item}
 			<div class="flex items-center justify-between">
 				<span class="text-xs text-gray-500 dark:text-gray-400">{item.label}</span>
 				<span class="text-sm font-semibold {item.color}">

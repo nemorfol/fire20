@@ -37,7 +37,7 @@ export const internationalReturns: AnnualReturn[] = [
 	{ year: 1995, value: 11.21 },
 	{ year: 1996, value: 6.05 },
 	{ year: 1997, value: 1.78 },
-	{ year: 1998, value: 20.00 },
+	{ year: 1998, value: 20.0 },
 	{ year: 1999, value: 26.96 },
 	{ year: 2000, value: -14.17 },
 	{ year: 2001, value: -21.44 },
@@ -52,22 +52,22 @@ export const internationalReturns: AnnualReturn[] = [
 	{ year: 2010, value: 7.75 },
 	{ year: 2011, value: -12.14 },
 	{ year: 2012, value: 17.02 },
-	{ year: 2013, value: 22.80 },
+	{ year: 2013, value: 22.8 },
 	{ year: 2014, value: -4.32 },
 	{ year: 2015, value: -0.81 },
-	{ year: 2016, value: 1.00 },
+	{ year: 2016, value: 1.0 },
 	{ year: 2017, value: 24.21 },
 	{ year: 2018, value: -14.09 },
 	{ year: 2019, value: 21.51 },
 	{ year: 2020, value: 7.59 },
 	{ year: 2021, value: 12.62 },
-	{ year: 2022, value: -16.00 },
+	{ year: 2022, value: -16.0 },
 	{ year: 2023, value: 17.94 },
 	{ year: 2024, value: 4.65 }
 ];
 
 function computeStats(data: AnnualReturn[]) {
-	const values = data.map(d => d.value);
+	const values = data.map((d) => d.value);
 	const count = values.length;
 	const mean = values.reduce((a, b) => a + b, 0) / count;
 	const variance = values.reduce((sum, v) => sum + (v - mean) ** 2, 0) / (count - 1);

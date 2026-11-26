@@ -1,5 +1,16 @@
 <script lang="ts">
-	import { Button, Input, Label, Table, TableHead, TableHeadCell, TableBody, TableBodyRow, TableBodyCell, Modal } from 'flowbite-svelte';
+	import {
+		Button,
+		Input,
+		Label,
+		Table,
+		TableHead,
+		TableHeadCell,
+		TableBody,
+		TableBodyRow,
+		TableBodyCell,
+		Modal
+	} from 'flowbite-svelte';
 	import { CirclePlusSolid, TrashBinSolid } from 'flowbite-svelte-icons';
 	import { db, type PortfolioSnapshotRecord } from '$lib/db/index';
 	import { liveQuery } from 'dexie';
@@ -66,7 +77,7 @@
 	<div class="flex items-center justify-between">
 		<h3 class="text-lg font-semibold text-gray-900 dark:text-white">Snapshot del Portafoglio</h3>
 		<Button size="sm" onclick={() => (showModal = true)}>
-			<CirclePlusSolid class="w-4 h-4 me-1" />
+			<CirclePlusSolid class="me-1 h-4 w-4" />
 			Aggiungi Snapshot
 		</Button>
 	</div>
@@ -87,7 +98,7 @@
 						<TableBodyCell>{snap.notes || '-'}</TableBodyCell>
 						<TableBodyCell>
 							<Button size="xs" color="red" outline onclick={() => deleteSnapshot(snap.id)}>
-								<TrashBinSolid class="w-3 h-3" />
+								<TrashBinSolid class="h-3 w-3" />
 							</Button>
 						</TableBodyCell>
 					</TableBodyRow>
@@ -109,15 +120,28 @@
 		</div>
 		<div>
 			<Label for="snap-value">Valore Totale del Portafoglio</Label>
-			<Input id="snap-value" type="number" bind:value={totalValue} placeholder="es. 100000" step="100" onblur={() => {}} />
+			<Input
+				id="snap-value"
+				type="number"
+				bind:value={totalValue}
+				placeholder="es. 100000"
+				step="100"
+				onblur={() => {}}
+			/>
 		</div>
 		<div>
 			<Label for="snap-notes">Note (opzionale)</Label>
-			<Input id="snap-notes" type="text" bind:value={notes} placeholder="es. Dopo ribilanciamento" onblur={() => {}} />
+			<Input
+				id="snap-notes"
+				type="text"
+				bind:value={notes}
+				placeholder="es. Dopo ribilanciamento"
+				onblur={() => {}}
+			/>
 		</div>
 	</div>
 	{#snippet footer()}
-		<div class="flex gap-2 justify-end">
+		<div class="flex justify-end gap-2">
 			<Button color="alternative" onclick={() => (showModal = false)}>Annulla</Button>
 			<Button onclick={addSnapshot} disabled={!dateValue || totalValue <= 0}>Salva</Button>
 		</div>

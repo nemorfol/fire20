@@ -21,15 +21,11 @@
 	<div>
 		<Label class="mb-2 text-base font-semibold">Anno di nascita</Label>
 		<div class="flex items-center gap-4">
-			<Input
-				type="number"
-				bind:value={birthYear}
-				min={1940}
-				max={2010}
-				class="w-32"
-			/>
+			<Input type="number" bind:value={birthYear} min={1940} max={2010} class="w-32" />
 			<span class="text-sm text-gray-500 dark:text-gray-400">
-				Eta attuale: <strong class="text-primary-600 dark:text-primary-400">{currentAge} anni</strong>
+				Eta attuale: <strong class="text-primary-600 dark:text-primary-400"
+					>{currentAge} anni</strong
+				>
 			</span>
 		</div>
 	</div>
@@ -41,21 +37,18 @@
 			max={75}
 			label="Eta FIRE target (quando smetterai di lavorare)"
 		/>
-		<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+		<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
 			Mancano <strong class="text-primary-600 dark:text-primary-400">{yearsToFire} anni</strong> al FIRE.
 			Diverso dall'eta di pensione INPS (vedi tab Pensione), che puo essere successiva.
 		</p>
 	</div>
 
 	<div>
-		<YearSlider
-			bind:value={lifeExpectancy}
-			min={70}
-			max={100}
-			label="Aspettativa di vita"
-		/>
-		<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-			Anni in FIRE: <strong class="text-primary-600 dark:text-primary-400">{Math.max(0, lifeExpectancy - retirementAge)} anni</strong>
+		<YearSlider bind:value={lifeExpectancy} min={70} max={100} label="Aspettativa di vita" />
+		<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+			Anni in FIRE: <strong class="text-primary-600 dark:text-primary-400"
+				>{Math.max(0, lifeExpectancy - retirementAge)} anni</strong
+			>
 		</p>
 	</div>
 </div>

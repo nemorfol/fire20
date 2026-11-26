@@ -1,9 +1,10 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import { Card } from 'flowbite-svelte';
 	import type { YearlyProjection } from '$lib/engine/fire-calculator';
 	import type { RiskEvent } from '$lib/engine/risk-scenarios';
 	import { formatCurrency, formatCompact } from '$lib/utils/format';
-	import EChart from '$lib/components/simulazione/EChart.svelte';
+	import EChart from '$lib/components/shared/EChart.svelte';
+	import type { CallbackDataParams } from 'echarts/types/dist/shared';
 
 	let {
 		baseline,
@@ -13,7 +14,16 @@
 		scenarios: { event: RiskEvent; data: YearlyProjection[] }[];
 	} = $props();
 
-	const colors = ['#3b82f6', '#ef4444', '#f59e0b', '#10b981', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'];
+	const colors = [
+		'#3b82f6',
+		'#ef4444',
+		'#f59e0b',
+		'#10b981',
+		'#8b5cf6',
+		'#ec4899',
+		'#06b6d4',
+		'#f97316'
+	];
 
 	let chartOptions = $derived.by(() => {
 		if (baseline.length === 0 || scenarios.length === 0) return {};
@@ -34,7 +44,11 @@
 				type: 'line',
 				data: s.data.map((p: YearlyProjection) => Math.round(Math.max(0, p.portfolio))),
 				smooth: true,
-				lineStyle: { width: 2, color: colors[(i + 1) % colors.length], type: i > 2 ? 'dashed' as const : 'solid' as const },
+				lineStyle: {
+					width: 2,
+					color: colors[(i + 1) % colors.length],
+					type: i > 2 ? ('dashed' as const) : ('solid' as const)
+				},
 				itemStyle: { color: colors[(i + 1) % colors.length] }
 			}))
 		];
@@ -42,10 +56,10 @@
 		return {
 			tooltip: {
 				trigger: 'axis',
-				formatter: (params: any) => {
+				formatter: (params: CallbackDataParams[]) => {
 					let html = `<strong>${params[0].name}</strong><br/>`;
 					for (const p of params) {
-						html += `${p.marker} ${p.seriesName}: ${formatCurrency(Math.max(0, p.value))}<br/>`;
+						html += `${p.marker as string} ${p.seriesName}: ${formatCurrency(Math.max(0, p.value as number))}<br/>`;
 					}
 					return html;
 				}
@@ -66,7 +80,7 @@
 </script>
 
 <Card class="max-w-none">
-	<h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+	<h5 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
 		Confronto Scenari ({scenarios.length} selezionati)
 	</h5>
 	<EChart options={chartOptions} height="450px" />

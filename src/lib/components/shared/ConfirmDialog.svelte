@@ -24,7 +24,7 @@
 	}
 </script>
 
-<Modal bind:open size="sm" title={title}>
+<Modal bind:open size="sm" {title}>
 	<div class="text-center">
 		<ExclamationCircleOutline class="mx-auto mb-4 h-12 w-12 text-gray-400 dark:text-gray-200" />
 		<p class="mb-5 text-lg text-gray-500 dark:text-gray-400">{message}</p>

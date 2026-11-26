@@ -16,19 +16,19 @@
 			id: 'fixed',
 			label: 'Regola del 4%',
 			description:
-				'Preleva una percentuale fissa del portafoglio iniziale, aggiustata annualmente per l\'inflazione. Strategia classica e semplice da seguire.'
+				"Preleva una percentuale fissa del portafoglio iniziale, aggiustata annualmente per l'inflazione. Strategia classica e semplice da seguire."
 		},
 		{
 			id: 'vpw',
 			label: 'VPW (Variable Percentage Withdrawal)',
 			description:
-				'La percentuale di prelievo aumenta con l\'eta basandosi su tavole attuariali. Si adatta automaticamente al portafoglio corrente.'
+				"La percentuale di prelievo aumenta con l'eta basandosi su tavole attuariali. Si adatta automaticamente al portafoglio corrente."
 		},
 		{
 			id: 'guyton-klinger',
 			label: 'Guyton-Klinger (Guardrails)',
 			description:
-				'Prelievo base aggiustato per inflazione, con guardrail: taglia del 10% se il tasso supera il 120% del tasso iniziale, aumenta del 10% se scende sotto l\'80%.'
+				"Prelievo base aggiustato per inflazione, con guardrail: taglia del 10% se il tasso supera il 120% del tasso iniziale, aumenta del 10% se scende sotto l'80%."
 		},
 		{
 			id: 'cape-based',
@@ -40,31 +40,30 @@
 			id: 'amortized',
 			label: 'Die-with-X (ammortamento)',
 			description:
-				'Consuma il capitale per arrivare, all\'aspettativa di vita, a un valore target da lasciare in eredita\' (anche 0). Si ricalcola ogni anno sul portafoglio corrente.'
+				"Consuma il capitale per arrivare, all'aspettativa di vita, a un valore target da lasciare in eredita' (anche 0). Si ricalcola ogni anno sul portafoglio corrente."
 		}
 	];
 </script>
 
 <Card class="max-w-none">
-	<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-		Strategia di Prelievo
-	</h3>
-	<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+	<h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Strategia di Prelievo</h3>
+	<div class="grid grid-cols-1 gap-3 md:grid-cols-2">
 		{#each strategies as strategy}
 			<button
 				type="button"
-				class="text-left rounded-xl border-2 p-4 transition-all duration-200 {selected === strategy.id
+				class="rounded-xl border-2 p-4 text-left transition-all duration-200 {selected ===
+				strategy.id
 					? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md'
-					: 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}"
+					: 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600'}"
 				onclick={() => (selected = strategy.id)}
 			>
 				<div class="flex items-start gap-3">
 					<Radio name="strategy" value={strategy.id} bind:group={selected} class="mt-0.5" />
 					<div>
-						<p class="font-semibold text-gray-900 dark:text-white text-sm">
+						<p class="text-sm font-semibold text-gray-900 dark:text-white">
 							{strategy.label}
 						</p>
-						<p class="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">
+						<p class="mt-1 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
 							{strategy.description}
 						</p>
 					</div>

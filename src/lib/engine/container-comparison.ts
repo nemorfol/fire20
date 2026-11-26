@@ -13,10 +13,7 @@
  * coerenza con il resto dell'app.
  */
 
-import {
-	calculateCapitalGainsTax,
-	calculatePensionFundTax
-} from './tax-italy';
+import { calculateCapitalGainsTax, calculatePensionFundTax } from './tax-italy';
 
 /** Parametri di input per il confronto tra contenitori fiscali */
 export interface ContainerInput {
@@ -68,7 +65,7 @@ function futureValueOfAnnuity(annualPayment: number, rate: number, years: number
 	if (Math.abs(rate) < 1e-9) {
 		return annualPayment * years;
 	}
-	return annualPayment * (Math.pow(1 + rate, years) - 1) / rate;
+	return (annualPayment * (Math.pow(1 + rate, years) - 1)) / rate;
 }
 
 /** Arrotonda a 2 decimali */
@@ -98,7 +95,8 @@ function buildEtfResult(input: ContainerInput): ContainerResult {
 		taxesOnExit: r2(taxesOnExit),
 		taxBenefitDeduction: 0,
 		netFinal: r2(netFinal),
-		notes: 'PAC in ETF con tassazione 26% sul capital gain solo alla vendita finale. Nessun beneficio fiscale in ingresso.'
+		notes:
+			'PAC in ETF con tassazione 26% sul capital gain solo alla vendita finale. Nessun beneficio fiscale in ingresso.'
 	};
 }
 
@@ -123,7 +121,8 @@ function buildBtpResult(input: ContainerInput): ContainerResult {
 		taxesOnExit: r2(taxesOnExit),
 		taxBenefitDeduction: 0,
 		netFinal: r2(netFinal),
-		notes: 'Accumulo in titoli di Stato con aliquota agevolata 12,5% su cedole e capital gain. Rendimento atteso tipicamente inferiore a ETF azionari.'
+		notes:
+			'Accumulo in titoli di Stato con aliquota agevolata 12,5% su cedole e capital gain. Rendimento atteso tipicamente inferiore a ETF azionari.'
 	};
 }
 

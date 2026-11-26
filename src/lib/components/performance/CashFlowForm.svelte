@@ -1,5 +1,18 @@
 <script lang="ts">
-	import { Button, Input, Label, Select, Table, TableHead, TableHeadCell, TableBody, TableBodyRow, TableBodyCell, Modal, Badge } from 'flowbite-svelte';
+	import {
+		Button,
+		Input,
+		Label,
+		Select,
+		Table,
+		TableHead,
+		TableHeadCell,
+		TableBody,
+		TableBodyRow,
+		TableBodyCell,
+		Modal,
+		Badge
+	} from 'flowbite-svelte';
 	import { CirclePlusSolid, TrashBinSolid } from 'flowbite-svelte-icons';
 	import { db, type CashFlowRecord } from '$lib/db/index';
 	import { liveQuery } from 'dexie';
@@ -87,7 +100,7 @@
 	<div class="flex items-center justify-between">
 		<h3 class="text-lg font-semibold text-gray-900 dark:text-white">Movimenti di Cassa</h3>
 		<Button size="sm" onclick={() => (showModal = true)}>
-			<CirclePlusSolid class="w-4 h-4 me-1" />
+			<CirclePlusSolid class="me-1 h-4 w-4" />
 			Aggiungi Movimento
 		</Button>
 	</div>
@@ -108,13 +121,15 @@
 						<TableBodyCell>
 							<Badge color={typeColors[cf.type] ?? 'blue'}>{typeLabels[cf.type] ?? cf.type}</Badge>
 						</TableBodyCell>
-						<TableBodyCell class="font-semibold {cf.amount >= 0 ? 'text-green-600' : 'text-red-600'}">
+						<TableBodyCell
+							class="font-semibold {cf.amount >= 0 ? 'text-green-600' : 'text-red-600'}"
+						>
 							{cf.amount >= 0 ? '+' : ''}{formatCurrency(cf.amount)}
 						</TableBodyCell>
 						<TableBodyCell>{cf.description || '-'}</TableBodyCell>
 						<TableBodyCell>
 							<Button size="xs" color="red" outline onclick={() => deleteCashFlow(cf.id)}>
-								<TrashBinSolid class="w-3 h-3" />
+								<TrashBinSolid class="h-3 w-3" />
 							</Button>
 						</TableBodyCell>
 					</TableBodyRow>
@@ -140,15 +155,28 @@
 		</div>
 		<div>
 			<Label for="cf-amount">Importo</Label>
-			<Input id="cf-amount" type="number" bind:value={amount} placeholder="es. 5000" step="100" onblur={() => {}} />
+			<Input
+				id="cf-amount"
+				type="number"
+				bind:value={amount}
+				placeholder="es. 5000"
+				step="100"
+				onblur={() => {}}
+			/>
 		</div>
 		<div>
 			<Label for="cf-desc">Descrizione (opzionale)</Label>
-			<Input id="cf-desc" type="text" bind:value={description} placeholder="es. PAC mensile" onblur={() => {}} />
+			<Input
+				id="cf-desc"
+				type="text"
+				bind:value={description}
+				placeholder="es. PAC mensile"
+				onblur={() => {}}
+			/>
 		</div>
 	</div>
 	{#snippet footer()}
-		<div class="flex gap-2 justify-end">
+		<div class="flex justify-end gap-2">
 			<Button color="alternative" onclick={() => (showModal = false)}>Annulla</Button>
 			<Button onclick={addCashFlow} disabled={!dateValue || amount === 0}>Salva</Button>
 		</div>
