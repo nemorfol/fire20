@@ -819,6 +819,23 @@ Questo significa che nella maggior parte dei casi il piano funziona, ma c'è un 
 <strong>Attenzione:</strong> Un tasso di successo del 95% NON significa che hai il 95% di probabilità di successo nel mondo reale. Significa che il 95% degli scenari storici simulati ha funzionato. Il futuro potrebbe essere diverso dal passato. Mantieni sempre un margine di sicurezza e un piano B.
 </div>
 
+<h3>Strategie di prelievo variabili nel Monte Carlo</h3>
+<p>Nel pannello di configurazione puoi scegliere <strong>come prelevi</strong> in pensione, non solo quanto:</p>
+<ul>
+<li><strong>Spesa fissa (regola del 4%)</strong>: prelevi ogni anno le tue spese, rivalutate con l'inflazione simulata. Spesa stabile, ma il portafoglio puo' esaurirsi.</li>
+<li><strong>Guyton-Klinger (guardrail)</strong>: parti da portafoglio al FIRE x tasso di prelievo e lo rivaluti con l'inflazione. Se il tasso corrente supera il 120% di quello iniziale tagli del 10%; se scende sotto l'80% aumenti del 10%.</li>
+<li><strong>VPW</strong>: prelevi una percentuale del portafoglio <em>corrente</em> che cresce con l'eta'. Non si esaurisce mai, ma la spesa segue i mercati.</li>
+<li><strong>CAPE-based</strong>: portafoglio corrente x (2% + 0,5 / CAPE). Nel Monte Carlo il CAPE resta fisso al valore che indichi, quindi equivale a una percentuale costante del portafoglio.</li>
+<li><strong>Die-with-X (ammortamento)</strong>: ogni anno ricalcola la rata che consuma il portafoglio fino a lasciare l'importo scelto (in euro di oggi) alla fine dell'orizzonte simulato, con un rendimento reale di pianificazione che imposti tu. Se i mercati vanno come il piano, la spesa reale resta costante; se vanno peggio, scende.</li>
+</ul>
+<p><strong>Perche' il tasso di successo non basta.</strong> Con una strategia variabile il portafoglio quasi non si azzera mai: il rischio vero e' che la <em>spesa</em> scenda. Per questo, sotto il grafico del patrimonio, trovi il riquadro <strong>Spesa reale in pensione</strong>, in euro di oggi:</p>
+<ul>
+<li>la banda P10-P90 e la mediana della spesa anno per anno;</li>
+<li>la spesa nell'<strong>anno peggiore</strong>, nella simulazione mediana e in 1 caso su 10;</li>
+<li>la quota di simulazioni con <strong>almeno un anno sotto le spese obiettivo</strong>.</li>
+</ul>
+<p>Confronta le strategie su questi numeri, non solo sul tasso di successo. Pensione INPS e altri redditi coprono parte della spesa decisa dalla strategia (riducono il prelievo dal portafoglio), non si aggiungono ad essa.</p>
+
 <h3>Serie storiche italiane vs USA</h3>
 <p>In modalita' storica il simulatore offre due <strong>preset</strong>, ciascuno tutto nella <strong>stessa valuta</strong>. Non e' un dettaglio: un rendimento in dollari "deflazionato" con l'inflazione italiana da' un rendimento reale sbagliato. E' il caso degli anni '70-'90, quando la lira si svalutava e l'inflazione italiana era molto piu' alta di quella americana.</p>
 <ul>

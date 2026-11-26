@@ -650,7 +650,8 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 					age,
 					lifeExpectancy,
 					realReturn: (1 + expectedReturn) / (1 + inflationRate) - 1,
-					targetBequest,
+					// Eredita' target in euro di OGGI, portafoglio in euro correnti
+					targetBequest: targetBequest * inflationCumulative,
 					guytonKlinger:
 						withdrawalStrategy === 'guyton-klinger'
 							? {

@@ -175,3 +175,78 @@ describe('Monte Carlo - campionamento storico congiunto (serie allineate per ann
 		).toThrow(/allineate/);
 	});
 });
+
+describe('Monte Carlo - strategie di prelievo variabili e spesa reale', () => {
+	// Mercato "costante": rendimento nominale 5%, inflazione 2% ogni anno (serie
+	// storiche di un solo valore, campionate congiuntamente).
+	const flat: MonteCarloParams = {
+		...baseParams,
+		initialPortfolio: 1_000_000,
+		annualContribution: 0,
+		annualExpenses: 30_000,
+		withdrawalRate: 0.04,
+		stockAllocation: 1,
+		bondAllocation: 0,
+		yearsToFire: 0,
+		yearsInRetirement: 30,
+		currentAge: 55,
+		lifeExpectancy: 85,
+		simulationMode: 'historical',
+		jointHistoricalSampling: true,
+		iterations: 50,
+		historicalStockReturns: [0.05],
+		historicalBondReturns: [0.05],
+		historicalInflation: [0.02]
+	};
+
+	it('spesa fissa sostenibile: spesa reale = spese obiettivo ogni anno, mai sotto', () => {
+		const r = runMonteCarloSimulation(flat);
+		expect(r.spending!.p50).toHaveLength(30);
+		expect(r.spending!.p50.every((v) => Math.abs(v - 30_000) <= 1)).toBe(true);
+		expect(r.spending!.minMedian).toBeCloseTo(30_000, -1);
+		expect(r.spending!.belowTargetRate).toBe(0);
+	});
+
+	it('portafoglio esaurito: la spesa scende ai soli redditi (pensione)', () => {
+		const r = runMonteCarloSimulation({
+			...flat,
+			initialPortfolio: 100_000,
+			annualPension: 10_000,
+			pensionAge: 55
+		});
+		expect(r.successRate).toBe(0);
+		expect(r.spending!.p50[29]).toBeCloseTo(10_000, -1);
+		expect(r.spending!.belowTargetRate).toBe(1);
+	});
+
+	it('VPW: non esaurisce il portafoglio, ma con mercati volatili la spesa scende', () => {
+		const r = runMonteCarloSimulation({
+			...flat,
+			withdrawalStrategy: 'vpw',
+			iterations: 400,
+			historicalStockReturns: [0.3, -0.25, 0.12, -0.1, 0.2],
+			historicalBondReturns: [0.3, -0.25, 0.12, -0.1, 0.2],
+			historicalInflation: [0.02, 0.02, 0.02, 0.02, 0.02]
+		});
+		expect(r.successRate).toBe(1);
+		expect(r.spending!.minP10).toBeLessThan(r.spending!.p50[0]);
+		expect(r.spending!.p90[29]).toBeGreaterThan(r.spending!.p10[29]);
+	});
+
+	it('die-with-X: eredita target indicizzata e spesa reale costante a rendimenti in linea col piano', () => {
+		const X = 200_000;
+		const r = runMonteCarloSimulation({
+			...flat,
+			withdrawalStrategy: 'amortized',
+			targetBequest: X,
+			// rendimento reale coerente col mercato simulato: 1,05/1,02 - 1
+			plannedRealReturn: 1.05 / 1.02 - 1
+		});
+		// Eredita' in euro di oggi -> nominale a fine orizzonte (prima: ~200k invece di ~355k)
+		const nominalTarget = X * Math.pow(1.02, 29);
+		expect(Math.abs(r.medianFinalValue / nominalTarget - 1)).toBeLessThan(0.001);
+		// Rata anticipata corretta: la spesa reale resta costante (prima calava ~15%)
+		const s = r.spending!.p50;
+		expect(Math.abs(s[29] - s[0])).toBeLessThanOrEqual(1);
+	});
+});

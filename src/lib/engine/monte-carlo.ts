@@ -50,6 +50,13 @@ export interface MonteCarloParams {
 	withdrawalStrategy: 'fixed' | 'vpw' | 'guyton-klinger' | 'cape-based' | 'amortized';
 	/** Valore terminale target (euro di oggi) per la strategia 'amortized' (die-with-X) */
 	targetBequest?: number;
+	/**
+	 * Rendimento REALE di pianificazione per la strategia 'amortized' (es. 0.03).
+	 * Se omesso si ricava dai rendimenti attesi parametrici (o 7%/3% di default)
+	 * meno l'inflazione attesa. Serve soprattutto nelle modalita' storiche, dove
+	 * i rendimenti attesi non sono un input.
+	 */
+	plannedRealReturn?: number;
 	/** Allocazione in azioni (0..1) */
 	stockAllocation: number;
 	/** Allocazione in obbligazioni (0..1) */
@@ -188,6 +195,28 @@ export interface MonteCarloResult {
 	successRateStdError: number;
 	/** Intervallo di confidenza ~95% del successRate (p ± 1.96*SE, clampato in [0,1]) */
 	successRateCI95: { lower: number; upper: number };
+	/**
+	 * Spesa REALE effettivamente sostenuta in pensione (euro di oggi), anno per anno:
+	 * prelievo deciso dalla strategia, limitato a quanto disponibile (portafoglio +
+	 * redditi) se il portafoglio si esaurisce. Indispensabile per le strategie
+	 * variabili (VPW, guardrail, CAPE, ammortamento): non "falliscono" quasi mai,
+	 * il loro rischio e' una spesa che scende. Indici = anni di pensione (0 = primo).
+	 * Non riflette gli eventi di rischio (applicati a posteriori al patrimonio).
+	 * Opzionale: assente nei risultati salvati prima della sua introduzione.
+	 */
+	spending?: {
+		p10: number[];
+		p50: number[];
+		p90: number[];
+		/** Spesa reale minima sul percorso: mediana e 10° percentile tra le simulazioni */
+		minMedian: number;
+		minP10: number;
+		/**
+		 * Quota di simulazioni con almeno un anno di spesa reale sotto le spese
+		 * obiettivo (annualExpenses, tolleranza 0,5%). 0 se annualExpenses = 0.
+		 */
+		belowTargetRate: number;
+	};
 }
 
 /**
@@ -302,9 +331,14 @@ function generateReturn(
  *
  * @returns Array dei valori del portafoglio per ogni anno
  */
-function runSingleSimulation(params: MonteCarloParams): number[] {
+function runSingleSimulation(params: MonteCarloParams): {
+	values: number[];
+	realSpending: number[];
+} {
 	const totalYears = params.yearsToFire + params.yearsInRetirement;
 	const portfolioValues: number[] = [];
+	// Spesa reale (euro di oggi) per ogni anno di pensione
+	const realSpending: number[] = [];
 	let portfolio = params.initialPortfolio;
 	let initialRetirementPortfolio = 0;
 	let previousWithdrawal = 0;
@@ -557,12 +591,21 @@ function runSingleSimulation(params: MonteCarloParams): number[] {
 					const blendedNominal =
 						(params.expectedStockReturn ?? 0.07) * params.stockAllocation +
 						(params.expectedBondReturn ?? 0.03) * params.bondAllocation;
+					const realReturn =
+						params.plannedRealReturn ?? (1 + blendedNominal) / (1 + params.inflationRate) - 1;
 					withdrawal = calculateWithdrawal('amortized', {
-						portfolio,
+						// Qui il prelievo avviene DOPO il rendimento dell'anno (rata
+						// anticipata), mentre la formula e' a rata posticipata (corretta nel
+						// proiettore deterministico, che preleva a fine anno): scontare il
+						// portafoglio di un periodo la rende esatta. Senza, a rendimenti in
+						// linea col piano la spesa reale calava di ~15% in 30 anni.
+						portfolio: realReturn > -1 ? portfolio / (1 + realReturn) : portfolio,
 						age: (params.currentAge ?? 40) + year,
 						lifeExpectancy: params.lifeExpectancy ?? 90,
-						realReturn: (1 + blendedNominal) / (1 + params.inflationRate) - 1,
-						targetBequest: params.targetBequest ?? 0
+						realReturn,
+						// L'eredita' target e' in euro di OGGI, il portafoglio in euro
+						// correnti: va indicizzata all'inflazione realizzata sul percorso.
+						targetBequest: (params.targetBequest ?? 0) * cumulativeInflation
 					});
 					break;
 				}
@@ -587,7 +630,19 @@ function runSingleSimulation(params: MonteCarloParams): number[] {
 					: 0;
 
 			previousWithdrawal = withdrawal;
+			// Spesa effettiva: il prelievo della strategia, ma non oltre quanto
+			// disponibile (portafoglio + redditi) se il portafoglio si esaurisce.
+			const available = portfolio + pensionNow + otherIncomeNow;
+			realSpending.push(Math.min(withdrawal, Math.max(0, available)) / cumulativeInflation);
 			portfolio -= withdrawal - pensionNow - otherIncomeNow;
+		} else if (isRetired) {
+			// Portafoglio esaurito: restano solo i redditi passivi
+			const ageNow = (params.currentAge ?? 40) + year;
+			const pensionNow =
+				ageNow >= (params.pensionAge ?? Infinity) ? (params.annualPension ?? 0) : 0;
+			const otherNow =
+				ageNow <= (params.otherIncomeEndAge ?? Infinity) ? (params.otherIncome ?? 0) : 0;
+			realSpending.push(pensionNow + otherNow);
 		}
 
 		// Il portafoglio non può essere negativo
@@ -599,7 +654,7 @@ function runSingleSimulation(params: MonteCarloParams): number[] {
 		cumulativeInflation *= 1 + inflation;
 	}
 
-	return portfolioValues;
+	return { values: portfolioValues, realSpending };
 }
 
 /**
@@ -628,12 +683,16 @@ export function runMonteCarloSimulation(params: MonteCarloParams): MonteCarloRes
 
 	// Matrice di tutte le simulazioni: [iterazione][anno]
 	const allSimulations: number[][] = [];
+	// Spesa reale per anno di pensione: [iterazione][anno di pensione]
+	const allSpending: number[][] = [];
 
 	// Progresso
 	const progressStep = Math.max(1, Math.floor(iterations / 10));
 
 	for (let i = 0; i < iterations; i++) {
-		let trajectory = runSingleSimulation(params);
+		const single = runSingleSimulation(params);
+		let trajectory = single.values;
+		allSpending.push(single.realSpending);
 
 		// Applica eventi di rischio se presenti
 		if (params.riskEvents && params.riskEvents.length > 0) {
@@ -752,7 +811,35 @@ export function runMonteCarloSimulation(params: MonteCarloParams): MonteCarloRes
 	const seSuccess = Math.sqrt((successRate * (1 - successRate)) / iterations);
 	const ciHalf = 1.96 * seSuccess;
 
+	// === Statistiche di spesa reale (strategie variabili) ===
+	const spendP10: number[] = [];
+	const spendP50: number[] = [];
+	const spendP90: number[] = [];
+	for (let r = 0; r < params.yearsInRetirement; r++) {
+		const vals = allSpending.map((sp) => sp[r] ?? 0);
+		const [a, b, c] = calculatePercentiles(vals, [10, 50, 90]);
+		spendP10.push(Math.round(a));
+		spendP50.push(Math.round(b));
+		spendP90.push(Math.round(c));
+	}
+	const minSpending = allSpending.map((sp) => (sp.length > 0 ? Math.min(...sp) : 0));
+	const [minP10, minMedian] =
+		minSpending.length > 0 ? calculatePercentiles(minSpending, [10, 50]) : [0, 0];
+	const target = params.annualExpenses;
+	const belowTargetRate =
+		target > 0 && params.yearsInRetirement > 0
+			? allSpending.filter((sp) => sp.some((v) => v < target * 0.995)).length / iterations
+			: 0;
+
 	return {
+		spending: {
+			p10: spendP10,
+			p50: spendP50,
+			p90: spendP90,
+			minMedian: Math.round(minMedian),
+			minP10: Math.round(minP10),
+			belowTargetRate: Math.round(belowTargetRate * 10000) / 10000
+		},
 		successRate: Math.round(successRate * 10000) / 10000,
 		medianFinalValue: Math.round(medianFinalValue),
 		meanFinalValue: Math.round(meanFinalValue),
