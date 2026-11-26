@@ -52,7 +52,7 @@
 		"fuse.js": "^7.4.2",
 		"jspdf": "^4.2.1",
 		"papaparse": "^5.5.3",
-		"tailwindcss": "^4.2.2",
+		"tailwindcss": "^4.3.5",
 		"xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
 	}
 }
