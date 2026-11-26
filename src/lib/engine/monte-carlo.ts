@@ -161,6 +161,39 @@ export interface MonteCarloParams {
 	 */
 	capitalGainsTaxRate?: number;
 	/**
+	 * Come si applica `capitalGainsTaxRate`:
+	 * - 'accrual' (default, retrocompatibile): ogni anno sui rendimenti positivi,
+	 *   come se fossero sempre realizzati. Prudente ma irrealistico per ETF ad
+	 *   accumulazione: ignora il differimento d'imposta.
+	 * - 'realization': il capital gain si paga solo quando si VENDE, sulla quota di
+	 *   plusvalenza di cio' che si vende (regime amministrato, art. 6 D.Lgs.
+	 *   461/1997). Il motore tiene il costo di carico: versamenti e surplus
+	 *   reinvestiti lo aumentano, le vendite lo riducono pro quota. Per coprire un
+	 *   fabbisogno netto N vende G = N / (1 - aliquota x quota di plusvalenza).
+	 *   Sotto il costo di carico non si paga nulla e non si genera credito: per gli
+	 *   ETF i proventi sono redditi di capitale, non compensabili con minusvalenze.
+	 *   Ipotesi: strumenti ad accumulazione (cedole e dividendi non tassati anno
+	 *   per anno).
+	 */
+	capitalGainsTaxMode?: 'accrual' | 'realization';
+	/**
+	 * Costo di carico fiscale del portafoglio iniziale (euro). Solo per
+	 * 'realization'. Default = initialPortfolio (nessuna plusvalenza latente):
+	 * se hai gia' guadagni non realizzati, indicarlo rende la stima piu' prudente.
+	 */
+	initialCostBasis?: number;
+	/**
+	 * Reddito livellato con la pensione (approccio "ciclo di vita", cfr.
+	 * Schreiber & Weber): per le strategie 'vpw' e 'amortized' la spesa si
+	 * calcola sul patrimonio TOTALE = portafoglio + valore attuale dei redditi
+	 * futuri (pensione INPS, altri redditi, fondo pensione) fino all'aspettativa
+	 * di vita, scontati al rendimento reale di pianificazione. Prima della pensione
+	 * si preleva di piu', dopo di meno; il reddito totale resta circa piatto.
+	 * Default false = comportamento precedente (rata sul solo portafoglio, i
+	 * redditi riducono soltanto il prelievo).
+	 */
+	levelIncomeWithPension?: boolean;
+	/**
 	 * Quota del portafoglio ESENTE da bollo titoli (tipicamente i BFP). 0..1.
 	 * Default 0. Viene sottratta dalla base del bollo (i BFP non lo scontano).
 	 */
@@ -443,6 +476,40 @@ function runSingleSimulation(params: MonteCarloParams): {
 	const pensionFundIncomeAt = (year: number): number =>
 		params.pensionFundIncomeByAge?.[(params.currentAge ?? 40) + year + 1] ?? 0;
 
+	// Rendimento reale di pianificazione (blend atteso azioni/bond), usato da
+	// 'amortized' e dal valore attuale dei redditi futuri.
+	const planningRealReturn = (() => {
+		const blendedNominal =
+			(params.expectedStockReturn ?? 0.07) * params.stockAllocation +
+			(params.expectedBondReturn ?? 0.03) * params.bondAllocation;
+		return params.plannedRealReturn ?? (1 + blendedNominal) / (1 + params.inflationRate) - 1;
+	})();
+
+	/** Redditi passivi REALI (euro di oggi) nell'anno `y` della simulazione */
+	const realIncomeAt = (y: number): number => {
+		const age = (params.currentAge ?? 40) + y;
+		const pension = age >= (params.pensionAge ?? Infinity) ? (params.annualPension ?? 0) : 0;
+		const other = age <= (params.otherIncomeEndAge ?? Infinity) ? (params.otherIncome ?? 0) : 0;
+		return pension + other + pensionFundIncomeAt(y);
+	};
+
+	/**
+	 * Valore attuale REALE dei redditi dall'anno `y` (incluso, rata anticipata)
+	 * fino all'aspettativa di vita, scontato al rendimento reale di pianificazione.
+	 */
+	const realIncomePV = (y: number): number => {
+		const age = (params.currentAge ?? 40) + y;
+		const n = Math.max(0, (params.lifeExpectancy ?? 90) - age);
+		const r = planningRealReturn > -1 ? planningRealReturn : 0;
+		let pv = 0;
+		for (let k = 0; k < n; k++) pv += realIncomeAt(y + k) / Math.pow(1 + r, k);
+		return pv;
+	};
+
+	// Costo di carico fiscale (solo per capitalGainsTaxMode 'realization')
+	const realizationTax = params.capitalGainsTaxMode === 'realization';
+	let costBasis = params.initialCostBasis ?? params.initialPortfolio;
+
 	for (let year = 0; year < totalYears; year++) {
 		const isRetired = year >= params.yearsToFire;
 		const retirementYear = isRetired ? year - params.yearsToFire : 0;
@@ -512,6 +579,7 @@ function runSingleSimulation(params: MonteCarloParams): {
 		// Fase di accumulazione: aggiungi contributi
 		if (!isRetired) {
 			portfolio += params.annualContribution;
+			costBasis += params.annualContribution;
 			// Se la pensione INPS decorre DURANTE l'accumulazione (eta' attuale +
 			// anno >= pensionAge ma siamo ancora pre-FIRE), va accreditata anche
 			// qui: il deterministico (fire-calculator.ts) la aggiunge ai contributi
@@ -521,8 +589,10 @@ function runSingleSimulation(params: MonteCarloParams): {
 			const ageAccum = (params.currentAge ?? 40) + year;
 			if (ageAccum >= (params.pensionAge ?? Infinity)) {
 				portfolio += (params.annualPension ?? 0) * cumulativeInflation;
+				costBasis += (params.annualPension ?? 0) * cumulativeInflation;
 			}
 			portfolio += pensionFundIncomeAt(year) * cumulativeInflation;
+			costBasis += pensionFundIncomeAt(year) * cumulativeInflation;
 		}
 
 		// Applica rendimenti, al netto del capital gain sui rendimenti POSITIVI
@@ -530,7 +600,8 @@ function runSingleSimulation(params: MonteCarloParams): {
 		// ottimista). Default 0 = retrocompatibile con le simulazioni storiche.
 		const returns = portfolio * portfolioReturn;
 		const capGainsRate = params.capitalGainsTaxRate ?? 0;
-		const capGainsTax = returns > 0 ? returns * capGainsRate : 0;
+		// In regime 'realization' il capital gain si paga alla vendita (sotto).
+		const capGainsTax = returns > 0 && !realizationTax ? returns * capGainsRate : 0;
 		portfolio += returns - capGainsTax;
 
 		// Imposte patrimoniali (bollo titoli + IVAFE) sul controvalore di
@@ -552,6 +623,11 @@ function runSingleSimulation(params: MonteCarloParams): {
 		// Fase di decumulo: preleva
 		if (isRetired && portfolio > 0) {
 			let withdrawal: number;
+			// Reddito livellato: la rata delle strategie 'vpw'/'amortized' si calcola
+			// sul patrimonio totale (portafoglio + VA nominale dei redditi futuri).
+			const incomePVNominal = params.levelIncomeWithPension
+				? realIncomePV(year) * cumulativeInflation
+				: 0;
 
 			switch (params.withdrawalStrategy) {
 				case 'fixed':
@@ -569,7 +645,7 @@ function runSingleSimulation(params: MonteCarloParams): {
 
 				case 'vpw':
 					withdrawal = calculateWithdrawal('vpw', {
-						portfolio,
+						portfolio: portfolio + incomePVNominal,
 						age: (params.currentAge ?? 40) + year,
 						lifeExpectancy: params.lifeExpectancy ?? 90
 					});
@@ -600,19 +676,19 @@ function runSingleSimulation(params: MonteCarloParams): {
 					break;
 
 				case 'amortized': {
-					// Rendimento reale di pianificazione (blend atteso azioni/bond).
-					const blendedNominal =
-						(params.expectedStockReturn ?? 0.07) * params.stockAllocation +
-						(params.expectedBondReturn ?? 0.03) * params.bondAllocation;
-					const realReturn =
-						params.plannedRealReturn ?? (1 + blendedNominal) / (1 + params.inflationRate) - 1;
+					const realReturn = planningRealReturn;
 					withdrawal = calculateWithdrawal('amortized', {
 						// Qui il prelievo avviene DOPO il rendimento dell'anno (rata
 						// anticipata), mentre la formula e' a rata posticipata (corretta nel
 						// proiettore deterministico, che preleva a fine anno): scontare il
 						// portafoglio di un periodo la rende esatta. Senza, a rendimenti in
 						// linea col piano la spesa reale calava di ~15% in 30 anni.
-						portfolio: realReturn > -1 ? portfolio / (1 + realReturn) : portfolio,
+						// Con reddito livellato si aggiunge il VA dei redditi futuri (anch'esso
+						// a rata anticipata, quindi con lo stesso sconto di un periodo).
+						portfolio:
+							realReturn > -1
+								? (portfolio + incomePVNominal) / (1 + realReturn)
+								: portfolio + incomePVNominal,
 						age: (params.currentAge ?? 40) + year,
 						lifeExpectancy: params.lifeExpectancy ?? 90,
 						realReturn,
@@ -643,11 +719,36 @@ function runSingleSimulation(params: MonteCarloParams): {
 				pensionFundIncomeAt(year) * cumulativeInflation;
 
 			previousWithdrawal = withdrawal;
-			// Spesa effettiva: il prelievo della strategia, ma non oltre quanto
-			// disponibile (portafoglio + redditi) se il portafoglio si esaurisce.
-			const available = portfolio + pensionNow + otherIncomeNow;
-			realSpending.push(Math.min(withdrawal, Math.max(0, available)) / cumulativeInflation);
-			portfolio -= withdrawal - pensionNow - otherIncomeNow;
+			const netNeed = withdrawal - pensionNow - otherIncomeNow;
+			if (realizationTax) {
+				// Capital gain alla vendita, sulla quota di plusvalenza del portafoglio
+				const gainShare = Math.max(0, 1 - costBasis / portfolio);
+				const effRate = Math.min(0.99, capGainsRate * gainShare);
+				// Netto ottenibile vendendo tutto il portafoglio
+				const available = portfolio * (1 - effRate) + pensionNow + otherIncomeNow;
+				realSpending.push(Math.min(withdrawal, Math.max(0, available)) / cumulativeInflation);
+				if (netNeed > 0) {
+					const grossNeeded = netNeed / (1 - effRate);
+					if (grossNeeded >= portfolio) {
+						// Il venduto non basta: portafoglio esaurito (fallimento)
+						portfolio = 0;
+						costBasis = 0;
+					} else {
+						costBasis -= costBasis * (grossNeeded / portfolio);
+						portfolio -= grossNeeded;
+					}
+				} else {
+					// Surplus dei redditi reinvestito: aumenta anche il costo di carico
+					portfolio -= netNeed;
+					costBasis -= netNeed;
+				}
+			} else {
+				// Spesa effettiva: il prelievo della strategia, ma non oltre quanto
+				// disponibile (portafoglio + redditi) se il portafoglio si esaurisce.
+				const available = portfolio + pensionNow + otherIncomeNow;
+				realSpending.push(Math.min(withdrawal, Math.max(0, available)) / cumulativeInflation);
+				portfolio -= netNeed;
+			}
 		} else if (isRetired) {
 			// Portafoglio esaurito: restano solo i redditi passivi
 			const ageNow = (params.currentAge ?? 40) + year;
