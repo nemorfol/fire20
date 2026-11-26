@@ -55,6 +55,19 @@ Anno fiscale di riferimento del preset: **2026** (`DEFAULT_2026.year`).
 | Aliquota parasubordinato (quota collaboratore)   | 11,24%                                                                               | Gestione separata INPS                                    | `DEFAULT_2026.inps.parasubordinato` — `assumptions.ts`    |
 | Aliquota autonomo (gestione separata, referenza) | 26,23%                                                                               | Gestione separata INPS                                    | `DEFAULT_2026.inps.autonomo` — `assumptions.ts`           |
 
+### Montante contributivo: rivalutazione (capitalizzazione)
+
+| Parametro                              | Valore                                                                                                                                                   | Fonte normativa                                                                     | Costante / file                                                     |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Tasso di capitalizzazione del montante | 1,5% annuo (stima prudenziale della variazione media quinquennale del PIL nominale calcolata dall'ISTAT; sovrascrivibile dal chiamante)                   | Art. 1, c. 9, L. 335/1995                                                            | `DEFAULT_MONTANTE_REVALUATION` — `inps-core.ts`                     |
+| Modello di capitalizzazione            | L'INTERO montante si rivaluta su base composta al 31/12 di ogni anno fino alla decorrenza, esclusa la contribuzione dell'anno stesso, **anche negli anni senza nuovi versamenti** (gap di carriera, stop contributi all'età FIRE) | Art. 1, c. 8, L. 335/1995 (testo su normattiva.it)                                   | `capitalizeMontante` — `inps-core.ts` (usato da entrambi i percorsi) |
+
+> Nota (intervento E1, 2026-07): prima i due percorsi divergevano fino a ~28% nello scenario
+> stop-contributi FIRE (`pension-italy` congelava il montante nel gap, `inps-simulator` lo
+> rivalutava contando due volte la rivalutazione dei contributi futuri) ed entrambi rivalutavano
+> il blocco già maturato solo fino ad oggi anziché fino alla decorrenza. Il modello unico
+> corregge entrambe le cose: le stime coincidono e risultano più alte di prima.
+
 ### Coefficienti di trasformazione (montante → pensione annua)
 
 Fonte unica per tutto il motore (`pension-italy.ts` e `inps-simulator.ts` li importano da qui):

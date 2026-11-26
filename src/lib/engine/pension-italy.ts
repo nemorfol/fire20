@@ -7,7 +7,7 @@ import {
 	COMPUTATION_RATES,
 	DEFAULT_MONTANTE_REVALUATION,
 	SOCIAL_ALLOWANCE_MONTHLY_2026,
-	revalueMontante
+	capitalizeMontante
 } from './inps-core.js';
 
 // Re-export per retrocompatibilita': altri moduli (es. pension-fund.ts)
@@ -90,8 +90,10 @@ const CONTRIBUTION_RATE = COMPUTATION_RATES.dipendente;
  * Calcola la pensione con il metodo contributivo INPS.
  *
  * Il calcolo:
- * 1. Si calcola il montante contributivo: somma dei contributi versati (33% dello stipendio)
- *    rivalutati annualmente con il tasso medio del PIL nominale
+ * 1. Si calcola il montante contributivo: contributi versati (33% dello stipendio)
+ *    accreditati anno per anno, con rivalutazione dell'intero montante ogni anno
+ *    al tasso medio del PIL nominale FINO ALLA DECORRENZA, anche negli anni senza
+ *    nuovi versamenti (L. 335/1995 art. 1 c. 8-9 — vedi inps-core.ts)
  * 2. Si applica il coefficiente di trasformazione basato sull'età di pensionamento
  * 3. Pensione annuale = montante * coefficiente
  *
@@ -122,39 +124,36 @@ export function calculateContributivePension(
 		};
 	}
 
-	const yearsToRetirement = retirementAge - currentAge;
-
-	// Stima del montante già accumulato (contributi passati rivalutati)
-	// Semplificazione: usiamo lo stipendio attuale come media per gli anni passati
-	let montante = 0;
-
-	// Montante per gli anni già lavorati
 	// Clamp difensivo: anni di contribuzione fuori range (input senza guard JS)
 	// falserebbero il montante (issue #10).
 	const safeContribYears = Math.max(0, Math.min(50, currentContributionYears || 0));
-	for (let i = safeContribYears; i > 0; i--) {
-		const yearsAgo = i;
-		const pastSalary = currentSalary / Math.pow(1 + salaryGrowthRate, yearsAgo);
-		const contribution = pastSalary * CONTRIBUTION_RATE;
-		// Rivaluta fino ad oggi
-		montante += revalueMontante(contribution, yearsAgo, montanteRevaluationRate);
-	}
 
-	// Montante per gli anni futuri: si versano contributi solo fino alla fine
-	// lavoro (FIRE); il montante gia' accumulato continua a rivalutarsi fino alla
-	// pensione anche nel "gap" senza nuovi versamenti. (#37)
+	// Modello unico del montante (E1, L. 335/1995 art. 1 c. 8-9, vedi
+	// `capitalizeMontante` in inps-core.ts): contributi accreditati anno per anno
+	// e rivalutazione dell'INTERO montante ogni anno fino alla decorrenza, anche
+	// negli anni senza versamenti (gap FIRE, #37). Convenzione anno in corso:
+	// l'anno corrente CONTA come anno di contribuzione allo stipendio attuale
+	// (stessa convenzione di inps-simulator.ts). L'asse "anno" e' qui l'eta'.
+	// Semplificazione: stipendio passato ricostruito deflazionando quello attuale
+	// con il tasso di crescita.
 	const contribEndAge = Math.min(contributionEndAge ?? retirementAge, retirementAge);
-	const futureContribYears = Math.max(0, contribEndAge - currentAge);
 	let lastSalary = currentSalary;
-	for (let i = 1; i <= yearsToRetirement; i++) {
-		if (i > futureContribYears) break; // fine contribuzione: nessun nuovo versamento
-		const futureSalary = currentSalary * Math.pow(1 + salaryGrowthRate, i);
-		lastSalary = futureSalary;
-		const contribution = futureSalary * CONTRIBUTION_RATE;
-		// Rivaluta dal versamento alla pensione
-		const yearsToGrow = yearsToRetirement - i;
-		montante += revalueMontante(contribution, yearsToGrow, montanteRevaluationRate);
-	}
+	const montante = capitalizeMontante({
+		startYear: currentAge - safeContribYears,
+		retirementYear: retirementAge,
+		rate: montanteRevaluationRate,
+		contributionForYear: (age) => {
+			// Gli anni passati hanno sempre contribuito; dai futuri (incluso l'anno
+			// in corso) si versa solo fino all'eta' di fine lavoro/FIRE.
+			if (age >= currentAge && age >= contribEndAge) return 0;
+			const salaryAtAge =
+				age >= currentAge
+					? currentSalary * Math.pow(1 + salaryGrowthRate, age - currentAge)
+					: currentSalary / Math.pow(1 + salaryGrowthRate, currentAge - age);
+			lastSalary = salaryAtAge;
+			return salaryAtAge * CONTRIBUTION_RATE;
+		}
+	});
 
 	// Coefficiente di trasformazione
 	const coefficient = getTransformationCoefficient(retirementAge);

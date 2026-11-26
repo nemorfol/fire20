@@ -5,7 +5,7 @@
  */
 import { getTransformationCoefficient } from './assumptions.js';
 import { getPensionRequirements } from './pension-italy';
-import { COMPUTATION_RATES, revalueMontante, type ContractType } from './inps-core.js';
+import { COMPUTATION_RATES, capitalizeMontante, type ContractType } from './inps-core.js';
 
 export interface INPSSimulatorParams {
 	birthYear: number;
@@ -108,7 +108,12 @@ function isInGap(year: number, gaps: { fromYear: number; toYear: number }[] | un
 }
 
 /**
- * Proietta il montante contributivo anno per anno.
+ * Proietta il montante contributivo anno per anno con il modello unico di
+ * `inps-core.ts` (E1, L. 335/1995 art. 1 c. 8-9): contributi accreditati anno
+ * per anno e rivalutazione dell'INTERO montante ogni anno fino alla decorrenza,
+ * anche negli anni senza versamenti (gap di carriera, stop FIRE #37).
+ * Convenzione anno in corso: l'anno solare corrente conta come anno di
+ * contribuzione allo stipendio attuale.
  */
 function projectMontante(
 	params: INPSSimulatorParams,
@@ -119,52 +124,44 @@ function projectMontante(
 	lastSalary: number;
 } {
 	const currentYear = new Date().getFullYear();
-	const currentAge = currentYear - params.birthYear;
 	const retirementYear = params.birthYear + retirementAge;
 	const contributionRate = COMPUTATION_RATES[params.contractType] ?? COMPUTATION_RATES.dipendente;
 	const growthRate = params.salaryGrowthRate / 100;
 	const partTimeFactor = params.partTime ? params.partTimePercentage / 100 : 1;
 
-	// Se abbiamo un montante esistente, lo usiamo come base
-	let montante = params.existingMontante || 0;
+	// Se il montante maturato e' noto (estratto conto INPS) lo usiamo come base
+	// e partiamo dall'anno corrente; altrimenti ricostruiamo anche il passato.
+	const existingMontante = params.existingMontante || 0;
+	const startYear =
+		existingMontante > 0
+			? currentYear
+			: currentYear - Math.max(0, params.existingContributionYears);
 
-	// Se non abbiamo montante esistente, calcoliamo quello passato
-	if (montante === 0 && params.existingContributionYears > 0) {
-		const startYear = currentYear - params.existingContributionYears;
-		for (let year = startYear; year < currentYear; year++) {
-			if (isInGap(year, params.careerGaps)) continue;
-			const yearsFromNow = currentYear - year;
-			const pastSalary = params.currentGrossSalary / Math.pow(1 + growthRate, yearsFromNow);
-			const contribution = pastSalary * contributionRate * partTimeFactor;
-			// Rivaluta fino ad oggi
-			montante += revalueMontante(contribution, yearsFromNow);
-		}
-	}
-
-	// Proiezione futura
 	let contributionYears = params.existingContributionYears;
 	let lastSalary = params.currentGrossSalary;
 
-	for (let year = currentYear; year < retirementYear; year++) {
-		// Stop contribuzione alla fine lavoro / FIRE: oltre contributionEndAge il
-		// montante si rivaluta ma non si versano nuovi contributi. (#37)
-		const ageThisYear = year - params.birthYear;
-		const contribStopped =
-			params.contributionEndAge != null && ageThisYear >= params.contributionEndAge;
-		if (isInGap(year, params.careerGaps) || contribStopped) {
-			// Rivaluta il montante esistente ma non aggiungi contributi
-			montante = revalueMontante(montante, 1);
-			continue;
+	let montante = capitalizeMontante({
+		startYear,
+		retirementYear,
+		initialMontante: existingMontante,
+		contributionForYear: (year) => {
+			if (isInGap(year, params.careerGaps)) return 0;
+			if (year < currentYear) {
+				// Ricostruzione del passato: stipendio deflazionato con la crescita
+				const yearsFromNow = currentYear - year;
+				const pastSalary = params.currentGrossSalary / Math.pow(1 + growthRate, yearsFromNow);
+				return pastSalary * contributionRate * partTimeFactor;
+			}
+			// Stop contribuzione alla fine lavoro / FIRE: oltre contributionEndAge il
+			// montante si rivaluta ma non si versano nuovi contributi. (#37)
+			const ageThisYear = year - params.birthYear;
+			if (params.contributionEndAge != null && ageThisYear >= params.contributionEndAge) return 0;
+			const futureSalary = params.currentGrossSalary * Math.pow(1 + growthRate, year - currentYear);
+			lastSalary = futureSalary;
+			contributionYears++;
+			return futureSalary * contributionRate * partTimeFactor;
 		}
-		const yearsFromNow = year - currentYear;
-		const futureSalary = params.currentGrossSalary * Math.pow(1 + growthRate, yearsFromNow);
-		lastSalary = futureSalary;
-		const contribution = futureSalary * contributionRate * partTimeFactor;
-		// Rivaluta dal versamento alla pensione
-		const yearsToGrow = retirementYear - year - 1;
-		montante += revalueMontante(contribution, yearsToGrow);
-		contributionYears++;
-	}
+	});
 
 	// Aggiungi riscatto laurea
 	if (params.riscattoLaurea && params.riscattoLaurea.years > 0) {
