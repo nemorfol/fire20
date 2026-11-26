@@ -266,3 +266,129 @@ describe('Monte Carlo - strategie di prelievo variabili e spesa reale', () => {
 		expect(gap(4)).toBeLessThan(46_000);
 	});
 });
+
+describe('Monte Carlo - capital gain alla vendita (capitalGainsTaxMode realization)', () => {
+	// Mercato costante, inflazione nulla: risultati calcolabili a mano.
+	const flat: MonteCarloParams = {
+		...baseParams,
+		initialPortfolio: 100_000,
+		annualContribution: 0,
+		annualExpenses: 10_000,
+		withdrawalRate: 0,
+		withdrawalStrategy: 'fixed',
+		stockAllocation: 1,
+		bondAllocation: 0,
+		yearsToFire: 0,
+		yearsInRetirement: 1,
+		currentAge: 60,
+		lifeExpectancy: 90,
+		simulationMode: 'historical',
+		jointHistoricalSampling: true,
+		iterations: 10,
+		historicalStockReturns: [0],
+		historicalBondReturns: [0],
+		historicalInflation: [0],
+		capitalGainsTaxRate: 0.26
+	};
+
+	it('accumulo: nessuna imposta finche non si vende (differimento)', () => {
+		const p = {
+			...flat,
+			annualExpenses: 0,
+			yearsToFire: 10,
+			historicalStockReturns: [0.1],
+			historicalBondReturns: [0.1]
+		};
+		const accrual = runMonteCarloSimulation(p).medianFinalValue;
+		const realization = runMonteCarloSimulation({
+			...p,
+			capitalGainsTaxMode: 'realization'
+		}).medianFinalValue;
+		expect(realization).toBeCloseTo(100_000 * Math.pow(1.1, 11), 0);
+		expect(accrual).toBeCloseTo(100_000 * Math.pow(1 + 0.1 * 0.74, 11), 0);
+	});
+
+	it('vendita: G = N / (1 - aliquota x quota di plusvalenza)', () => {
+		// Costo 50k su 100k -> plusvalenza 50% -> aliquota effettiva 13%
+		const r = runMonteCarloSimulation({
+			...flat,
+			capitalGainsTaxMode: 'realization',
+			initialCostBasis: 50_000
+		});
+		expect(r.medianFinalValue).toBeCloseTo(100_000 - 10_000 / 0.87, 0);
+		expect(r.spending!.p50[0]).toBeCloseTo(10_000, 0);
+	});
+
+	it('sotto il costo di carico non si paga nulla (e nessun credito)', () => {
+		const r = runMonteCarloSimulation({
+			...flat,
+			capitalGainsTaxMode: 'realization',
+			initialCostBasis: 200_000
+		});
+		expect(r.medianFinalValue).toBeCloseTo(90_000, 0);
+	});
+
+	it('il costo di carico si riduce pro quota: seconda vendita coerente', () => {
+		// Anno 1: vende 11.494,25 (costo -5.747,13); anno 2: stessa quota di plusvalenza
+		const r = runMonteCarloSimulation({
+			...flat,
+			yearsInRetirement: 2,
+			capitalGainsTaxMode: 'realization',
+			initialCostBasis: 50_000
+		});
+		expect(r.medianFinalValue).toBeCloseTo(100_000 - (2 * 10_000) / 0.87, 0);
+	});
+});
+
+describe('Monte Carlo - reddito livellato con la pensione (levelIncomeWithPension)', () => {
+	// 300k, rendimento reale 0, pensione 20k dai 60 anni, orizzonte 50-80
+	const p: MonteCarloParams = {
+		...baseParams,
+		initialPortfolio: 300_000,
+		annualContribution: 0,
+		annualExpenses: 0,
+		withdrawalRate: 0.04,
+		withdrawalStrategy: 'amortized',
+		plannedRealReturn: 0,
+		targetBequest: 0,
+		stockAllocation: 1,
+		bondAllocation: 0,
+		yearsToFire: 0,
+		yearsInRetirement: 30,
+		currentAge: 50,
+		lifeExpectancy: 80,
+		annualPension: 20_000,
+		pensionAge: 60,
+		simulationMode: 'historical',
+		jointHistoricalSampling: true,
+		iterations: 10,
+		historicalStockReturns: [0],
+		historicalBondReturns: [0],
+		historicalInflation: [0]
+	};
+
+	it('amortized: spesa totale piatta = (portafoglio + VA pensione) / anni', () => {
+		const r = runMonteCarloSimulation({ ...p, levelIncomeWithPension: true });
+		const level = (300_000 + 20 * 20_000) / 30;
+		expect(r.spending!.p50[0]).toBeCloseTo(level, 0);
+		expect(r.spending!.p50[9]).toBeCloseTo(level, 0);
+		expect(r.spending!.p50[10]).toBeCloseTo(level, 0);
+		expect(r.spending!.p50[29]).toBeCloseTo(level, 0);
+	});
+
+	it('senza livellamento la rata ignora la pensione futura (spesa bassa nel ponte)', () => {
+		const r = runMonteCarloSimulation(p);
+		expect(r.spending!.p50[0]).toBeCloseTo(10_000, 0);
+		expect(r.spending!.p50[29]).toBeGreaterThan(20_000);
+	});
+
+	it('VPW: la rata si applica a portafoglio + VA dei redditi futuri', () => {
+		const off = runMonteCarloSimulation({ ...p, withdrawalStrategy: 'vpw' });
+		const on = runMonteCarloSimulation({
+			...p,
+			withdrawalStrategy: 'vpw',
+			levelIncomeWithPension: true
+		});
+		expect(on.spending!.p50[0]).toBeCloseTo((off.spending!.p50[0] * 700_000) / 300_000, 0);
+	});
+});

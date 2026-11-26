@@ -87,6 +87,15 @@
 	let targetBequest = $state(0);
 	let capeRatio = $state(currentCAPE);
 	let plannedRealReturn = $state(3.0);
+	// Reddito livellato (VPW / die-with-X): la rata considera anche il valore
+	// attuale di pensione e altri redditi futuri (approccio ciclo di vita).
+	let levelIncomeWithPension = $state(true);
+	// Capital gain: 'realization' = alla vendita, sulla quota di plusvalenza
+	// (ETF ad accumulazione); 'accrual' = ogni anno sui rendimenti (prudente).
+	let capitalGainsTaxMode = $state<'realization' | 'accrual'>('realization');
+	/** Plusvalenza latente oggi, in % del valore del portafoglio */
+	let latentGainPct = $state(0);
+	const levelApplies = $derived(withdrawalStrategy === 'vpw' || withdrawalStrategy === 'amortized');
 
 	const strategyOptions: { value: Strategy; name: string; description: string }[] = [
 		{
@@ -278,6 +287,10 @@
 				capeRatio,
 				targetBequest,
 				plannedRealReturn: plannedRealReturn / 100,
+				levelIncomeWithPension: levelApplies && levelIncomeWithPension,
+				capitalGainsTaxMode,
+				initialCostBasis:
+					initialPortfolio * (1 - Math.min(100, Math.max(0, latentGainPct || 0)) / 100),
 				currentAge,
 				annualPension: pensionAnnual,
 				pensionAge: pensionStartAge,
@@ -317,6 +330,10 @@
 				capeRatio,
 				targetBequest,
 				plannedRealReturn: plannedRealReturn / 100,
+				levelIncomeWithPension: levelApplies && levelIncomeWithPension,
+				capitalGainsTaxMode,
+				initialCostBasis:
+					initialPortfolio * (1 - Math.min(100, Math.max(0, latentGainPct || 0)) / 100),
 				currentAge,
 				annualPension: pensionAnnual,
 				pensionAge: pensionStartAge,
@@ -448,6 +465,35 @@
 					<Helper class="mt-1 text-xs">Default: CAPE S&amp;P 500 attuale ({currentCAPE}).</Helper>
 				</div>
 			{/if}
+			{#if levelApplies}
+				<label class="flex items-start gap-2 text-sm text-indigo-900 dark:text-indigo-200">
+					<input
+						type="checkbox"
+						bind:checked={levelIncomeWithPension}
+						class="mt-0.5 rounded border-gray-300"
+					/>
+					<span
+						><strong>Reddito livellato con la pensione</strong>: la rata si calcola su portafoglio +
+						valore attuale di pensione INPS, fondo pensione e altri redditi futuri. Prima della
+						pensione prelevi di piu', dopo di meno: il reddito totale resta circa costante.</span
+					>
+				</label>
+			{/if}
+			{#if withdrawalStrategy === 'vpw' && levelIncomeWithPension}
+				<div class="max-w-xs">
+					<Label for="planned-real-return-vpw" class="mb-2"
+						>Rendimento reale per scontare i redditi futuri (%)</Label
+					>
+					<Input
+						id="planned-real-return-vpw"
+						type="number"
+						bind:value={plannedRealReturn}
+						min={-2}
+						max={8}
+						step={0.5}
+					/>
+				</div>
+			{/if}
 			{#if withdrawalStrategy === 'amortized'}
 				<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
 					<div>
@@ -475,6 +521,48 @@
 							step={0.5}
 						/>
 					</div>
+				</div>
+			{/if}
+		</div>
+
+		<!-- Tassazione del capital gain nel Monte Carlo -->
+		<div
+			class="grid grid-cols-1 gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 sm:grid-cols-2 dark:border-amber-800 dark:bg-amber-900/20"
+		>
+			<div>
+				<Label for="cg-mode" class="mb-2">Capital gain</Label>
+				<Select
+					id="cg-mode"
+					items={[
+						{ value: 'realization', name: 'Alla vendita, sulla plusvalenza (ETF ad accumulo)' },
+						{ value: 'accrual', name: 'Ogni anno sui rendimenti (prudente)' }
+					]}
+					bind:value={capitalGainsTaxMode}
+				/>
+				<p class="mt-2 text-xs text-amber-800 dark:text-amber-300">
+					{#if capitalGainsTaxMode === 'realization'}
+						Paghi l'aliquota solo sulla parte di guadagno di cio' che vendi per coprire le spese: il
+						resto continua a rendere (differimento d'imposta).
+					{:else}
+						Tassa ogni anno i rendimenti positivi come se fossero realizzati: sottostima il
+						risultato di chi detiene ETF ad accumulazione.
+					{/if}
+				</p>
+			</div>
+			{#if capitalGainsTaxMode === 'realization'}
+				<div>
+					<Label for="latent-gain" class="mb-2">Plusvalenza latente oggi (% del portafoglio)</Label>
+					<Input
+						id="latent-gain"
+						type="number"
+						bind:value={latentGainPct}
+						min={0}
+						max={100}
+						step={5}
+					/>
+					<Helper class="mt-1 text-xs"
+						>Quota del valore attuale che e' guadagno non ancora tassato (0 = appena investito).</Helper
+					>
 				</div>
 			{/if}
 		</div>

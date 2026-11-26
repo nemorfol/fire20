@@ -17,6 +17,16 @@ sua riga nella sezione «Non rilasciato».
 
 ### Aggiunto
 
+- **Capital gain alla vendita nel Monte Carlo** (`capitalGainsTaxMode: 'realization'`, default
+  nella UI): il motore tiene il costo di carico e paga l'aliquota solo sulla quota di
+  plusvalenza di cio' che vende, con vendita lorda G = N / (1 - aliquota x quota di
+  plusvalenza). Differimento d'imposta come per un ETF ad accumulazione; nessun credito sotto il
+  costo. Plusvalenza latente iniziale indicabile. La modalita' precedente (ogni anno sui
+  rendimenti) resta selezionabile ed e' il default del motore.
+- **Reddito livellato con la pensione** per VPW e die-with-X (`levelIncomeWithPension`): la rata
+  si calcola su portafoglio + valore attuale dei redditi futuri (INPS, fondo pensione, altri
+  redditi), come nei modelli "ciclo di vita" (Schreiber & Weber). Nel ponte prima della pensione
+  si preleva di piu', il reddito totale resta circa piatto. Guida aggiornata.
 - **Preset storico «All-World in EUR»** (nuovo default del Monte Carlo storico): azioni come mix
   a peso fisso di S&P 500 e MSCI World ex-USA, entrambi convertiti in lire/EUR coi cambi storici
   e ribilanciati ogni anno, con BTP e inflazione ISTAT. Peso USA modificabile (default 70%, peso
