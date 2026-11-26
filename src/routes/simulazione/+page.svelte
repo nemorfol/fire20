@@ -16,7 +16,12 @@
 	import { blendedCapitalGainsRate } from '$lib/engine/tax-italy';
 	import { createResult, getAllResults, deleteResult } from '$lib/db/results';
 	import { getAllProfiles } from '$lib/db/profiles';
-	import { calculateLiquidNetWorth } from '$lib/engine/fire-calculator';
+	import { calculateLiquidNetWorth, liquidMonthlyContributions } from '$lib/engine/fire-calculator';
+	import {
+		pensionFundPlanFromProfile,
+		type PensionFundPlan,
+		type PensionFundProfileData
+	} from '$lib/engine/rita';
 
 	import ConfigPanel from '$lib/components/simulazione/ConfigPanel.svelte';
 	import SuccessGauge from '$lib/components/simulazione/SuccessGauge.svelte';
@@ -67,6 +72,9 @@
 	let seriesPresetId = $state<SeriesPresetId>('it-default');
 	/** Finestra storica effettivamente usata dall'ultimo run (per trasparenza) */
 	let historyWindow = $state<{ from: number; to: number } | null>(null);
+	// #41: dati del fondo pensione dal profilo e piano usato nell'ultima simulazione
+	let fundProfile = $state<PensionFundProfileData | null>(null);
+	let lastFundPlan = $state<PensionFundPlan | null>(null);
 
 	onMount(() => {
 		loadPreviousResults();
@@ -96,8 +104,15 @@
 					getPreset(p.assumptionsId).capital
 				);
 				mcBolloExemptShare = liquid > 0 ? (p.portfolio.bfp ?? 0) / liquid : 0;
+				// I versamenti al fondo pensione alimentano il fondo, non il portafoglio (#41)
 				const monthly =
-					Object.values(p.monthlyContributions).reduce((s, v) => s + (v || 0), 0) * 12;
+					liquidMonthlyContributions(p.monthlyContributions as unknown as Record<string, number>) *
+					12;
+				fundProfile = {
+					portfolio: { pensionFund: p.portfolio.pensionFund ?? 0 },
+					monthlyContributions: { pensionFund: p.monthlyContributions.pensionFund ?? 0 },
+					pension: { contributionYears: p.pension?.contributionYears ?? 0 }
+				};
 				const income = (p.annualIncome || 0) + (p.otherIncome || 0);
 				const contribution =
 					income > 0 ? Math.min(monthly, Math.max(0, income - (p.annualExpenses || 0))) : monthly;
@@ -200,6 +215,26 @@
 			}
 		}
 
+		// #41: fondo pensione come asset differito. Il piano (RITA o prestazione) e'
+		// ricalcolato con le eta' del pannello; il rendimento del fondo e' quello
+		// atteso del mix azioni/obbligazioni (tassato al 20% in rita.ts).
+		lastFundPlan = null;
+		if (fundProfile && params.currentAge !== undefined) {
+			const retirementAge = params.currentAge + (params.yearsToFire ?? 0);
+			const stockAlloc = params.stockAllocation ?? 0.7;
+			const plan = pensionFundPlanFromProfile(fundProfile, {
+				currentAge: params.currentAge,
+				retirementAge,
+				pensionAge: params.pensionAge ?? 67,
+				lifeExpectancy: retirementAge + (params.yearsInRetirement ?? 30),
+				nominalReturn:
+					(params.expectedStockReturn ?? 0.07) * stockAlloc +
+					(params.expectedBondReturn ?? 0.03) * (params.bondAllocation ?? 1 - stockAlloc),
+				inflationRate: params.inflationRate ?? 0.02
+			});
+			if (plan.mode !== 'none') lastFundPlan = plan;
+		}
+
 		try {
 			worker = runMonteCarloWorker(
 				worker,
@@ -243,7 +278,8 @@
 					annualPension: params.annualPension ?? 0,
 					pensionAge: params.pensionAge,
 					otherIncome: params.otherIncome ?? 0,
-					otherIncomeEndAge: params.otherIncomeEndAge
+					otherIncomeEndAge: params.otherIncomeEndAge,
+					pensionFundIncomeByAge: lastFundPlan?.incomeByAge
 				} satisfies MonteCarloParams,
 				{
 					onProgress: (percent) => {
@@ -432,6 +468,17 @@
 						>Ultima simulazione: anni {historyWindow.from}-{historyWindow.to} ({historyWindow.to -
 							historyWindow.from +
 							1} anni), valuta {getSeriesPreset(seriesPresetId).currency}.</span
+					>
+				{/if}
+				{#if lastFundPlan}
+					<br /><span class="font-medium text-violet-700 dark:text-violet-300"
+						>Fondo pensione (fuori dal portafoglio):
+						{#if lastFundPlan.mode === 'rita'}
+							RITA netta ~{Math.round(lastFundPlan.ritaAnnualNet).toLocaleString('it-IT')} &euro;/anno
+							(euro di oggi) dai {lastFundPlan.startAge} ai {lastFundPlan.ritaEndAge} anni.
+						{:else}
+							prestazione dai {lastFundPlan.startAge} anni (50% capitale, 50% rendita).
+						{/if}</span
 					>
 				{/if}
 			</p>

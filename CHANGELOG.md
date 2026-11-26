@@ -65,6 +65,31 @@ sua riga nella sezione «Non rilasciato».
 
 ### Corretto
 
+- **Fondo pensione come asset differito, con RITA** (#41): il montante del fondo pensione non è
+  più nel patrimonio liquido, perché non si può prelevare al 4% prima della RITA o della
+  prestazione. Prima il FIRE Number lo trattava come capitale disponibile da subito e anticipava il
+  FIRE. Ora il fondo cresce a parte, con i propri versamenti e rendimenti tassati al 20%, e diventa
+  reddito netto (`src/lib/engine/rita.ts`). Le due vie sono:
+  - **RITA** (art. 11, c. 4, D.Lgs. 252/2005): Caso 1, fino a 5 anni prima della vecchiaia, con
+    cessazione del lavoro e almeno 20 anni di contributi; Caso 2, fino a 10 anni prima, con
+    inoccupazione oltre 24 mesi.
+  - **prestazione** all'età di pensione: 50% in capitale e 50% in rendita.
+
+  Il ponte diventa a tre fasi, FIRE → RITA → INPS. Il valore attuale degli incassi riduce il FIRE
+  Number. Gli stessi flussi entrano nella proiezione (colonna _Fondo pens. (RITA)_ e montante
+  residuo), nell'export del cash-flow e nel Monte Carlo (`pensionFundIncomeByAge`). Anche
+  _Simulazione_, _Scenari_, _Stress test_, _Confronto profili_ e dashboard ricevono questi flussi.
+  Anche i versamenti mensili al fondo non alimentano più il portafoglio liquido. Nel calcolatore un
+  riquadro dedicato mostra caso, date, montante e ritenuta, con un interruttore per escludere il
+  fondo. Le ipotesi sono prudenziali: ritenuta del 15% sull'intera rata, nessun risparmio IRPEF sui
+  contributi dedotti, 5 anni di adesione dati per maturati. **Le stime cambiano**: con un fondo
+  pensione consistente il FIRE può risultare più tardi di prima.
+- **Dashboard, Stress test e Scenari partono dal patrimonio liquido**: prima usavano il patrimonio
+  totale, che includeva anche immobili e TFR. Ora sono coerenti con il calcolatore.
+- **Capitale della prestazione al 50%**: il simulatore di erogazione (pagina Fondo pensione)
+  permetteva fino al 60% in capitale, ma l'innalzamento previsto dalla L. 199/2025 è stato
+  soppresso dall'art. 16-ter della L. 112/2026, che ha convertito il D.L. 62/2026. Il limite torna
+  al 50% (`MAX_CAPITAL_PCT`) in motore, UI e guida.
 - **Die-with-X: eredita' target non indicizzata** (Monte Carlo e proiettore deterministico):
   l'importo da lasciare, in euro di oggi, veniva confrontato col portafoglio in euro correnti. Ora
   e' rivalutato con l'inflazione (cumulata sul percorso). Nel Monte Carlo la formula di

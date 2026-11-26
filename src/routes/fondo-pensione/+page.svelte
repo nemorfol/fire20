@@ -42,8 +42,9 @@
 						<p class="text-sm text-gray-700 dark:text-gray-300">
 							La Legge di Bilancio 2026 (in vigore dal <strong>1 luglio 2026</strong>) introduce
 							nuove modalita' di erogazione piu' flessibili. Prima esistevano solo rendita vitalizia
-							e capitale (max 50%). Ora le opzioni sono <strong>5</strong>, con il capitale alzato
-							al <strong>60%</strong>.
+							e capitale (max 50%). Ora le opzioni sono <strong>5</strong>. Il capitale resta al
+							<strong>50%</strong>: l'innalzamento al 60% previsto dalla manovra e' stato soppresso
+							dall'art. 16-ter della L. 112/2026.
 						</p>
 					</div>
 				</div>
@@ -148,10 +149,11 @@
 						</div>
 						<div>
 							<h4 class="font-semibold text-yellow-700 dark:text-yellow-300">
-								Capitale fino al 60%
+								Capitale fino al 50%
 							</h4>
 							<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-								Era 50%, ora 60%. 100% capitale se rendita sotto ~267 EUR/mese.
+								Il 60% della manovra 2026 e' stato soppresso (L. 112/2026). 100% capitale se rendita
+								sotto ~267 EUR/mese.
 							</p>
 						</div>
 					</div>

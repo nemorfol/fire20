@@ -29,6 +29,7 @@ export function buildCashFlowCSV(projections: YearlyProjection[]): string {
 		'Contributi INPS',
 		'Stipendio netto',
 		'Pensione INPS',
+		'Fondo pensione (RITA/prestazione)',
 		'Altri redditi',
 		'Rendimenti lordi',
 		'Tasse rendimenti',
@@ -39,7 +40,8 @@ export function buildCashFlowCSV(projections: YearlyProjection[]): string {
 		'Rata mutuo',
 		'Spese totali',
 		'Prelievi portafoglio',
-		'Portafoglio fine anno'
+		'Portafoglio fine anno',
+		'Montante fondo pensione'
 	];
 
 	const rows = projections.map((p) => [
@@ -50,6 +52,7 @@ export function buildCashFlowCSV(projections: YearlyProjection[]): string {
 		fmt(p.inpsContributions),
 		fmt(p.netSalary),
 		fmt(p.pensionIncome),
+		fmt(p.pensionFundIncome),
 		fmt(p.otherIncomeActive),
 		fmt(p.investmentReturnsGross),
 		fmt(p.taxes),
@@ -60,7 +63,8 @@ export function buildCashFlowCSV(projections: YearlyProjection[]): string {
 		fmt(p.mortgagePayment),
 		fmt(p.totalExpenses),
 		fmt(p.withdrawals),
-		fmt(p.portfolio)
+		fmt(p.portfolio),
+		fmt(p.pensionFundBalance)
 	]);
 
 	const lines = [

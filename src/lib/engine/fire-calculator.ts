@@ -10,6 +10,7 @@ import { DEFAULT_2026, type AssumptionSet } from './assumptions';
 import { totalFamilyExpenses, totalUniversityExpenses } from './family';
 import { computeYearlyImpact, type LifeEvent } from './life-events';
 import { spouseYearlyCashFlow } from './couple';
+import { pensionFundIncomePV, type PensionFundPlan } from './rita';
 import type { Child, Mortgage, Spouse } from '$lib/db/index';
 
 /** Proiezione anno per anno del portafoglio */
@@ -71,6 +72,10 @@ export interface YearlyProjection {
 	equityShare?: number;
 	/** Netto del coniuge nell'anno (lavoro + pensione, post-IRPEF separata) */
 	spouseNetIncome?: number;
+	/** Incasso netto dal fondo pensione nell'anno (RITA o prestazione), #41 */
+	pensionFundIncome?: number;
+	/** Montante del fondo pensione a fine anno (asset differito, fuori dal portafoglio), #41 */
+	pensionFundBalance?: number;
 }
 
 /**
@@ -195,6 +200,12 @@ export interface ProjectionParams {
 	 * calcolati separatamente sul reddito del coniuge (no joint filing).
 	 */
 	spouse?: Spouse;
+	/**
+	 * Piano del fondo pensione (asset differito, vedi `planPensionFund` in
+	 * rita.ts): i flussi netti RITA/prestazione (euro di oggi) entrano come
+	 * reddito dell'anno. Il montante NON fa parte di `initialPortfolio`. #41
+	 */
+	pensionFundPlan?: Pick<PensionFundPlan, 'incomeByAge' | 'balanceByAge'>;
 }
 
 /**
@@ -247,6 +258,13 @@ export function calculateFireNumberWithPension(params: {
 	baseYear?: number;
 	/** Eta attuale (serve a mappare retirementAge → calendar year) */
 	currentAge?: number;
+	/**
+	 * Flussi netti del fondo pensione per eta' (RITA / prestazione, euro di
+	 * oggi, da `planPensionFund`): il loro valore attuale riduce il capitale
+	 * necessario. Con la RITA il ponte diventa a tre fasi:
+	 * FIRE -> inizio RITA -> pensione INPS. #41
+	 */
+	pensionFundIncomeByAge?: Record<number, number>;
 }): number {
 	const {
 		annualExpenses,
@@ -261,7 +279,8 @@ export function calculateFireNumberWithPension(params: {
 		children,
 		mortgage,
 		baseYear = new Date().getFullYear(),
-		currentAge = retirementAge
+		currentAge = retirementAge,
+		pensionFundIncomeByAge
 	} = params;
 
 	if (withdrawalRate <= 0) return Infinity;
@@ -276,7 +295,11 @@ export function calculateFireNumberWithPension(params: {
 
 	// Calcolo PV del flusso "altri redditi" attivo dopo il FIRE fino a otherIncomeEndAge
 	const otherIncomeYears = Math.max(0, Math.min(otherIncomeEndAge, lifeExpectancy) - retirementAge);
-	const pvOtherIncome = annuityPV(otherIncome, otherIncomeYears);
+	// Il fondo pensione (RITA/prestazione) e' trattato come un reddito futuro:
+	// stessa logica degli altri redditi, ma con flussi per eta'.
+	const pvOtherIncome =
+		annuityPV(otherIncome, otherIncomeYears) +
+		(pensionFundIncomeByAge ? pensionFundIncomePV(pensionFundIncomeByAge, retirementAge, r) : 0);
 
 	// PV delle spese familiari future che cadono DOPO il FIRE: figli ancora a
 	// carico dopo il retirementAge, rate di mutuo residue. Usiamo euro di oggi
@@ -421,9 +444,16 @@ export const LIQUID_ASSET_KEYS = [
 	'cash',
 	'gold',
 	'crypto',
-	'pensionFund',
 	'other'
 ] as const;
+
+/**
+ * Asset differiti: il fondo pensione complementare non e' prelevabile al 4%.
+ * Cresce separatamente e diventa reddito via RITA o prestazione (vedi rita.ts).
+ * Fino al 2026-11 era contato tra i liquidi: sovrastimava il patrimonio di
+ * partenza e anticipava il FIRE (#41).
+ */
+export const DEFERRED_ASSET_KEYS = ['pensionFund'] as const;
 
 /**
  * Asset illiquidi: producono reddito (affitti) o hanno vincoli di prelievo
@@ -445,6 +475,23 @@ export function calculateLiquidNetWorth(portfolio: Record<string, number>): numb
  */
 export function calculateIlliquidNetWorth(portfolio: Record<string, number>): number {
 	return ILLIQUID_ASSET_KEYS.reduce((sum, key) => sum + (portfolio[key] || 0), 0);
+}
+
+/** Patrimonio differito: montante del fondo pensione (#41) */
+export function calculateDeferredNetWorth(portfolio: Record<string, number>): number {
+	return DEFERRED_ASSET_KEYS.reduce((sum, key) => sum + (portfolio[key] || 0), 0);
+}
+
+/**
+ * Risparmio annuo investibile nel portafoglio liquido: i versamenti mensili
+ * del profilo ESCLUSI quelli al fondo pensione, che alimentano il fondo (#41).
+ */
+export function liquidMonthlyContributions(contributions: Record<string, number>): number {
+	return Object.entries(contributions).reduce(
+		(sum, [key, value]) =>
+			(DEFERRED_ASSET_KEYS as readonly string[]).includes(key) ? sum : sum + (value || 0),
+		0
+	);
 }
 
 /**
@@ -503,7 +550,8 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 		glidePathEndEquity = 0.3,
 		expectedEquityReturn,
 		expectedBondReturn,
-		spouse
+		spouse,
+		pensionFundPlan
 	} = params;
 	// Se non passati esplicitamente, derivo i rendimenti per asset class dal
 	// rendimento medio: equity = expectedReturn + 2 punti, bond = expectedReturn - 2.
@@ -598,8 +646,14 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 		// e dagli eventi di vita. incomeMultiplier modula il reddito (0 = disoccupato).
 		// Il bonus si aggiunge ai contributi, le spese una-tantum li riducono.
 		// Se la pensione INPS arriva DURANTE l'accumulazione, viene aggiunta.
+		// Fondo pensione (#41): incasso netto RITA/prestazione dell'anno, in euro
+		// correnti. Da reddito: in accumulo si aggiunge ai contributi, in FIRE
+		// riduce il prelievo dal portafoglio (come la pensione INPS).
+		const pensionFundIncome = (pensionFundPlan?.incomeByAge[age] ?? 0) * inflationCumulative;
+		const pensionFundBalance = (pensionFundPlan?.balanceByAge[age] ?? 0) * inflationCumulative;
 		const accumPensionIncome =
-			!isRetired && age >= pensionAge ? annualPension * inflationCumulative : 0;
+			(!isRetired && age >= pensionAge ? annualPension * inflationCumulative : 0) +
+			(!isRetired ? pensionFundIncome : 0);
 		const nominalContribution = annualContribution * inflationCumulative;
 		const incomeAdjusted =
 			nominalContribution * lifeImpact.incomeMultiplier + lifeIncomeDeltaNominal;
@@ -670,7 +724,7 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 			// entrate passive = pensione + altri redditi + bonus una-tantum + netto coniuge
 			// uscite = prelievo base + spese famiglia + spese una-tantum
 			const totalPassiveIncome =
-				pensionIncome + otherIncomeActive + lifeBonusNominal + spouseTotalNet;
+				pensionIncome + otherIncomeActive + lifeBonusNominal + spouseTotalNet + pensionFundIncome;
 			const totalCashNeeds = baseWithdrawal + familyTotalNet + lifeExpenseNominal;
 			const netNeed = totalCashNeeds - totalPassiveIncome;
 
@@ -788,6 +842,8 @@ export function projectPortfolio(params: ProjectionParams): YearlyProjection[] {
 			goalBucketBalance: Math.round(goalBucket),
 			goalBucketWithdrawal: Math.round(goalBucketWithdrawal),
 			pensionIncome: pensionIncomeForProjection,
+			pensionFundIncome: Math.round(pensionFundIncome),
+			pensionFundBalance: Math.round(pensionFundBalance),
 			grossSalary: isRetired ? 0 : Math.round(grossSalary),
 			irpef: isRetired ? 0 : Math.round(irpef),
 			inpsContributions: isRetired ? 0 : Math.round(inpsContributions),

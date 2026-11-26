@@ -32,10 +32,13 @@
 		calculateNetWorth,
 		calculateLiquidNetWorth,
 		calculateIlliquidNetWorth,
+		calculateDeferredNetWorth,
+		liquidMonthlyContributions,
 		projectPortfolio,
 		calculateCoastFireNumber,
 		type YearlyProjection
 	} from '$lib/engine/fire-calculator';
+	import { pensionFundPlanFromProfile, type PensionFundPlan } from '$lib/engine/rita';
 	import {
 		optimizeWithdrawalOrder,
 		blendedCapitalGainsRate,
@@ -154,6 +157,29 @@
 	let effPension = $derived(includeFutureIncome ? annualPensionIncome : 0);
 	let effOtherIncome = $derived(includeFutureIncome ? wiOtherIncome : 0);
 	let realReturn = $derived((1 + effectiveReturn / 100) / (1 + inflationRate / 100) - 1);
+
+	// #41: il fondo pensione e' un asset DIFFERITO (non prelevabile al 4%). Cresce
+	// separatamente e diventa reddito via RITA prima della pensione di vecchiaia,
+	// o come prestazione a pensionAge. Il toggle lo esclude del tutto (prudenziale).
+	let includePensionFund = $state(true);
+	let pensionFundPlan = $derived<PensionFundPlan | null>(
+		profile
+			? pensionFundPlanFromProfile(profile, {
+					currentAge: new Date().getFullYear() - profile.birthYear,
+					retirementAge: wiRetirementAge,
+					pensionAge: wiPensionAge,
+					lifeExpectancy: wiLifeExpectancy,
+					nominalReturn: effectiveReturn / 100,
+					inflationRate: inflationRate / 100,
+					assumptions
+				})
+			: null
+	);
+	let effPensionFundPlan = $derived(
+		includePensionFund && pensionFundPlan && pensionFundPlan.mode !== 'none'
+			? pensionFundPlan
+			: undefined
+	);
 	let fireNumberClassic = $derived(calculateFireNumber(annualExpenses, withdrawalRate));
 	let fireNumber = $derived(
 		calculateFireNumberWithPension({
@@ -169,7 +195,8 @@
 			children: profile?.children,
 			mortgage: profile?.mortgage,
 			baseYear: new Date().getFullYear(),
-			currentAge: profile ? new Date().getFullYear() - profile.birthYear : 30
+			currentAge: profile ? new Date().getFullYear() - profile.birthYear : 30,
+			pensionFundIncomeByAge: effPensionFundPlan?.incomeByAge
 		})
 	);
 	let bridgeYears = $derived(Math.max(0, wiPensionAge - wiRetirementAge));
@@ -194,6 +221,9 @@
 	);
 	let illiquidNetWorth = $derived(
 		profile ? calculateIlliquidNetWorth(profile.portfolio as unknown as Record<string, number>) : 0
+	);
+	let deferredNetWorth = $derived(
+		profile ? calculateDeferredNetWorth(profile.portfolio as unknown as Record<string, number>) : 0
 	);
 
 	let annualSavings = $derived(wiAnnualContribution);
@@ -271,7 +301,8 @@
 					glidePathEnabled: profile.glidePathEnabled ?? false,
 					glidePathStartEquity: profile.glidePathStartEquity,
 					glidePathEndEquity: profile.glidePathEndEquity,
-					targetBequest: targetBequest
+					targetBequest: targetBequest,
+					pensionFundPlan: effPensionFundPlan
 				})
 			: []
 	);
@@ -303,7 +334,8 @@
 					assumptions: assumptions,
 					foreignBrokerShare: profile.foreignBrokerShare ?? 0,
 					bolloExemptShare: bolloExemptShare,
-					glidePathEnabled: profile.glidePathEnabled ?? false
+					glidePathEnabled: profile.glidePathEnabled ?? false,
+					pensionFundPlan: effPensionFundPlan
 				}
 			: null
 	);
@@ -328,11 +360,12 @@
 
 	// === Helper: initialize What-If state from profile ===
 	function initWhatIfFromProfile(p: Profile) {
-		// Usiamo il patrimonio LIQUIDO come base per il FIRE (immobili e TFR
-		// non sono prelevabili al 4%).
+		// Usiamo il patrimonio LIQUIDO come base per il FIRE (immobili, TFR e
+		// fondo pensione non sono prelevabili al 4%). I versamenti al fondo
+		// pensione alimentano il fondo, non il portafoglio (#41).
 		const liquidNw = calculateLiquidNetWorth(p.portfolio as unknown as Record<string, number>);
 		const monthlyTotal =
-			Object.values(p.monthlyContributions).reduce((s, v) => s + (v || 0), 0) * 12;
+			liquidMonthlyContributions(p.monthlyContributions as unknown as Record<string, number>) * 12;
 		const income = (p.annualIncome || 0) + (p.otherIncome || 0);
 		// I contributi non possono superare il reddito disponibile
 		const contribution =
@@ -471,6 +504,66 @@
 				</Helper>
 			</div>
 
+			<!-- #41: fondo pensione come asset differito (RITA / prestazione) -->
+			{#if pensionFundPlan && pensionFundPlan.mode !== 'none'}
+				<div
+					class="mb-6 rounded-lg border border-violet-200 bg-violet-50 p-4 dark:border-violet-800 dark:bg-violet-900/20"
+				>
+					<h3 class="mb-1 text-base font-semibold text-violet-900 dark:text-violet-200">
+						Fondo pensione &mdash; {pensionFundPlan.mode === 'rita' ? 'RITA' : 'prestazione'} (non prelevabile
+						al 4%)
+					</h3>
+					<p class="mb-3 text-sm text-violet-800 dark:text-violet-300">
+						Il montante ({formatCurrency(deferredNetWorth)} oggi) non e' nel patrimonio liquido: cresce
+						a parte e diventa reddito solo
+						{#if pensionFundPlan.mode === 'rita'}
+							con la <strong>RITA</strong> (Caso {pensionFundPlan.ritaCase}:
+							{pensionFundPlan.ritaCase === 1
+								? 'cessazione del lavoro e almeno 20 anni di contributi'
+								: 'inoccupazione da oltre 24 mesi'}), dai {pensionFundPlan.startAge} ai {pensionFundPlan.ritaEndAge}
+							anni.
+						{:else}
+							a {wiPensionAge} anni come prestazione (50% capitale, 50% rendita): con il FIRE a {wiRetirementAge}
+							anni la RITA non e' accessibile prima della pensione.
+						{/if}
+					</p>
+					<div class="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+						<div class="rounded-lg bg-white/70 p-3 dark:bg-gray-800/60">
+							<p class="text-xs text-gray-500 dark:text-gray-400">Montante a inizio erogazione</p>
+							<p class="text-lg font-semibold text-gray-900 dark:text-white">
+								{formatCurrency(pensionFundPlan.balanceAtStart)}
+							</p>
+						</div>
+						{#if pensionFundPlan.mode === 'rita'}
+							<div class="rounded-lg bg-white/70 p-3 dark:bg-gray-800/60">
+								<p class="text-xs text-gray-500 dark:text-gray-400">RITA netta media / anno</p>
+								<p class="text-lg font-semibold text-gray-900 dark:text-white">
+									{formatCurrency(pensionFundPlan.ritaAnnualNet)}
+								</p>
+							</div>
+						{/if}
+						<div class="rounded-lg bg-white/70 p-3 dark:bg-gray-800/60">
+							<p class="text-xs text-gray-500 dark:text-gray-400">Ritenuta applicata</p>
+							<p class="text-lg font-semibold text-gray-900 dark:text-white">
+								{(pensionFundPlan.taxRate * 100).toLocaleString('it-IT', {
+									maximumFractionDigits: 1
+								})}%
+							</p>
+						</div>
+					</div>
+					<Toggle bind:checked={includePensionFund}>
+						Considera il fondo pensione nel FIRE Number e nella proiezione
+					</Toggle>
+					<Helper class="mt-1 text-xs">
+						Importi in euro di oggi. Ipotesi prudenziali: ritenuta del 15% su tutta la rata (per
+						legge scende fino al 9% con gli anni di adesione e non colpisce i rendimenti gia'
+						tassati nel fondo); rendimento del fondo pari a quello atteso del portafoglio, tassato
+						al 20%. Con la RITA il ponte verso la pensione e' a tre fasi: FIRE &rarr; RITA &rarr;
+						INPS.
+					</Helper>
+				</div>
+			{/if}
+
 			<!-- Key Metrics -->
 			<MetricsGrid
 				{fireNumber}
@@ -497,14 +590,11 @@
 						che vale la pena verificare:
 					</p>
 					<ul class="mt-2 ml-4 list-disc space-y-1 text-sm">
-						{#if pensionFundAmount > 0}
+						{#if pensionFundAmount > 0 && effPensionFundPlan}
 							<li>
-								Il patrimonio di partenza usato per il calcolo ({formatCurrency(
-									wiInitialPortfolio
-								)}) comprende, nel dato di profilo, il <strong>fondo pensione</strong>
-								({formatCurrency(pensionFundAmount)}), prelevabile pero' solo via
-								<strong>RITA</strong> in prossimita' della pensione: oggi non e' davvero disponibile per
-								vivere di rendita.
+								Il <strong>fondo pensione</strong> ({formatCurrency(pensionFundAmount)} oggi) non e' nel
+								patrimonio di partenza, ma i suoi incassi futuri (RITA o prestazione) abbassano il capitale
+								necessario: verifica i requisiti e le date nel riquadro dedicato.
 							</li>
 						{/if}
 						{#if effPension > 0}

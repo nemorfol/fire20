@@ -22,8 +22,8 @@ Invarianti consolidati del progetto — nessun intervento di questo piano deve r
    Nota: IRPEF 2026 con 2ª aliquota al **33% e' CORRETTA** (Legge di Bilancio 2026) — non
    "correggerla" al 35%.
 4. **Invarianti motore Monte Carlo / FIRE** (fix del 2026-06-08, commit fa86c13):
-   prelievo calcolato sulle spese reali; floor dei rendimenti > -100%; il fondo pensione
-   conteggiato tra i liquidi e' **intenzionale** (RITA); bande di percentile nei grafici.
+   prelievo calcolato sulle spese reali; floor dei rendimenti > -100%; bande di percentile nei
+   grafici. Il fondo pensione e' un asset differito (RITA/prestazione), non liquido (#41).
 5. **Retrocompatibilita' profili IndexedDB.** Ogni nuovo campo `$bindable` su `Profile` rompe
    i profili salvati vecchi (lezione delle issue #33/#37/#38): normalizzare SEMPRE in
    `loadProfileIntoState`, nello stato iniziale e nei default; se serve, migrazione Dexie

@@ -33,7 +33,9 @@
 	} from '$lib/db/scenarios';
 	import { getAllProfiles } from '$lib/db/profiles';
 	import { getAllResults, createResult } from '$lib/db/results';
-	import { calculateNetWorth } from '$lib/engine/fire-calculator';
+	import { calculateLiquidNetWorth, liquidMonthlyContributions } from '$lib/engine/fire-calculator';
+	import { pensionFundPlanFromProfile } from '$lib/engine/rita';
+	import { getPreset } from '$lib/engine/assumptions';
 	import type { MonteCarloParams } from '$lib/engine/monte-carlo';
 	import { runMonteCarloWorker } from '$lib/workers/monte-carlo-client';
 	import { sp500Returns } from '$lib/data/sp500';
@@ -264,9 +266,24 @@
 		const currentAge = currentYear - profile.birthYear;
 		const yearsToFire = Math.max(0, retirementAge - currentAge);
 		const yearsInRetirement = profile.lifeExpectancy - retirementAge;
-		const netWorth = calculateNetWorth(profile.portfolio as unknown as Record<string, number>);
+		// Solo patrimonio LIQUIDO; il fondo pensione e' differito e entra come
+		// reddito futuro (RITA / prestazione), come nel Calcolatore (#41).
+		const netWorth = calculateLiquidNetWorth(
+			profile.portfolio as unknown as Record<string, number>
+		);
 		const annualContribution =
-			Object.values(profile.monthlyContributions).reduce((s, v) => s + (v || 0), 0) * 12;
+			liquidMonthlyContributions(
+				profile.monthlyContributions as unknown as Record<string, number>
+			) * 12;
+		const fundPlan = pensionFundPlanFromProfile(profile, {
+			currentAge,
+			retirementAge,
+			pensionAge: profile.pension?.pensionAge ?? 67,
+			lifeExpectancy: profile.lifeExpectancy,
+			nominalReturn: expectedReturn,
+			inflationRate,
+			assumptions: getPreset(profile.assumptionsId)
+		});
 		const iterations = profile.simulation.iterations || 10000;
 
 		runningScenarioId = scenario.id;
@@ -290,7 +307,9 @@
 				historicalBondReturns,
 				historicalInflation,
 				// Serie US tutte 1928-2024 (allineate, USD): campionamento per anno
-				jointHistoricalSampling: true
+				jointHistoricalSampling: true,
+				currentAge,
+				pensionFundIncomeByAge: fundPlan.incomeByAge
 			} satisfies MonteCarloParams;
 
 			worker = runMonteCarloWorker(worker, mcParams, {
